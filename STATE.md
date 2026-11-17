@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 15:05 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 15:12 (Europe/Kaliningrad)
 > main · последний коммит: 4d66133 «2.3: статус СКУД в шапке»
-> Версия 2.4 (`versionCode 15`), пакет `ru.smartsystem39.gates`
+> Версия 2.5 (`versionCode 16`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 

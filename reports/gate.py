@@ -200,6 +200,26 @@ CREATE TABLE IF NOT EXISTS devices (
     dev_type INTEGER
 );
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS passes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    number     TEXT UNIQUE,
+    visitor    TEXT NOT NULL,
+    document   TEXT,
+    phone      TEXT,
+    org        TEXT,
+    host       TEXT,
+    purpose    TEXT,
+    visit_date TEXT,
+    valid_from TEXT,
+    valid_to   TEXT,
+    doors      TEXT,
+    note       TEXT,
+    status     TEXT DEFAULT 'active',
+    created_by TEXT,
+    created_at TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_passes_to ON passes(valid_to);
+
 CREATE TABLE IF NOT EXISTS days (
     day      TEXT PRIMARY KEY,
     rows     INTEGER,
@@ -1063,6 +1083,111 @@ def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
     if enc.lower().replace("-", "") == "utf8":
         data = b"\xef\xbb\xbf" + data
     return data, n
+
+
+
+PASS_STATUS = {"active": "Действует", "expired": "Истёк", "upcoming": "Ещё не действует",
+               "revoked": "Отозван"}
+
+
+def _pass_status(row):
+    if (row["status"] or "") == "revoked":
+        return "revoked"
+    today = dt.date.today().isoformat()
+    if row["valid_to"] and row["valid_to"] < today:
+        return "expired"
+    if row["valid_from"] and row["valid_from"] > today:
+        return "upcoming"
+    return "active"
+
+
+def _pass_row(row):
+    d = dict(row)
+    try:
+        d["doors"] = json.loads(d.get("doors") or "[]")
+    except ValueError:
+        d["doors"] = []
+    d["state"] = _pass_status(row)
+    d["state_title"] = PASS_STATUS.get(d["state"], d["state"])
+    return d
+
+
+def doors_list(con):
+    """Двери (устройства) из картотеки Gate."""
+    out = [{"dev_ptr": r["dev_ptr"], "name": r["name"] or ("Точка %s" % r["dev_ptr"])}
+           for r in con.execute("SELECT dev_ptr, name FROM devices ORDER BY name")]
+    return out
+
+
+def passes_list(con, from_day=None, to_day=None, state=None, search=None, limit=500):
+    """Пропуска: свежие сверху."""
+    where, params = [], []
+    if from_day:
+        where.append("(valid_to IS NULL OR valid_to >= ?)")
+        params.append(from_day)
+    if to_day:
+        where.append("(valid_from IS NULL OR valid_from <= ?)")
+        params.append(to_day)
+    if search:
+        where.append("(instr_ru(visitor, ?) OR instr_ru(org, ?) OR instr_ru(host, ?) OR instr_ru(number, ?))")
+        params += [search] * 4
+    sql = "SELECT * FROM passes"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY id DESC LIMIT ?"
+    params.append(int(limit))
+    rows = [ _pass_row(r) for r in con.execute(sql, params)]
+    if state and state not in ("", "all"):
+        rows = [r for r in rows if r["state"] == state]
+    return rows
+
+
+def pass_get(con, pid):
+    r = con.execute("SELECT * FROM passes WHERE id=?", (int(pid),)).fetchone()
+    return _pass_row(r) if r else None
+
+
+def pass_create(con, data, created_by=""):
+    visitor = (data.get("visitor") or "").strip()
+    if not visitor:
+        raise ValueError("не указано ФИО посетителя")
+    visit = (data.get("visit_date") or dt.date.today().isoformat()).strip()
+    valid_to = (data.get("valid_to") or visit).strip()
+    if valid_to < visit:
+        raise ValueError("срок действия раньше даты приёма")
+    doors = data.get("doors") or []
+    if isinstance(doors, str):
+        doors = [x.strip() for x in doors.split("|") if x.strip()]
+    year = visit[:4] if len(visit) >= 4 else str(dt.date.today().year)
+    n = con.execute("SELECT COUNT(*) c FROM passes WHERE number LIKE ?", ("П-%s-%%" % year,)).fetchone()["c"]
+    number = "П-%s-%04d" % (year, n + 1)
+    with _lock:
+        con.execute(
+            "INSERT INTO passes(number,visitor,document,phone,org,host,purpose,visit_date,"
+            "valid_from,valid_to,doors,note,status,created_by,created_at)"
+            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (number, visitor, (data.get("document") or "").strip(), (data.get("phone") or "").strip(),
+             (data.get("org") or "").strip(), (data.get("host") or "").strip(),
+             (data.get("purpose") or "").strip(), visit, visit, valid_to,
+             json.dumps(doors, ensure_ascii=False), (data.get("note") or "").strip(),
+             "active", created_by, dt.datetime.now().isoformat(timespec="seconds")))
+        con.commit()
+        pid = con.execute("SELECT last_insert_rowid() i").fetchone()["i"]
+    return pass_get(con, pid)
+
+
+def pass_revoke(con, pid):
+    with _lock:
+        con.execute("UPDATE passes SET status='revoked' WHERE id=?", (int(pid),))
+        con.commit()
+    return pass_get(con, pid)
+
+
+def pass_delete(con, pid):
+    with _lock:
+        con.execute("DELETE FROM passes WHERE id=?", (int(pid),))
+        con.commit()
+    return True
 
 
 def points_list(con):
