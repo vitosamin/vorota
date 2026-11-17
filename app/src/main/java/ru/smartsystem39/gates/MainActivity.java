@@ -3,6 +3,7 @@ package ru.smartsystem39.gates;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.net.Uri;
@@ -101,6 +102,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void attachBaseContext(Context base) {
+        int mode = new Config(base).getThemeMode();
+        if (mode != 0) {
+            android.content.res.Configuration conf =
+                    new android.content.res.Configuration(base.getResources().getConfiguration());
+            conf.uiMode = (conf.uiMode & ~android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                    | (mode == 2 ? android.content.res.Configuration.UI_MODE_NIGHT_YES
+                                 : android.content.res.Configuration.UI_MODE_NIGHT_NO);
+            base = base.createConfigurationContext(conf);
+        }
+        super.attachBaseContext(base);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         cfg = new Config(this);
@@ -139,6 +154,12 @@ public class MainActivity extends Activity {
         updateStatus = findViewById(R.id.updateStatus);
         btnCheckUpdates = findViewById(R.id.btnCheckUpdates);
         btnInstallUpdate = findViewById(R.id.btnInstallUpdate);
+        themeLight = findViewById(R.id.themeLight);
+        themeDark = findViewById(R.id.themeDark);
+        themeSystem = findViewById(R.id.themeSystem);
+        themeLight.setOnClickListener(v -> applyTheme(1));
+        themeDark.setOnClickListener(v -> applyTheme(2));
+        themeSystem.setOnClickListener(v -> applyTheme(0));
         navDevices = findViewById(R.id.navDevices);
         navSettings = findViewById(R.id.navSettings);
         navDevicesIcon = findViewById(R.id.navDevicesIcon);
@@ -232,6 +253,7 @@ public class MainActivity extends Activity {
         lastStatus.clear();
         rebuildMain();
         rebuildSettings();
+        updateThemeButtons();
         if (devices.isEmpty()) {
             setHeader(getString(R.string.status_no_devices), R.drawable.dot_muted, getColor(R.color.text_secondary));
         } else {
@@ -815,6 +837,28 @@ public class MainActivity extends Activity {
                 }
             });
         });
+    }
+
+    private Button themeLight, themeDark, themeSystem;
+
+    private void applyTheme(int mode) {
+        cfg.setThemeMode(mode);
+        updateThemeButtons();
+        recreate();
+    }
+
+    private void updateThemeButtons() {
+        if (themeLight == null) return;
+        int mode = cfg.getThemeMode();
+        int[][] map = { {1, 0}, {2, 0}, {0, 0} };
+        styleThemeButton(themeLight, mode == 1);
+        styleThemeButton(themeDark, mode == 2);
+        styleThemeButton(themeSystem, mode == 0);
+    }
+
+    private void styleThemeButton(Button b, boolean active) {
+        b.setBackgroundResource(active ? R.drawable.btn_primary : R.drawable.btn_secondary);
+        b.setTextColor(getColor(active ? R.color.white : R.color.text_primary));
     }
 
     private void rebuildSettings() {

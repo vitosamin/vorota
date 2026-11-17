@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#12161B</color>
+    <color name="bg_top">#171C22</color>
+    <color name="bg_bottom">#0E1216</color>
+    <color name="card">#1B2027</color>
+    <color name="card_high">#20262E</color>
+    <color name="card_stroke">#2A313A</color>
+    <color name="field">#1A1F26</color>
+    <color name="field_stroke">#2C333D</color>
+    <color name="nav_bg">#151A20</color>
+
+    <color name="accent">#5CBFA1</color>
+    <color name="accent_light">#74CFB3</color>
+    <color name="accent_deep">#429B82</color>
+    <color name="accent_dark">#2F7261</color>
+    <color name="accent_soft">#1E3A33</color>
+    <color name="accent_tint">#24453C</color>
+
+    <color name="violet">#8B84D9</color>
+    <color name="violet_soft">#27243A</color>
+
+    <color name="warn">#D8A54B</color>
+    <color name="warn_soft">#2E2718</color>
+    <color name="danger">#E07A70</color>
+    <color name="danger_soft">#33201E</color>
+    <color name="info">#7FA6DD</color>
+    <color name="info_soft">#1E2734</color>
+
+    <color name="text_primary">#E4E8ED</color>
+    <color name="text_secondary">#A3ACB8</color>
+    <color name="text_muted">#7C8590</color>
+    <color name="icon_bg">#1E3A33</color>
+    <color name="icon_launcher">#17553F</color>
+    <color name="white">#FFFFFF</color>
+    <color name="transparent">#00000000</color>
+    <color name="scrim">#99000000</color>
+</resources>

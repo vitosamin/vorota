@@ -1,6 +1,7 @@
 package ru.smartsystem39.gates;
 
 import android.app.Activity;
+import android.content.Context;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.graphics.Typeface;
@@ -72,6 +73,20 @@ public class DeviceEditActivity extends Activity {
     private Button btnDelete;
     private Button btnPickEntity;
     private ImageButton btnBack;
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        int mode = new Config(base).getThemeMode();
+        if (mode != 0) {
+            android.content.res.Configuration conf =
+                    new android.content.res.Configuration(base.getResources().getConfiguration());
+            conf.uiMode = (conf.uiMode & ~android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                    | (mode == 2 ? android.content.res.Configuration.UI_MODE_NIGHT_YES
+                                 : android.content.res.Configuration.UI_MODE_NIGHT_NO);
+            base = base.createConfigurationContext(conf);
+        }
+        super.attachBaseContext(base);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

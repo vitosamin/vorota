@@ -41,7 +41,7 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:va
 .clock{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text)}
 button,.btn{font:inherit;cursor:pointer;border-radius:3px;border:1px solid var(--line);
   background:var(--panel);color:var(--text);padding:6px 12px;transition:background .12s,border-color .12s;
-  display:inline-flex;align-items:center;gap:6px;text-decoration:none;line-height:1.4}
+  display:inline-flex;align-items:center;gap:6px;text-decoration:none;line-height:18px;min-height:32px}
 button:hover,.btn:hover{background:#eaf2fd;border-color:var(--accent)}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 button.primary:hover{background:var(--accent2);border-color:var(--accent2)}
@@ -105,10 +105,15 @@ td.num,th.num{text-align:center;font-variant-numeric:tabular-nums;white-space:no
 .feed .who{flex:1;min-width:0}
 .feed .who .n{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .feed .who .d{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+@media(max-width:1250px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:880px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.filters{grid-template-columns:1fr}}
 label.f{display:block;color:#4a5560;font-size:11.5px;margin-bottom:4px}
 input,select{width:100%;font:inherit;color:var(--text);background:#fff;border:1px solid var(--line);
-  border-radius:3px;padding:5px 8px;outline:none;transition:.12s}
+  border-radius:3px;padding:0 8px;height:32px;outline:none;transition:.12s}
+input[type=checkbox],input[type=radio]{height:auto;line-height:normal;padding:0;width:auto}
+input[type=date],input[type=time]{padding-right:6px}
 input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,208,.15)}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .chk{display:flex;align-items:center;gap:6px;color:#4a5560;font-size:12px;cursor:pointer;user-select:none}
@@ -218,7 +223,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 /* мультивыбор контрольных точек */
 .msel{position:relative}
 .msel-btn{width:100%;display:flex;align-items:center;gap:6px;justify-content:space-between;
-  background:#fff;border:1px solid var(--line);border-radius:3px;padding:5px 8px;font:inherit;
+  background:#fff;border:1px solid var(--line);border-radius:3px;padding:0 8px;height:32px;font:inherit;
   color:var(--text);cursor:pointer;text-align:left}
 .msel-btn:hover{background:#eaf2fd;border-color:var(--accent)}
 .msel.on .msel-btn{border-color:var(--accent);background:#eef5ff;font-weight:600}
@@ -236,6 +241,15 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .msel-list .mi.all{font-weight:600;color:var(--accent)}
 .msel-list .mi.all.sel{background:#eaf2fd}
 .msel-list .mi.cur{background:#f3f8ff}
+
+.range{display:flex;align-items:center;gap:6px}
+.range input{flex:1 1 0;min-width:0;width:auto}
+.range span{color:var(--dim);flex:0 0 auto}
+
+.filters.f5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1250px){.filters.f5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:880px){.filters.f5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.filters.f5{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -377,7 +391,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
       </div>
       <div id="evBody" style="display:none">
         <div class="bd">
-          <div class="filters">
+          <div class="filters f5">
             <div><label class="f">Событие</label><select id="evMsg"><option value="">любое событие</option></select></div>
             <div><label class="f">ФИО или табельный</label><input type="text" id="evSearch" placeholder="Пыхтеев, Антоненко, 032/57959…"></div>
             <div><label class="f">Тип события</label><select id="evType"><option value="">все типы</option></select></div>
@@ -421,15 +435,15 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
               <div class="msel-list"></div>
             </div></div>
           <div><label class="f">Поиск (ФИО, номер)</label><input type="text" id="rSearch" placeholder="начните вводить…"></div>
-          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="rEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="rEmpList"></div></div></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="rEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="rEmpList"></div></div></div>
           <div><label class="f">Вид</label><select id="rView">
             <option value="detail">По дням</option>
             <option value="summary">Свод по сотрудникам</option>
             <option value="late">Опоздания</option>
             <option value="absent">Не приходили (нет проходов)</option>
           </select></div>
-          <div><label class="f">Начало смены</label><input type="time" id="rShiftS" value="08:00"></div>
-          <div><label class="f">Конец смены</label><input type="time" id="rShiftE" value="17:00"></div>
+          <div><label class="f">Смена</label>
+            <div class="range"><input type="time" id="rShiftS" value="08:00"><span>—</span><input type="time" id="rShiftE" value="17:00"></div></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="rGo">Показать отчёт</button>
@@ -456,7 +470,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
   <section class="tab" id="tab-rpt">
     <div class="card" style="margin-bottom:12px">
       <div class="bd">
-        <div class="filters">
+        <div class="filters f5">
           <div><label class="f">С даты</label><input type="date" id="pFrom"></div>
           <div><label class="f">По дату</label><input type="date" id="pTo"></div>
           <div><label class="f">Подразделение</label><select id="pGroup"><option value="">все</option></select></div>
@@ -465,7 +479,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
               <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
               <div class="msel-list"></div>
             </div></div>
-          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="pEmpList"></div></div></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="pEmpList"></div></div></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="pGo">Обновить счётчики</button>
@@ -497,15 +511,15 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
               <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
               <div class="msel-list"></div>
             </div></div>
-            <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="eEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="eEmpList"></div></div></div>
+            <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="eEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="eEmpList"></div></div></div>
             <div><label class="f">Вид</label><select id="eView">
               <option value="detail">По дням (табель)</option>
               <option value="summary">Свод по сотрудникам</option>
               <option value="late">Опоздания</option>
               <option value="absent">Не приходили</option>
             </select></div>
-            <div><label class="f">Начало смены</label><input type="time" id="eShiftS" value="08:00"></div>
-            <div><label class="f">Конец смены</label><input type="time" id="eShiftE" value="17:00"></div>
+            <div><label class="f">Смена</label>
+              <div class="range"><input type="time" id="eShiftS" value="08:00"><span>—</span><input type="time" id="eShiftE" value="17:00"></div></div>
           </div>
           <div class="filters" style="margin-top:12px">
             <div><label class="f">Кодировка</label><select id="eEnc">

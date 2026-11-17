@@ -63,6 +63,14 @@ public class Config {
         sp.edit().putString("gate_token", v == null ? "" : v).apply();
     }
 
+    public int getThemeMode() {
+        return sp.getInt("theme_mode", 0);
+    }
+
+    public void setThemeMode(int mode) {
+        sp.edit().putInt("theme_mode", mode).apply();
+    }
+
     public boolean hasHa() {
         return !getHaUrl().trim().isEmpty() && !getHaToken().trim().isEmpty();
     }
