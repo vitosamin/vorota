@@ -80,6 +80,7 @@ class GateBridge
     static uint targetPid;
     static IntPtr mainWnd, accessWnd, grid, openBtn;
     static bool freshForm = false;
+    static bool sortChecked = false;
 
     static string T(IntPtr h) { var s = new StringBuilder(1024); GetWindowText(h, s, 1024); return s.ToString(); }
     static string C(IntPtr h) { var s = new StringBuilder(256); GetClassName(h, s, 256); return s.ToString(); }
@@ -128,17 +129,31 @@ class GateBridge
         ShowWindow(accessWnd, 5);
         SetForegroundWindow(accessWnd);
         AttachThreadInput(myT, fgT, false);
-        Thread.Sleep(300);
+        Thread.Sleep(80);
     }
 
     static void Click(int x, int y)
     {
         SetCursorPos(x, y);
-        Thread.Sleep(110);
+        Thread.Sleep(35);
         mouse_event(MDOWN, 0, 0, 0, IntPtr.Zero);
-        Thread.Sleep(60);
+        Thread.Sleep(25);
         mouse_event(MUP, 0, 0, 0, IntPtr.Zero);
-        Thread.Sleep(230);
+        Thread.Sleep(90);
+    }
+
+    /// <summary>Принудительно сортирует таблицу по первому столбцу (два клика = убывание),
+    /// чтобы порядок строк всегда совпадал с калибровкой.</summary>
+    static void ForceSort()
+    {
+        if (grid == IntPtr.Zero) return;
+        RECT gr; GetWindowRect(grid, out gr);
+        for (int i = 0; i < 2; i++)
+        {
+            Click(gr.Left + 60, gr.Top + 9);
+            Thread.Sleep(250);
+        }
+        Log("force sort applied");
     }
 
     static void ResetForm()
@@ -241,7 +256,7 @@ class GateBridge
         {
             int y = gr.Top + ROW_BASE + row * ROW_H + (attempt == 0 ? 0 : (attempt == 1 ? 2 : -2));
             Click(gr.Left + 60, y);
-            Thread.Sleep(220);
+            Thread.Sleep(90);
             if (VerifyRow(gr, row)) return true;
         }
         Log("select failed row=" + row);
@@ -313,6 +328,14 @@ class GateBridge
             return parts.Length > 0 ? parts[0] : "0";
         }
         catch { return "0"; }
+    }
+
+    /// <summary>true, если считыватель — «выход» (по названию из базы Gate).</summary>
+    static bool IsOut(int rdr)
+    {
+        foreach (var r in Readers)
+            if ((int)r[0] == rdr) return ((string)r[3]).ToLower().Contains("выход");
+        return false;
     }
 
     static int NumOfReader(int rdr)
@@ -424,6 +447,7 @@ class GateBridge
             {
                 if (!EnsureReady()) return "{\"ok\":false,\"error\":\"gate ui not ready\"}";
                 Focus();
+                ForceSort();
                 if (fromRow <= 1) Map.Clear();
                 var report = new StringBuilder();
                 for (int row = fromRow; row <= ROWS_MAX; row++)
@@ -476,13 +500,14 @@ class GateBridge
                 if (Map.Count == 0) return "{\"ok\":false,\"error\":\"not calibrated\"}";
                 if (!EnsureReady()) return "{\"ok\":false,\"error\":\"gate ui not ready\"}";
                 Focus();
+                if (!sortChecked) { ForceSort(); sortChecked = true; }
                 var opened = new List<int>();
                 var failed = new List<int>();
                 foreach (int row in rows)
                 {
                     if (!SelectRow(row)) { failed.Add(row); continue; }
                     ClickOpen();
-                    Thread.Sleep(600);
+                    Thread.Sleep(120);
                     opened.Add(row);
                     Log("open row=" + row);
                 }
@@ -614,9 +639,9 @@ class GateBridge
                 {
                     if (e.Dev != id) continue;
                     if (!seen.Add(e.Rdr)) continue;          // дедуп по считывателю
-                    int num = NumOfReader(e.Rdr);
-                    if (dir == "in" && num == 2) continue;
-                    if (dir == "out" && num != 2) continue;
+                    bool isOut = IsOut(e.Rdr);
+                    if (dir == "in" && isOut) continue;
+                    if (dir == "out" && !isOut) continue;
                     rows.Add(e.Row);
                 }
                 if (rows.Count == 0) { Respond(ctx, 404, "{\"ok\":false,\"error\":\"door\"}"); return; }
@@ -648,6 +673,25 @@ class GateBridge
         try { listener.Start(); }
         catch (Exception e) { Log("listen err " + e.Message); return; }
         Log("listening " + PORT);
+        // прогрев: держим окно готовым и сортировку зафиксированной, чтобы первое нажатие не ждало
+        new Thread(() =>
+        {
+            try
+            {
+                lock (uiLock)
+                {
+                    if (EnsureReady())
+                    {
+                        Focus();
+                        ForceSort();
+                        sortChecked = true;
+                        Log("warmup done");
+                    }
+                    else Log("warmup skipped: ui not ready");
+                }
+            }
+            catch (Exception e) { Log("warmup err " + e.Message); }
+        }) { IsBackground = true }.Start();
         while (true)
         {
             var ctx = listener.GetContext();

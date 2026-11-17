@@ -78,25 +78,42 @@ public class Config {
     public List<Device> getDevices() {
         List<Device> out = new ArrayList<>();
         String raw = sp.getString(K_DEVICES, null);
-        if (raw == null) {
+        if (raw != null) {
+            try {
+                JSONArray arr = new JSONArray(raw);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject o = arr.optJSONObject(i);
+                    if (o != null) out.add(Device.fromJson(o));
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        if (ensureDefaults(out)) saveDevices(out);
+        return out;
+    }
+
+    /** Заготовки «Шлагбаум» и «Калитка» всегда на месте (в избранном), пока их не удалили вручную. */
+    private boolean ensureDefaults(List<Device> devices) {
+        boolean changed = false;
+        boolean hasBarrier = false, hasGate = false;
+        for (Device d : devices) {
+            if ("Шлагбаум".equals(d.name)) hasBarrier = true;
+            if ("Калитка".equals(d.name)) hasGate = true;
+        }
+        if (!hasBarrier && !sp.getBoolean("deleted_barrier", false)) {
             Device barrier = new Device(Device.newId(), "Шлагбаум", Device.TYPE_BARRIER);
             barrier.favorite = true;
+            devices.add(0, barrier);
+            changed = true;
+        }
+        if (!hasGate && !sp.getBoolean("deleted_gate", false)) {
             Device gate = new Device(Device.newId(), "Калитка", Device.TYPE_GATE);
             gate.favorite = true;
-            out.add(barrier);
-            out.add(gate);
-            saveDevices(out);
-            return out;
+            int pos = Math.min(1, devices.size());
+            devices.add(pos, gate);
+            changed = true;
         }
-        try {
-            JSONArray arr = new JSONArray(raw);
-            for (int i = 0; i < arr.length(); i++) {
-                JSONObject o = arr.optJSONObject(i);
-                if (o != null) out.add(Device.fromJson(o));
-            }
-        } catch (Exception ignored) {
-        }
-        return out;
+        return changed;
     }
 
     public void saveDevices(List<Device> devices) {
@@ -123,7 +140,12 @@ public class Config {
         List<Device> list = getDevices();
         List<Device> out = new ArrayList<>();
         for (Device d : list) {
-            if (!d.id.equals(id)) out.add(d);
+            if (d.id.equals(id)) {
+                if ("Шлагбаум".equals(d.name)) sp.edit().putBoolean("deleted_barrier", true).apply();
+                if ("Калитка".equals(d.name)) sp.edit().putBoolean("deleted_gate", true).apply();
+            } else {
+                out.add(d);
+            }
         }
         saveDevices(out);
     }

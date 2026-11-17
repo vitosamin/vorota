@@ -633,18 +633,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Убирает незаполненные заготовки «Шлагбаум»/«Калитка», когда появились реальные двери. */
-    private List<Device> prunePlaceholders(List<Device> devices) {
-        List<Device> out = new ArrayList<>();
-        for (Device d : devices) {
-            boolean placeholder = ("Шлагбаум".equals(d.name) || "Калитка".equals(d.name))
-                    && (d.entity == null || d.entity.trim().isEmpty())
-                    && (d.address == null || d.address.trim().isEmpty());
-            if (!placeholder) out.add(d);
-        }
-        return out;
-    }
-
     private void importGateDoors() {
         importGate(false);
     }
@@ -730,7 +718,6 @@ public class MainActivity extends Activity {
                         found.statusField = "";
                         added++;
                     }
-                    devices = prunePlaceholders(devices);
                     cfg.saveDevices(devices);
                 } catch (Exception e) {
                     error = "некорректный ответ моста";
