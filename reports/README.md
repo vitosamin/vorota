@@ -117,7 +117,7 @@ sudo sh /home/dsh/projects/gates/reports/systemd/install.sh
 | `GET /api/stream?day=` | **SSE**: поток проходов вживую |
 | `GET /api/live?day=&limit=&all=1` | лента событий (`all=1` — вместе с дверными) |
 | `GET /api/presence?day=` | кто на объекте (последний проход — вход) |
-| `GET /api/analytics?from=&to=&group=&point=` | данные для всех графиков + сравнение с прошлым периодом |
+| `GET /api/analytics?from=&to=&group=&points=` | данные для всех графиков + сравнение с прошлым периодом |
 | `GET /api/late?from=&to=&group=&search=` | опоздания по сотрудникам |
 | `GET /api/person?user_ptr=&from=&to=` | карточка сотрудника: дни, часы, опоздания |
 | `GET /api/users?group=&search=&user_ptr=` | отчёт о пользователях |
@@ -126,7 +126,7 @@ sudo sh /home/dsh/projects/gates/reports/systemd/install.sh
 | `GET /api/events/summary?from=&to=` | сводка журнала событий СКУД |
 | `GET /api/events/list?from=&to=&type=&search=&message=&alarms=1&limit=&offset=` | журнал событий (`search` — ФИО/табельный/текст, `message` — точное событие) |
 | `GET /api/points`, `/api/groups` | контрольные точки, подразделения |
-| `GET /api/report?from=&to=&view=&group=&point=&search=&shift_start=&shift_end=` | отчёт |
+| `GET /api/report?from=&to=&view=&group=&points=&search=&user_ptr=&shift_start=&shift_end=` | отчёт |
 | `GET /api/sync?days=3` | догрузить журнал |
 | `GET /export/1c.csv?...&enc=cp1251&sep=semicolon&dec=,&header=1` | файл для 1С |
 | `GET /export/report.xls?...` | оформленный отчёт для Excel |
@@ -135,6 +135,10 @@ sudo sh /home/dsh/projects/gates/reports/systemd/install.sh
 | `GET /print?view=detail\|summary\|late\|absent\|users\|events&...` | печатный документ (→ PDF из браузера) |
 
 `view`: `detail` (по дням) · `summary` (свод) · `late` (опоздания) · `absent` (не приходили).
+
+`points` — одна или несколько контрольных точек через `|` (например
+`points=КПП1 - Вход|КПП2 - Вход`). Пусто или не задано — все точки.
+Одиночный параметр `point` тоже принимается.
 
 Пример через curl:
 
@@ -207,3 +211,18 @@ curl -s -u vitosamin:Admin910327 -o otchet.csv \
 Выбранный человек фильтрует **все** отчёты и выгрузки: УРВ, свод, опоздания,
 не приходили, отчёт о пользователях, журнал событий, CSV для 1С и печать.
 Пустое значение — все сотрудники.
+
+## Несколько контрольных точек
+
+В полях **«Контрольные точки»** (вкладки «Отчёты», «Посещаемость»,
+«Выгрузка в 1С», «Аналитика») можно отметить **сколько угодно точек** галочками:
+
+- «все точки (без фильтра)» — снять выбор;
+- одна точка — в поле видно её название;
+- несколько — «выбрано точек: N».
+
+Фильтр действует на все отчёты: УРВ, свод, опоздания, не приходили,
+журнал событий, CSV для 1С, Excel, печать и графики аналитики.
+
+Пример: `КПП1 - Вход` + `КПП2 - Вход` за 17.11 — 164 человека вместо 169
+по всем точкам; за неделю 961 запись УРВ.

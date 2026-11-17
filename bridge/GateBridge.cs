@@ -613,26 +613,26 @@ class GateBridge
 <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
 <title>Вход · Ворота</title>
 <style>
-:root{--bg:#f3f5f9;--card:#ffffff;--line:#e2e7ef;--acc:#0f9d76;--txt:#17202a;--mut:#5a6878;--muted:#8b98a7}
+:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .box{width:100%;max-width:380px}
-.logo{width:60px;height:60px;border-radius:18px;background:#e6f5f0;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.logo{width:60px;height:60px;border-radius:18px;background:#e4ede9;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
 h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 6px;letter-spacing:-.02em}
 .sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:26px}
 form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.04)}
 label{display:block;font-size:12px;color:var(--mut);margin:0 0 6px 2px;font-weight:500}
-input{width:100%;background:#f7f9fc;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 14px;font-size:15px;margin-bottom:14px;outline:none;transition:.15s}
-input:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(15,157,118,.12)}
+input{width:100%;background:#f2f4f7;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 14px;font-size:15px;margin-bottom:14px;outline:none;transition:.15s}
+input:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(63,132,113,.14)}
 button{width:100%;border:0;border-radius:11px;padding:13px;font-size:15px;font-weight:600;color:#fff;background:var(--acc);cursor:pointer;transition:.15s}
-button:hover{background:#0b8663}
+button:hover{background:#356f5f}
 button:active{transform:translateY(1px)}
 .err{background:#fbeae8;border:1px solid #f0c9c4;color:#b3372d;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px}
 .foot{color:var(--muted);font-size:11px;text-align:center;margin-top:18px}
 </style></head><body>
 <div class=""box"">
   <div class=""logo"">
-    <svg width=""28"" height=""28"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#0b7c5d"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round"">
+    <svg width=""28"" height=""28"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2f6b5b"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round"">
       <path d=""M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16""/><path d=""M15 12h5""/><path d=""M2 21h20""/><circle cx=""11"" cy=""12"" r=""1""/>
     </svg>
   </div>
@@ -656,7 +656,7 @@ button:active{transform:translateY(1px)}
 <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
 <title>Ворота</title>
 <style>
-:root{--bg:#f3f5f9;--card:#ffffff;--line:#e2e7ef;--acc:#0f9d76;--txt:#17202a;--mut:#5a6878;--muted:#8b98a7}
+:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:30px 20px 44px}
 .wrap{max-width:1080px;margin:0 auto}
@@ -670,19 +670,19 @@ h1{font-size:30px;font-weight:600;margin:0;letter-spacing:-.02em}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:.15s}
 .card:hover{box-shadow:0 2px 6px rgba(16,24,40,.06),0 12px 28px rgba(16,24,40,.05);border-color:#d5dee9}
 .top{display:flex;align-items:center;gap:12px}
-.icon{width:42px;height:42px;border-radius:50%;background:#e6f5f0;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.icon{width:42px;height:42px;border-radius:50%;background:#e4ede9;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .name{font-size:16px;font-weight:600;flex:1;letter-spacing:-.01em}
-.state{font-size:12px;color:var(--muted);background:#f4f6fa;border:1px solid var(--line);border-radius:999px;padding:4px 9px;display:flex;align-items:center;gap:6px}
+.state{font-size:12px;color:var(--muted);background:#f0f2f5;border:1px solid var(--line);border-radius:999px;padding:4px 9px;display:flex;align-items:center;gap:6px}
 .dot{width:6px;height:6px;border-radius:50%;background:#0f9d76}
 .btns{display:flex;gap:10px}
 button{border-radius:11px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;flex:1;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
-.bin{background:#e4f4ee;border:1px solid #bfe5d7;color:#0b7c5d}
-.bin:hover{background:#d8efe6}
-.bout{background:#e8effb;border:1px solid #c4d6f1;color:#2563c7}
-.bout:hover{background:#dde8f9}
+.bin{background:#e6eee9;border:1px solid #cfddd5;color:#2f6b5b}
+.bin:hover{background:#dde8e1}
+.bout{background:#e7ebf2;border:1px solid #d2dae6;color:#44699b}
+.bout:hover{background:#dce3ee}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.55;cursor:default;transform:none}
-#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#17202a;color:#fff;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#3a424c;color:#f8f9fb;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
 #toast.show{opacity:1}
 .empty{color:var(--muted);text-align:center;padding:40px 0}
 </style></head><body>
@@ -697,9 +697,9 @@ button:disabled{opacity:.55;cursor:default;transform:none}
 <div id=""toast""></div>
 <script>
 var TOKEN='vorota-2026';
-var ICON='<svg width=""22"" height=""22"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#0b7c5d"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16""/><path d=""M15 12h5""/><path d=""M2 21h20""/><circle cx=""11"" cy=""12"" r=""1""/></svg>';
-var ARR_IN='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#0b7c5d"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M5 12h14""/><path d=""M13 6l6 6-6 6""/></svg>';
-var ARR_OUT='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2563c7"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M19 12H5""/><path d=""M11 6l-6 6 6 6""/></svg>';
+var ICON='<svg width=""22"" height=""22"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2f6b5b"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16""/><path d=""M15 12h5""/><path d=""M2 21h20""/><circle cx=""11"" cy=""12"" r=""1""/></svg>';
+var ARR_IN='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2f6b5b"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M5 12h14""/><path d=""M13 6l6 6-6 6""/></svg>';
+var ARR_OUT='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#44699b"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M19 12H5""/><path d=""M11 6l-6 6 6 6""/></svg>';
 function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2400);}
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
 function iconBox(){var d=el('div','icon');d.innerHTML=ICON;return d;}

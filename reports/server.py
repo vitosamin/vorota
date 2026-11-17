@@ -39,6 +39,11 @@ SESSION_HOURS = int(AUTH.get("session_hours", 12))
 SECRET = (gate.CFG.get("secret") or "gate-skud-secret").encode("utf-8")
 COOKIE = "gate_session"
 
+def qpoints(q):
+    """Выбранные контрольные точки: `points=A|B` или одиночный `point`."""
+    return q.get("points") or q.get("point") or None
+
+
 def page_version():
     """Версия интерфейса — меняется при каждой правке index.html."""
     try:
@@ -465,7 +470,7 @@ class Handler(BaseHTTPRequestHandler):
         con = gate.connect()
         if view == "absent":
             rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"),
-                               user_ptr=q.get("user_ptr") or None)
+                               user_ptr=q.get("user_ptr") or None, point=qpoints(q))
             con.close()
             return self.send_json({"from": frm, "to": to, "view": view, "count": len(rows),
                                    "people": len(rows), "total_hours": 0, "late_days": 0,
@@ -473,7 +478,7 @@ class Handler(BaseHTTPRequestHandler):
         if view == "late":
             items = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
                                      shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
-                                     user_ptr=q.get("user_ptr") or None)
+                                     user_ptr=q.get("user_ptr") or None, point=qpoints(q))
             con.close()
             return self.send_json({"from": frm, "to": to, "view": view, "count": len(items),
                                    "people": len(items),
@@ -481,7 +486,7 @@ class Handler(BaseHTTPRequestHandler):
                                    "late_days": sum(x["late_days"] for x in items),
                                    "rows": items, "summary": items})
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
-                               point=q.get("point"), include_deleted=q.get("deleted") == "1",
+                               point=qpoints(q), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",
                                shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
                                user_ptr=q.get("user_ptr") or None)
@@ -500,7 +505,7 @@ class Handler(BaseHTTPRequestHandler):
         frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
         to = q.get("to") or dt.date.today().isoformat()
         con = gate.connect()
-        data = gate.analytics(con, frm, to, group=q.get("group"), point=q.get("point"))
+        data = gate.analytics(con, frm, to, group=q.get("group"), point=qpoints(q))
         con.close()
         return self.send_json(data)
 
@@ -546,10 +551,10 @@ class Handler(BaseHTTPRequestHandler):
         to = q.get("to") or dt.date.today().isoformat()
         con = gate.connect()
         up = q.get("user_ptr") or None
-        rows = gate.attendance(con, frm, to, group=q.get("group"), point=q.get("point"), user_ptr=up)
+        rows = gate.attendance(con, frm, to, group=q.get("group"), point=qpoints(q), user_ptr=up)
         summary = gate.attendance_summary(rows)
         late = sum(1 for a in summary if a["late_total"])
-        absent = len(gate.absent(con, frm, to, group=q.get("group"), user_ptr=up))
+        absent = len(gate.absent(con, frm, to, group=q.get("group"), user_ptr=up, point=qpoints(q)))
         users = len(gate.users_report(con, group=q.get("group"), user_ptr=up))
         events = con.execute("SELECT COUNT(*) c FROM events WHERE day BETWEEN ? AND ?",
                              (frm, to)).fetchone()["c"]
@@ -583,6 +588,7 @@ class Handler(BaseHTTPRequestHandler):
                                   search=(q.get("search") or "").strip() or None,
                                   message=(q.get("message") or "").strip() or None,
                                   user_ptr=q.get("user_ptr") or None,
+                                  point=qpoints(q),
                                   alarms_only=q.get("alarms") == "1",
                                   sep=sep, enc=enc)
         con.close()
@@ -610,6 +616,7 @@ class Handler(BaseHTTPRequestHandler):
             search=(q.get("search") or "").strip() or None,
             message=(q.get("message") or "").strip() or None,
             user_ptr=q.get("user_ptr") or None,
+            point=qpoints(q),
             alarms_only=(q.get("alarms") == "1"),
             limit=max(1, min(500, int(q.get("limit", 200)))),
             offset=max(0, int(q.get("offset", 0))))
@@ -679,17 +686,17 @@ class Handler(BaseHTTPRequestHandler):
         con = gate.connect()
         if view == "absent":
             rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"),
-                               user_ptr=q.get("user_ptr") or None)
+                               user_ptr=q.get("user_ptr") or None, point=qpoints(q))
             con.close()
             return rows, COLS_ABS, frm, to
         if view == "late":
             rows = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
                                     shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
-                                    user_ptr=q.get("user_ptr") or None)
+                                    user_ptr=q.get("user_ptr") or None, point=qpoints(q))
             con.close()
             return rows, COLS_LATE, frm, to
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
-                               point=q.get("point"), include_deleted=q.get("deleted") == "1",
+                               point=qpoints(q), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",
                                shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
                                user_ptr=q.get("user_ptr") or None)
@@ -737,6 +744,7 @@ class Handler(BaseHTTPRequestHandler):
                                      search=(q.get("search") or "").strip() or None,
                                      message=(q.get("message") or "").strip() or None,
                                      user_ptr=q.get("user_ptr") or None,
+                                     point=qpoints(q),
                                      alarms_only=q.get("alarms") == "1", limit=2000)
             rows = [dict(it, alarm_flag=("да" if it["alarm"] else "")) for it in items["items"]]
             cols, title = COLS_EVENTS, "Отчёт о событиях СКУД"

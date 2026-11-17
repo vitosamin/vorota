@@ -470,6 +470,31 @@ def kpi(con, day=None):
     }
 
 
+def _points(point):
+    """Нормализовать выбор контрольных точек: строка, список или «A|B»."""
+    if not point:
+        return []
+    if isinstance(point, str):
+        parts = point.split("|")          # названия точек могут содержать запятые
+    else:
+        parts = list(point)
+    out = []
+    for x in parts:
+        x = str(x).strip()
+        if x and x not in out:
+            out.append(x)
+    return out
+
+
+def _point_sql(point, column="unit"):
+    """SQL-условие по выбранным точкам (ИЛИ по подстроке) и параметры."""
+    pts = _points(point)
+    if not pts:
+        return "", []
+    clauses = ["%s LIKE ?" % column] * len(pts)
+    return " AND (" + " OR ".join(clauses) + ")", ["%" + p + "%" for p in pts]
+
+
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
                shift_start=None, shift_end=None, user_ptr=None):
@@ -482,9 +507,9 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     sql = ("SELECT day, ts, user_ptr, unit, message FROM events"
            " WHERE day BETWEEN ? AND ? AND event_type=? AND event_code=? AND user_ptr>0")
     params = [from_day, to_day, PASS_TYPE, PASS_CODE]
-    if point:
-        sql += " AND unit LIKE ?"
-        params.append("%" + point + "%")
+    frag, pparams = _point_sql(point)
+    sql += frag
+    params += pparams
     if user_ptr:
         sql += " AND user_ptr = ?"
         params.append(int(user_ptr))
@@ -607,12 +632,16 @@ def _real_name(fio):
     return len(fio) >= 3 and not _SERVICE_NAME.match(fio)
 
 
-def absent(con, from_day, to_day, group=None, search=None, user_ptr=None):
-    """Сотрудники без единого прохода за период («не приходили»)."""
+def absent(con, from_day, to_day, group=None, search=None, user_ptr=None, point=None):
+    """Сотрудники без единого прохода за период («не приходили»).
+
+    Если заданы контрольные точки — считаются только проходы через них.
+    """
     users = _user_names(con)
+    frag, pparams = _point_sql(point)
     seen = {r["user_ptr"] for r in con.execute(
         "SELECT DISTINCT user_ptr FROM events WHERE day BETWEEN ? AND ? AND event_type=? AND event_code=?"
-        " AND user_ptr>0", (from_day, to_day, PASS_TYPE, PASS_CODE))}
+        " AND user_ptr>0" + frag, [from_day, to_day, PASS_TYPE, PASS_CODE] + pparams)}
     d0 = dt.date.fromisoformat(from_day)
     d1 = dt.date.fromisoformat(to_day)
     days = (d1 - d0).days + 1
@@ -666,9 +695,9 @@ def analytics(con, from_day, to_day, group=None, point=None):
     sql = ("SELECT day, ts, unit, user_ptr FROM events WHERE day BETWEEN ? AND ?"
            " AND event_type=? AND event_code=? AND user_ptr>0")
     params = [from_day, to_day, PASS_TYPE, PASS_CODE]
-    if point:
-        sql += " AND unit LIKE ?"
-        params.append("%" + point + "%")
+    frag, pparams = _point_sql(point)
+    sql += frag
+    params += pparams
     hourly = [{"hour": h, "in": 0, "out": 0} for h in range(24)]
     heat = [[0] * 24 for _ in range(7)]
     for ev in con.execute(sql, params):
@@ -783,7 +812,7 @@ def events_summary(con, from_day, to_day):
 
 
 def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=False,
-                limit=200, offset=0, message=None, user_ptr=None):
+                limit=200, offset=0, message=None, user_ptr=None, point=None):
     """Страница журнала событий (новые сверху).
 
     `search` — ФИО, табельный номер или текст события (без учёта регистра);
@@ -802,6 +831,10 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
     if user_ptr:
         where.append("user_ptr = ?")
         params.append(int(user_ptr))
+    frag, pparams = _point_sql(point)
+    if frag:
+        where.append(frag[5:])          # убираем ведущее " AND "
+        params += pparams
     if search:
         clauses = ["instr_ru(message, ?)", "instr_ru(unit, ?)", "instr_ru(name, ?)"]
         sparams = [search, search, search]
@@ -850,10 +883,11 @@ def employees(con, group=None, include_visitors=False):
 
 
 def late_report(con, from_day, to_day, group=None, search=None,
-                shift_start=None, shift_end=None, user_ptr=None):
+                shift_start=None, shift_end=None, user_ptr=None, point=None):
     """Опоздания за период: по сотрудникам, с худшим днём."""
     rows = attendance(con, from_day, to_day, group=group, search=search,
-                      shift_start=shift_start, shift_end=shift_end, user_ptr=user_ptr)
+                      shift_start=shift_start, shift_end=shift_end, user_ptr=user_ptr,
+                      point=point)
     per = {}
     for r in rows:
         a = per.setdefault(r["user_ptr"], {
@@ -939,7 +973,7 @@ EVENTS_COLS_CSV = [
 
 
 def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
-               alarms_only=False, sep=";", enc="cp1251", user_ptr=None):
+               alarms_only=False, sep=";", enc="cp1251", user_ptr=None, point=None):
     """Весь журнал событий за период в CSV (потоком, без загрузки всех строк в память)."""
     where = ["day BETWEEN ? AND ?"]
     params = [from_day, to_day]
@@ -954,6 +988,10 @@ def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
     if user_ptr:
         where.append("user_ptr = ?")
         params.append(int(user_ptr))
+    frag, pparams = _point_sql(point)
+    if frag:
+        where.append(frag[5:])          # убираем ведущее " AND "
+        params += pparams
     if search:
         where.append("(instr_ru(message, ?) OR instr_ru(unit, ?) OR instr_ru(name, ?))")
         params += [search, search, search]

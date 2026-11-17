@@ -214,6 +214,28 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .combo-list .none{padding:8px 9px;color:var(--dim);font-size:12px}
 .combo-list .ch{position:sticky;top:0;z-index:2;background:#eef2f6;color:#3d4652;font-size:10.5px;
   font-weight:700;padding:3px 9px;border-bottom:1px solid var(--line);border-top:1px solid var(--line2)}
+
+/* мультивыбор контрольных точек */
+.msel{position:relative}
+.msel-btn{width:100%;display:flex;align-items:center;gap:6px;justify-content:space-between;
+  background:#fff;border:1px solid var(--line);border-radius:3px;padding:5px 8px;font:inherit;
+  color:var(--text);cursor:pointer;text-align:left}
+.msel-btn:hover{background:#eaf2fd;border-color:var(--accent)}
+.msel.on .msel-btn{border-color:var(--accent);background:#eef5ff;font-weight:600}
+.msel-btn .msel-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msel-btn i{font-style:normal;color:var(--dim);flex:0 0 auto}
+.msel-list{position:absolute;z-index:70;left:0;right:0;top:100%;margin-top:2px;max-height:300px;overflow:auto;
+  background:#fff;border:1px solid var(--line);border-radius:3px;display:none;
+  box-shadow:0 10px 26px -14px rgba(16,24,40,.45);min-width:260px}
+.msel-list.open{display:block}
+.msel-list .mi{display:flex;align-items:center;gap:7px;padding:5px 9px;font-size:12.5px;cursor:pointer;
+  border-bottom:1px solid var(--line2)}
+.msel-list .mi:hover{background:#eaf2fd}
+.msel-list .mi input{width:auto;margin:0}
+.msel-list .mi .g{color:var(--dim);font-size:11px}
+.msel-list .mi.all{font-weight:600;color:var(--accent)}
+.msel-list .mi.all.sel{background:#eaf2fd}
+.msel-list .mi.cur{background:#f3f8ff}
 </style>
 </head>
 <body>
@@ -291,7 +313,11 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
           <div><label class="f">С даты</label><input type="date" id="aFrom"></div>
           <div><label class="f">По дату</label><input type="date" id="aTo"></div>
           <div><label class="f">Подразделение</label><select id="aGroup"><option value="">все</option></select></div>
-          <div><label class="f">Контрольная точка</label><select id="aPoint"><option value="">все точки</option></select></div>
+          <div><label class="f">Контрольные точки</label>
+            <div class="msel" id="aPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
+              <div class="msel-list"></div>
+            </div></div>
         </div>
         <div class="row-actions"><button class="primary" id="aGo">Построить графики</button>
           <button id="aPrint">🖨 Печать</button></div>
@@ -389,7 +415,11 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
           <div><label class="f">С даты</label><input type="date" id="rFrom"></div>
           <div><label class="f">По дату</label><input type="date" id="rTo"></div>
           <div><label class="f">Подразделение</label><select id="rGroup"><option value="">все</option></select></div>
-          <div><label class="f">Контрольная точка</label><select id="rPoint"><option value="">все точки</option></select></div>
+          <div><label class="f">Контрольные точки</label>
+            <div class="msel" id="rPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
+              <div class="msel-list"></div>
+            </div></div>
           <div><label class="f">Поиск (ФИО, номер)</label><input type="text" id="rSearch" placeholder="начните вводить…"></div>
           <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="rEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="rEmpList"></div></div></div>
           <div><label class="f">Вид</label><select id="rView">
@@ -430,7 +460,11 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
           <div><label class="f">С даты</label><input type="date" id="pFrom"></div>
           <div><label class="f">По дату</label><input type="date" id="pTo"></div>
           <div><label class="f">Подразделение</label><select id="pGroup"><option value="">все</option></select></div>
-          <div><label class="f">Контрольная точка</label><select id="pPoint"><option value="">все точки</option></select></div>
+          <div><label class="f">Контрольные точки</label>
+            <div class="msel" id="pPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
+              <div class="msel-list"></div>
+            </div></div>
           <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="pEmpList"></div></div></div>
         </div>
         <div class="row-actions">
@@ -458,7 +492,11 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
             <div><label class="f">С даты</label><input type="date" id="eFrom"></div>
             <div><label class="f">По дату</label><input type="date" id="eTo"></div>
             <div><label class="f">Подразделение</label><select id="eGroup"><option value="">все</option></select></div>
-            <div><label class="f">Точка</label><select id="ePoint"><option value="">все точки</option></select></div>
+            <div><label class="f">Контрольные точки</label>
+            <div class="msel" id="ePoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i>▾</i></button>
+              <div class="msel-list"></div>
+            </div></div>
             <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="eEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="eEmpList"></div></div></div>
             <div><label class="f">Вид</label><select id="eView">
               <option value="detail">По дням (табель)</option>
@@ -811,7 +849,7 @@ async function loadAnalytics(){
   const p=new URLSearchParams();
   p.set('from',$('#aFrom').value||shiftISO(6)); p.set('to',$('#aTo').value||todayISO());
   if($('#aGroup').value)p.set('group',$('#aGroup').value);
-  if($('#aPoint').value)p.set('point',$('#aPoint').value);
+  mselAdd(p, '#aPoint');
   try{
     const d=await api('/api/analytics?'+p.toString());
     const totPasses=d.by_day.reduce((a,x)=>a+x.passes,0), pt=d.prev_totals||{};
@@ -894,6 +932,62 @@ function buildCombo(inputSel, listSel){
   inp.addEventListener('blur', ()=>setTimeout(()=>list.classList.remove('open'),160));
 }
 
+
+/* ---------- мультивыбор контрольных точек ---------- */
+const MSEL={};
+let POINTS=[];
+
+function mselValues(sel){ return MSEL[sel] ? Array.from(MSEL[sel]) : []; }
+function mselClearAll(){ Object.keys(MSEL).forEach(k=>{ MSEL[k].clear(); mselUpdate(k); }); }
+
+function mselUpdate(sel){
+  const root=$(sel); if(!root) return;
+  const set=MSEL[sel]||new Set();
+  const txt=root.querySelector('.msel-txt');
+  const n=set.size;
+  txt.textContent = n===0 ? (root.dataset.ph||'все точки')
+                  : n===1 ? Array.from(set)[0]
+                  : 'выбрано точек: '+n;
+  root.classList.toggle('on', n>0);
+  root.querySelectorAll('.msel-list input[type=checkbox]').forEach(cb=>{ cb.checked=set.has(cb.value); });
+  const all=root.querySelector('.msel-list .mi.all');
+  if(all) all.classList.toggle('sel', n===0);
+}
+
+function buildMsel(sel, items){
+  const root=$(sel);
+  if(!root || root.dataset.msel==='1') return;
+  root.dataset.msel='1';
+  MSEL[sel]=new Set();
+  const list=root.querySelector('.msel-list');
+  list.innerHTML='<div class="mi all">все точки (без фильтра)</div>'
+    + items.map(it=>'<label class="mi"><input type="checkbox" value="'+esc(it.unit)+'">'
+        + '<span>'+esc(it.unit)+'</span> <span class="g">('+NUM(it.count)+')</span></label>').join('');
+  root.querySelector('.msel-btn').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    document.querySelectorAll('.msel-list.open').forEach(x=>{ if(x!==list) x.classList.remove('open'); });
+    list.classList.toggle('open');
+  });
+  list.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    if(e.target.closest('.mi.all')){ MSEL[sel].clear(); mselUpdate(sel); }
+  });
+  list.addEventListener('change',(e)=>{
+    const cb=e.target;
+    if(cb.type!=='checkbox') return;
+    if(cb.checked) MSEL[sel].add(cb.value); else MSEL[sel].delete(cb.value);
+    mselUpdate(sel);
+  });
+  mselUpdate(sel);
+}
+document.addEventListener('click',()=>{ document.querySelectorAll('.msel-list.open').forEach(x=>x.classList.remove('open')); });
+
+function mselAdd(p, sel){
+  const v=mselValues(sel);
+  if(v.length) p.set('points', v.join('|'));
+  return p;
+}
+
 /* комбобоксы сотрудников можно открыть ещё до загрузки справочника */
 buildCombo('#rEmp','#rEmpList');
 buildCombo('#eEmp','#eEmpList');
@@ -923,7 +1017,7 @@ function rptQS(){
   p.set('from',$('#pFrom').value||shiftISO(6));
   p.set('to',$('#pTo').value||todayISO());
   if($('#pGroup').value)p.set('group',$('#pGroup').value);
-  if($('#pPoint').value)p.set('point',$('#pPoint').value);
+  mselAdd(p, '#pPoint');
   const pe=empUid('#pEmp'); if(pe)p.set('user_ptr',pe);
   return p;
 }
@@ -1097,7 +1191,7 @@ function reportQS(prefix){
   const p=new URLSearchParams();
   p.set('from',g(prefix+'From')); p.set('to',g(prefix+'To'));
   if(g(prefix+'Group'))p.set('group',g(prefix+'Group'));
-  if(g(prefix+'Point'))p.set('point',g(prefix+'Point'));
+  mselAdd(p, prefix+'Point');
   if(g(prefix+'ShiftS'))p.set('shift_start',g(prefix+'ShiftS'));
   if(g(prefix+'ShiftE'))p.set('shift_end',g(prefix+'ShiftE'));
   const emp=empUid(prefix+'Emp'); if(emp)p.set('user_ptr',emp);
@@ -1335,7 +1429,8 @@ async function loadRefs(){
       const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
       ['#rGroup','#eGroup','#aGroup','#pGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
-      ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
+      POINTS=pts;
+      ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>buildMsel(s, POINTS));
       okGroups=true;
     }
   }catch(e){ /* повторим позже */ }
