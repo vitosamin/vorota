@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:40 (Europe/Kaliningrad)
-> main · последний коммит: 669ec38 «2.2: статус шапки, 2FA в вебе»
-> Версия 2.2 (`versionCode 13`), пакет `ru.smartsystem39.gates`
+> Обновлено: 2026-11-17 14:48 (Europe/Kaliningrad)
+> main · последний коммит: 4d66133 «2.3: статус СКУД в шапке»
+> Версия 2.3 (`versionCode 14`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
