@@ -347,6 +347,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self.serve_static("index.html")
             if path.startswith("/static/"):
                 return self.serve_static(path[len("/static/"):])
+            if path == "/api/passes":
+                return self.api_passes(q)
+            if path == "/api/gate/find":
+                return self.api_gate_find(q)
+            if path == "/api/passes/check":
+                return self.api_pass_check(q)
+            if path == "/api/doors":
+                return self.send_json(gate.doors_list(gate.connect()))
+            if path == "/print/pass":
+                return self.print_pass(q)
             if path == "/api/me":
                 return self.api_me()
             if path == "/api/accounts":
@@ -603,6 +613,100 @@ class Handler(BaseHTTPRequestHandler):
                                filename="События_СКУД_%s_%s.csv" % (frm, to),
                                ascii_name="events_%s_%s.csv" % (frm, to))
 
+    def api_passes(self, q):
+        con = gate.connect()
+        items = gate.passes_list(con, from_day=q.get("from"), to_day=q.get("to"),
+                                 state=q.get("state"), search=q.get("search"))
+        try:
+            idx = gate.gate_index(con)
+            for it in items:
+                it["gate"] = gate.pass_gate_status(con, it, idx)
+        except Exception:                        # noqa: BLE001
+            for it in items:
+                it["gate"] = None
+        info = {"mtime": gate.meta_get(con, "config_mtime", ""),
+                "users": int(gate.meta_get(con, "config_users", "0") or 0),
+                "synced": gate.meta_get(con, "config_synced", "")}
+        con.close()
+        counts = {}
+        for it in items:
+            counts[it["state"]] = counts.get(it["state"], 0) + 1
+        return self.send_json({"count": len(items), "items": items, "counts": counts,
+                               "gate_info": info})
+
+    def api_gate_find(self, q):
+        con = gate.connect()
+        data = gate.find_cards(con, (q.get("q") or "").strip())
+        con.close()
+        return self.send_json(data)
+
+    def api_pass_check(self, q):
+        try:
+            pid = int(q.get("id", "0"))
+        except ValueError:
+            pid = 0
+        con = gate.connect()
+        p = gate.pass_get(con, pid)
+        data = gate.pass_gate_status(con, p) if p else None
+        con.close()
+        if not p:
+            return self.send_json({"error": "пропуск не найден"}, code=404)
+        return self.send_json({"ok": True, "gate": data, "pass": p})
+
+    def passes_post(self, path, body):
+        need = ("admin",) if path == "/api/passes/delete" else ("admin", "operator")
+        user = self.require_role(*need)
+        if not user:
+            return
+        try:
+            payload = json.loads(body or b"{}")
+        except ValueError:
+            payload = {}
+        con = gate.connect()
+        try:
+            if path == "/api/passes/add":
+                p = gate.pass_create(con, payload, created_by=user)
+                return self.send_json({"ok": True, "pass": p})
+            if path == "/api/passes/revoke":
+                p = gate.pass_revoke(con, payload.get("id"))
+                return self.send_json({"ok": True, "pass": p})
+            if path == "/api/passes/delete":
+                gate.pass_delete(con, payload.get("id"))
+                return self.send_json({"ok": True})
+            return self.send_json({"error": "not found"}, code=404)
+        except (ValueError, TypeError) as exc:
+            return self.send_json({"ok": False, "error": str(exc)}, code=400)
+        finally:
+            con.close()
+
+    def print_pass(self, q):
+        try:
+            pid = int(q.get("id", "0"))
+        except ValueError:
+            pid = 0
+        con = gate.connect()
+        p = gate.pass_get(con, pid)
+        con.close()
+        if not p:
+            return self.send_bytes(b"pass not found", "text/plain; charset=utf-8", code=404)
+
+        def esc(v):
+            return (str(v if v is not None else "")
+                    .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+        doors = ", ".join(p.get("doors") or []) or "—"
+        html = PASS_TEMPLATE.format(
+            number=esc(p["number"]), visitor=esc(p["visitor"]), org=esc(p.get("org") or "—"),
+            position=esc(p.get("position") or "—"), schedule=esc(p.get("schedule_text") or "—"),
+            card=esc(p.get("card") or "—"),
+            document=esc(p.get("document") or "—"), phone=esc(p.get("phone") or "—"),
+            host=esc(p.get("host") or "—"), purpose=esc(p.get("purpose") or "—"),
+            visit=esc(p.get("visit_date") or ""), valid_to=esc(p.get("valid_to") or ""),
+            doors=esc(doors), state=esc(p["state_title"]), note=esc(p.get("note") or ""),
+            created=esc((p.get("created_at") or "")[:16].replace("T", " ")),
+            author=esc(p.get("created_by") or ""),
+            stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
     def api_me(self):
         user = self.current_user()
         if not user:
@@ -621,11 +725,14 @@ class Handler(BaseHTTPRequestHandler):
                                "roles": [{"id": r, "title": accounts.ROLE_TITLES[r]} for r in accounts.ROLES]})
 
     def require_admin(self):
+        return self.require_role("admin")
+
+    def require_role(self, *roles):
         user = self.current_user()
         if not user:
             self.send_json({"error": "нужно войти"}, code=401)
             return None
-        if accounts.role_of(user) != "admin":
+        if accounts.role_of(user) not in roles:
             self.send_json({"error": "недостаточно прав"}, code=403)
             return None
         return user
@@ -921,6 +1028,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(do_sync(days=payload.get("days")))
         if path.startswith("/api/accounts") or path.startswith("/api/settings"):
             return self.admin_post(path, body)
+        if path.startswith("/api/passes"):
+            return self.passes_post(path, body)
         return self.send_bytes(b"not found", "text/plain; charset=utf-8", code=404)
 
 
@@ -972,6 +1081,10 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
     gate.init_db()
+    try:
+        gate.sync_config()                       # картотека считывается при старте
+    except Exception as exc:                     # noqa: BLE001
+        print("картотека Gate не загружена:", exc, flush=True)
     if accounts.ensure_admin(AUTH):
         print("создан администратор из gate.config.json → auth", flush=True)
     threading.Thread(target=sync_worker, daemon=True).start()
@@ -983,5 +1096,56 @@ def main():
         pass
 
 
+PASS_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<title>Пропуск {number}</title>
+<style>
+ @page{{size:A6 landscape;margin:8mm}}
+ body{{font:12px/1.4 "Segoe UI",Arial,sans-serif;color:#111;margin:0}}
+ .toolbar{{position:fixed;top:8px;right:10px}}
+ .toolbar button{{font:13px "Segoe UI",Arial;padding:6px 14px;border:1px solid #2f6fd0;border-radius:3px;
+   background:#2f6fd0;color:#fff;cursor:pointer}}
+ @media print{{.toolbar{{display:none}}}}
+ .card{{border:2px solid #2f6fd0;border-radius:6px;padding:10px 14px;max-width:520px}}
+ .head{{display:flex;justify-content:space-between;align-items:flex-start;
+   border-bottom:1px solid #cfd8e3;padding-bottom:6px;margin-bottom:8px}}
+ .head .t{{font-size:11px;color:#555;letter-spacing:.6px;text-transform:uppercase}}
+ .head .n{{font-size:15px;font-weight:700}}
+ .who{{font-size:17px;font-weight:700;margin:2px 0 2px}}
+ .org{{color:#444;margin-bottom:8px}}
+ table{{width:100%;border-collapse:collapse;font-size:11px}}
+ td{{padding:2px 0;vertical-align:top}}
+ td.k{{color:#667;width:96px;white-space:nowrap}}
+ .doors{{margin-top:6px;padding:5px 8px;background:#eef5ff;border:1px solid #cfe0f7;border-radius:3px;font-size:11px}}
+ .foot{{margin-top:8px;border-top:1px dashed #cfd8e3;padding-top:6px;font-size:10px;color:#666;
+   display:flex;justify-content:space-between}}
+ .state{{font-size:10px;color:#2f6fd0;border:1px solid #cfe0f7;background:#eef5ff;border-radius:3px;padding:1px 6px}}
+ .mono{{font-family:ui-monospace,Consolas,monospace}}
+</style></head><body>
+<div class="toolbar"><button onclick="window.print()">Печать</button></div>
+<div class="card">
+  <div class="head">
+    <div><div class="t">СКУД Gate · пропуск</div><div class="n">№ {number}</div></div>
+    <div class="state">{state}</div>
+  </div>
+  <div class="who">{visitor}</div>
+  <div class="org">{position} · {org}</div>
+  <table>
+    <tr><td class="k">Дата приёма</td><td><b>{visit}</b></td></tr>
+    <tr><td class="k">Действует до</td><td><b>{valid_to}</b></td></tr>
+    <tr><td class="k">График</td><td>{schedule}</td></tr>
+    <tr><td class="k">Карта</td><td class="mono">{card}</td></tr>
+    <tr><td class="k">К кому</td><td>{host}</td></tr>
+    <tr><td class="k">Цель</td><td>{purpose}</td></tr>
+    <tr><td class="k">Документ</td><td>{document}</td></tr>
+    <tr><td class="k">Телефон</td><td>{phone}</td></tr>
+  </table>
+  <div class="doors"><b>Двери:</b> {doors}</div>
+  <div class="foot"><span>Выдал: {author} · {created}</span><span>Подпись ________</span></div>
+</div>
+<script>window.addEventListener('load',function(){{setTimeout(function(){{window.print();}},350);}});</script>
+</body></html>"""
+
+
 if __name__ == "__main__":
     main()
+

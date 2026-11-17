@@ -250,6 +250,28 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 @media(max-width:1250px){.filters.f5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:880px){.filters.f5{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.filters.f5{grid-template-columns:1fr}}
+
+.cardcap{display:flex;gap:6px}
+.cardcap input{flex:1 1 0;min-width:0}
+.cardcap button{flex:0 0 auto;min-height:32px;padding:0 10px;font-size:15px;line-height:1}
+.cardcap.waiting input{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,208,.16);background:#eef5ff}
+.cardcap.ok input{border-color:#2e9e5b;background:#f0faf3}
+
+.sched{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sched .wdbtn{min-height:32px;padding:0 11px;font-size:12.5px;background:#fff;color:var(--text)}
+.sched .wdbtn:hover{background:#eaf2fd}
+.sched .wdbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.sched .tm{width:104px;flex:0 0 auto}
+.sched .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.sched .dash{color:var(--dim)}
+
+.gateBtn{background:transparent;border:none;padding:0;min-height:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.gateBtn:hover{background:transparent;border-color:transparent}
+.prog{display:inline-block;width:64px;height:6px;background:#e3e8ee;border-radius:3px;overflow:hidden;vertical-align:middle}
+.prog i{display:block;height:100%;background:#2e9e5b;transition:width .3s}
+.prog.part i{background:#d99000}
+.prog.none i{background:#d9534f}
+tbody tr.pick td{background:#eef5ff}
 </style>
 </head>
 <body>
@@ -274,6 +296,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     <button data-tab="mon" class="active">Мониторинг</button>
     <button data-tab="ana">Аналитика</button>
     <button data-tab="rep">Посещаемость</button>
+    <button data-tab="pas">Пропуска</button>
     <button data-tab="rpt">Отчёты</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
@@ -466,6 +489,82 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     </div>
   </section>
 
+
+
+  <!-- ================= ПРОПУСКА ================= -->
+  <section class="tab" id="tab-pas">
+    <div class="card" id="passFormCard" style="margin-bottom:12px">
+      <div class="hd"><h3>Новый человек с пропуском</h3><span class="hint">посетитель или сотрудник — на выбранные двери</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f" id="passVisitorLbl">ФИО</label><input id="passVisitor" autocomplete="off" placeholder="Иванов Иван Иванович"></div>
+          <div style="grid-column:1/-1;margin:-4px 0 2px">
+            <label class="chk"><input type="checkbox" id="passByCard"> выдать по номеру карты — ФИО можно не заполнять</label>
+          </div>
+          <div><label class="f">Должность</label><input id="passPos" autocomplete="off" placeholder="водитель, менеджер…"></div>
+          <div><label class="f">Организация</label><input id="passOrg" autocomplete="off" placeholder="ООО Ромашка"></div>
+          <div><label class="f">Документ</label><input id="passDoc" autocomplete="off" placeholder="паспорт 40 15 123456"></div>
+          <div><label class="f">Телефон</label><input id="passPhone" autocomplete="off" placeholder="+7 …"></div>
+          <div><label class="f">К кому</label><input id="passHost" autocomplete="off" placeholder="отдел, сотрудник"></div>
+          <div><label class="f">Цель визита</label><input id="passPurpose" autocomplete="off" placeholder="доставка, ремонт, встреча"></div>
+          <div><label class="f">Дата приёма</label><input type="date" id="passVisit"></div>
+          <div><label class="f">Действует до</label><input type="date" id="passTo"></div>
+          <div><label class="f">Карта</label>
+            <div class="cardcap">
+              <input id="passCard" autocomplete="off" placeholder="приложите карту">
+              <button type="button" id="passCardRead" title="Считать с USB-считывателя">⌁</button>
+            </div></div>
+          <div style="grid-column:1/-1"><label class="f">График доступа</label>
+            <div class="sched">
+              <button type="button" class="wdbtn" data-d="0">Пн</button>
+              <button type="button" class="wdbtn" data-d="1">Вт</button>
+              <button type="button" class="wdbtn" data-d="2">Ср</button>
+              <button type="button" class="wdbtn" data-d="3">Чт</button>
+              <button type="button" class="wdbtn" data-d="4">Пт</button>
+              <button type="button" class="wdbtn" data-d="5">Сб</button>
+              <button type="button" class="wdbtn" data-d="6">Вс</button>
+              <span class="sep"></span>
+              <input type="time" class="tm" id="passTimeFrom" value="08:00">
+              <span class="dash">—</span>
+              <input type="time" class="tm" id="passTimeTo" value="20:00">
+              <label class="chk" style="margin-left:8px"><input type="checkbox" id="passAllDays"> круглосуточно</label>
+            </div>
+          </div>
+          <div><label class="f">Двери</label>
+            <div class="msel" id="passDoors" data-ph="все двери">
+              <button type="button" class="msel-btn"><span class="msel-txt">все двери</span><i>▾</i></button>
+              <div class="msel-list"></div>
+            </div></div>
+          <div><label class="f">Примечание</label><input id="passNote" autocomplete="off" placeholder="необязательно"></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="passAdd">Выдать пропуск</button>
+          <span class="muted" id="passHint" style="font-size:12px;align-self:center">считыватель карт работает как клавиатура — приложите карту в поле «Карта»</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd"><h3>Выданные пропуска</h3><span class="hint" id="passCount">—</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Действуют на дату</label><input type="date" id="passFltFrom"></div>
+          <div><label class="f">Поиск (ФИО, организация, номер)</label><input id="passSearch" autocomplete="off"></div>
+          <div><label class="f">Статус</label><select id="passState">
+            <option value="">все</option>
+            <option value="active">Действует</option>
+            <option value="upcoming">Ещё не действует</option>
+            <option value="expired">Истёк</option>
+            <option value="revoked">Отозван</option>
+          </select></div>
+        </div>
+        <div class="row-actions"><button class="primary" id="passFilter">Показать</button>
+          <button id="gateFind">🔍 Найти карту в Gate</button>
+          <span class="muted" id="passGateInfo" style="font-size:12px;align-self:center"></span></div>
+        <div class="tblwrap" id="passList" style="margin-top:12px"><div class="empty">Загрузка…</div></div>
+      </div>
+    </div>
+  </section>
 
   <!-- ================= ОТЧЁТЫ ================= -->
   <section class="tab" id="tab-rpt">
@@ -831,6 +930,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     if(state.tab==='ana') loadAnalytics();
     if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
     if(state.tab==='set'){ ROLES_CACHE=[]; loadAccounts(); }
+    if(state.tab==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
   };
 });
 
@@ -1508,8 +1608,291 @@ window.addEventListener('focus', checkVersion);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkVersion(); });
 
 
+
+/* ---------- пропуска ---------- */
+let PASS_DAYS = new Set([0,1,2,3,4,5,6]);
+let DOORS = [];
+
+function passDaysRender(){
+  document.querySelectorAll('.sched .wdbtn').forEach(b=>{
+    b.classList.toggle('on', PASS_DAYS.has(+b.dataset.d));
+    b.onclick=()=>{
+      const d=+b.dataset.d;
+      if(PASS_DAYS.has(d)) PASS_DAYS.delete(d); else PASS_DAYS.add(d);
+      passDaysRender();
+    };
+  });
+}
+
+function passSchedule(){
+  const all=$('#passAllDays').checked;
+  const from=$('#passTimeFrom').value, to=$('#passTimeTo').value;
+  const days=Array.from(PASS_DAYS).sort((a,b)=>a-b);
+  return {days: all ? [0,1,2,3,4,5,6] : days,
+          from: all ? '' : from,
+          to:   all ? '' : to};
+}
+
+function normCard(v){
+  return (v||'').replace(/[\s\-]/g,'').toUpperCase();
+}
+
+function setupCardReader(){
+  const inp=$('#passCard'), wrap=inp ? inp.parentElement : null;
+  const btn=$('#passCardRead');
+  if(!inp) return;
+  inp.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      inp.value=normCard(inp.value);
+      if(inp.value){ wrap.classList.add('ok'); toast('Карта считана: '+inp.value); }
+    }
+  });
+  inp.addEventListener('input', ()=>{ wrap.classList.remove('ok'); });
+  if(btn) btn.onclick=()=>{
+    inp.value=''; inp.focus();
+    wrap.classList.remove('ok'); wrap.classList.add('waiting');
+    setTimeout(()=>wrap.classList.remove('waiting'), 6000);
+    toast('Приложите карту к считывателю');
+  };
+}
+
+async function loadDoors(){
+  try{
+    DOORS = await api('/api/doors');
+    buildMsel('#passDoors', DOORS.map(d=>({unit:d.name})));
+  }catch(e){ DOORS=[]; }
+}
+
+async function loadPasses(){
+  const p=new URLSearchParams();
+  if($('#passFltFrom').value) p.set('from',$('#passFltFrom').value);
+  const s=$('#passSearch').value.trim(); if(s) p.set('search',s);
+  if($('#passState').value) p.set('state',$('#passState').value);
+  try{
+    const d=await api('/api/passes?'+p.toString());
+    renderPasses(d.items||[]);
+    const gi=d.gate_info||{};
+    const el=$('#passGateInfo');
+    if(el){
+      const mt=(gi.mtime||'').replace(/^\w{3} /,'');
+      el.textContent = mt ? 'картотека Gate: '+mt+' · '+gi.users+' чел.' : '';
+      el.title = 'если после добавления ключа время не изменилось — Gate не сохранил';
+    }
+    const c=d.counts||{};
+    $('#passCount').textContent = (d.count||0)+' шт. · действует '+(c.active||0)
+      +', истекло '+(c.expired||0)+', отозвано '+(c.revoked||0);
+  }catch(e){ $('#passList').innerHTML='<div class="empty">'+esc(e.message)+'</div>'; }
+}
+
+function passBadge(it){
+  const map={active:'in', expired:'na', upcoming:'live', revoked:'out'};
+  return '<span class="badge '+(map[it.state]||'na')+'">'+esc(it.state_title)+'</span>';
+}
+
+function renderPasses(items){
+  const wrap=$('#passList');
+  if(!items.length){ wrap.innerHTML='<div class="empty">Пропусков нет</div>'; return; }
+  wrap.innerHTML='<table><thead><tr><th>Номер</th><th>Посетитель</th><th>Приём</th><th>Действует до</th>'
+    +'<th>График</th><th>Двери</th><th>Готовность в Gate</th><th>Статус</th><th>Действия</th></tr></thead><tbody>'
+    + items.map(it=>{
+      const who='<div class="nm">'+esc(it.visitor)+'</div>'
+        + '<div class="pos">'+[it.position, it.org].filter(Boolean).map(esc).join(' · ')+'</div>';
+      const card=it.card?'<div class="pos mono">карта '+esc(it.card)+'</div>':'';
+      const doors=(it.doors||[]).length?esc(it.doors.join(', ')):'<span class="dim">все</span>';
+      return '<tr>'
+        +'<td class="mono">'+esc(it.number)+'</td>'
+        +'<td>'+who+card+'</td>'
+        +'<td class="mono">'+esc(it.visit_date||'')+'</td>'
+        +'<td class="mono">'+esc(it.valid_to||'')+'</td>'
+        +'<td class="tag">'+esc(it.schedule_text||'—')+'</td>'
+        +'<td class="tag">'+doors+'</td>'
+        +'<td>'+gateCell(it)+'</td>'
+        +'<td>'+passBadge(it)+(canOperate()&&it.state==='active'&&!it.in_schedule?' <span class="badge late" title="сейчас вне графика">вне графика</span>':'')+'</td>'
+        +'<td><button class="gateBtn" data-id="'+it.id+'" style="min-height:26px;padding:2px 8px;font-size:12px;border:1px solid var(--line)">Проверить</button> '
+        +'<a class="btn" style="min-height:26px;padding:2px 8px;font-size:12px" href="/print/pass?id='+it.id+'" target="_blank">Печать</a> '
+        +(canOperate()?'<button class="passRev" data-id="'+it.id+'" style="min-height:26px;padding:2px 8px;font-size:12px">Отозвать</button> ':'')
+        +(isAdmin()?'<button class="passDel" data-id="'+it.id+'" style="min-height:26px;padding:2px 8px;font-size:12px">Удалить</button>':'')
+        +'</td></tr>';
+    }).join('')+'</tbody></table>';
+
+  wrap.querySelectorAll('.passRev').forEach(b=>b.onclick=async()=>{
+    try{ await postJSON('/api/passes/revoke',{id:+b.dataset.id}); toast('Пропуск отозван'); loadPasses(); }
+    catch(e){ toast('Не удалось: '+e.message,true); }
+  });
+  wrap.querySelectorAll('.passDel').forEach(b=>b.onclick=async()=>{
+    if(!confirm('Удалить пропуск?')) return;
+    try{ await postJSON('/api/passes/delete',{id:+b.dataset.id}); toast('Пропуск удалён'); loadPasses(); }
+    catch(e){ toast('Не удалось: '+e.message,true); }
+  });
+}
+
+$('#passByCard').onchange=()=>{
+  const on=$('#passByCard').checked;
+  $('#passVisitorLbl').textContent = on ? 'ФИО (необязательно)' : 'ФИО';
+  $('#passVisitor').placeholder = on ? 'можно не заполнять' : 'Иванов Иван Иванович';
+  $('#passCard').placeholder = on ? 'номер карты — обязателен' : 'приложите карту';
+};
+
+$('#passFilter').onclick=loadPasses;
+$('#passAdd').onclick=async()=>{
+  const payload={
+    visitor:$('#passVisitor').value.trim(),
+    position:$('#passPos').value.trim(),
+    org:$('#passOrg').value.trim(),
+    document:$('#passDoc').value.trim(),
+    phone:$('#passPhone').value.trim(),
+    host:$('#passHost').value.trim(),
+    purpose:$('#passPurpose').value.trim(),
+    card:normCard($('#passCard').value),
+    visit_date:$('#passVisit').value,
+    valid_to:$('#passTo').value || $('#passVisit').value,
+    doors:mselValues('#passDoors'),
+    schedule:passSchedule(),
+    note:$('#passNote').value.trim()
+  };
+  if(!payload.visitor && !payload.card){ toast('Укажите ФИО или номер карты', true); return; }
+  try{
+    const d=await postJSON('/api/passes/add', payload);
+    toast('Выдан пропуск '+d.pass.number+(d.pass.warning?' — '+d.pass.warning:''), !!d.pass.warning);
+    ['#passVisitor','#passPos','#passOrg','#passDoc','#passPhone','#passHost','#passPurpose','#passCard','#passNote']
+      .forEach(x=>$(x).value='');
+    MSEL['#passDoors'] && MSEL['#passDoors'].clear() && mselUpdate('#passDoors');
+    loadPasses();
+    window.open('/print/pass?id='+d.pass.id,'_blank');
+  }catch(e){ toast('Не удалось: '+e.message, true); }
+};
+
+
+
+/* ---------- поиск карты в картотеке Gate ---------- */
+async function openGateFind(){
+  $('#modal').classList.add('open');
+  $('#mTitle').textContent='Поиск карты в Gate';
+  $('#mSub').textContent='что реально лежит в картотеке СКУД';
+  $('#mBody').innerHTML =
+    '<div class="filters" style="margin-bottom:10px">'
+    +'<div><label class="f">Номер карты — целиком или часть</label>'
+    +'<input id="gfQuery" autocomplete="off" placeholder="39939, 104/18643, 0000006848D3"></div>'
+    +'<div><label class="f">&nbsp;</label><button class="primary" id="gfGo">Найти</button></div></div>'
+    +'<div id="gfOut"></div>';
+  $('#gfGo').onclick=()=>runGateFind();
+  $('#gfQuery').onkeydown=(e)=>{ if(e.key==='Enter'){ e.preventDefault(); runGateFind(); } };
+  $('#gfQuery').focus();
+  runGateFind('');
+}
+
+async function runGateFind(){
+  const q=$('#gfQuery') ? $('#gfQuery').value.trim() : '';
+  const out=$('#gfOut');
+  out.innerHTML='<div class="empty"><span class="spin"></span> Ищу…</div>';
+  try{
+    const d=await api('/api/gate/find?q='+encodeURIComponent(q));
+    let html='';
+    if(q){
+      if(!d.count){
+        html+='<div class="notice" style="margin:0 0 10px"><span>⚠️</span><div>'
+          +'<b>Карты «'+esc(q)+'» в картотеке Gate нет.</b><br>'
+          +'Значит ключ в СКУД не заведён — двери его не знают. Добавьте в GateTerm → Пользователи '
+          +'и нажмите «Обновить из Gate».</div></div>';
+      }else{
+        html+='<div class="chips"><span class="chip">найдено: <b>'+d.count+'</b></span></div>';
+      }
+      if(d.items.length){
+        html+='<div class="tblwrap" style="max-height:260px"><table><thead><tr>'
+          +'<th>Сотрудник</th><th>Карта (Number)</th><th>Код (NumberU)</th><th class="num">Дверей</th>'
+          +'</tr></thead><tbody>'
+          + d.items.map(x=>'<tr><td>'+esc(x.fio)+(x.deleted?' <span class="badge out">удалён</span>':'')+'</td>'
+            +'<td class="mono">'+esc(x.number||'—')+'</td>'
+            +'<td class="mono tag">'+esc(x.number_u||'—')+'</td>'
+            +'<td class="num mono">'+x.doors.length+'</td></tr>').join('')
+          +'</tbody></table></div>';
+      }
+    }
+    if(d.recent && d.recent.length){
+      html+='<h4 class="sec" style="margin:12px 0 6px">Последние, кого добавляли в Gate</h4>'
+        +'<div class="tblwrap" style="max-height:220px"><table><thead><tr><th>Сотрудник</th><th>Карта</th><th>Код</th></tr></thead><tbody>'
+        + d.recent.map(x=>'<tr><td>'+esc(x.fio||'—')+'</td><td class="mono">'+esc(x.number||'—')+'</td>'
+          +'<td class="mono tag">'+esc(x.number_u||'—')+'</td></tr>').join('')
+        +'</tbody></table></div>';
+    }
+    out.innerHTML=html;
+  }catch(e){ out.innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+$('#gateFind').onclick=openGateFind;
+
+/* ---------- готовность ключа в Gate ---------- */
+function gateCell(it){
+  const g=it.gate;
+  const js=it.gate_state||'';
+  if(js==='sent') return '<button class="gateBtn" data-id="'+it.id+'" title="отправлено, агент обработает в течение 2 минут"><span class="badge live">отправлен в Gate…</span></button>';
+  if(js==='error'||js==='queue_error') return '<button class="gateBtn" data-id="'+it.id+'" title="'+esc(it.gate_error||'')+'"><span class="badge out">ошибка записи</span></button>';
+  if(!g) return '<span class="dim">—</span>';
+  if(!g.in_gate){
+    return '<button class="gateBtn none" data-id="'+it.id+'" title="'+esc(g.note||'')+'">'
+      + '<span class="badge out">нет в Gate</span></button>';
+  }
+  if(!g.total){
+    return '<button class="gateBtn" data-id="'+it.id+'" title="в пропуске не выбраны двери">'
+      + '<span class="badge na">двери не выбраны</span></button>';
+  }
+  const pct = Math.round(g.ok_count/g.total*100);
+  const cls = g.ok_count===g.total ? '' : (g.ok_count ? 'part' : 'none');
+  return '<button class="gateBtn" data-id="'+it.id+'" title="нажмите, чтобы увидеть по дверям">'
+    + '<span class="prog '+cls+'"><i style="width:'+pct+'%"></i></span> '
+    + '<span class="tag mono">'+g.ok_count+'/'+g.total+'</span></button>';
+}
+
+async function refreshGate(){
+  toast('Обновляю картотеку Gate…');
+  try{ await api('/api/sync?days=0'); }catch(e){ /* не критично */ }
+  closePerson(); await loadPasses(); toast('Готово');
+}
+
+async function showPassGate(id){
+  $('#modal').classList.add('open');
+  $('#mTitle').textContent='Готовность ключа';
+  $('#mSub').textContent='';
+  $('#mBody').innerHTML='<div class="empty"><span class="spin"></span> Проверяю…</div>';
+  try{
+    const d=await api('/api/passes/check?id='+id);
+    const g=d.gate||{}, p=d.pass||{};
+    $('#mTitle').textContent='Пропуск '+(p.number||'');
+    $('#mSub').textContent=(p.visitor||'')+(p.card?' · карта '+p.card:'');
+    let head='';
+    const js=p.gate_state||'';
+    if(js==='sent') head+='<div class="notice" style="margin:0 0 10px"><span>⏳</span><div>Задание отправлено, агент на сервере Gate обработает его в течение 2 минут.</div></div>';
+    if(js==='error'||js==='queue_error') head+='<div class="notice" style="margin:0 0 10px;border-color:#f5c6c2;background:#fdeceb"><span>⚠️</span><div><b>Не удалось записать ключ в Gate</b><br>'+esc(p.gate_error||'')+'</div></div>';
+    if(!g.in_gate){
+      head='<div class="notice" style="margin:0 0 10px"><span>⚠️</span><div><b>'+esc(g.note||'ключа нет в Gate')+'</b><br>'
+        +'Ключ заводится в самом Gate (GateTerm → Пользователи) или оператором на КПП. '
+        +'В нашем реестре карта есть, но контроллеры её не знают — поэтому двери не открываются.</div></div>';
+    }else{
+      head='<div class="chips"><span class="chip">найден в Gate: <b>'+esc(g.user.fio)+'</b></span>'
+        +'<span class="chip">табельный: <b>'+esc(g.user.number||'—')+'</b></span>'
+        +(g.user.deleted?'<span class="chip" style="color:#b42318">запись удалена</span>':'')
+        +'<span class="chip">открывает дверей: <b>'+g.granted+'</b></span></div>';
+    }
+    const list=(g.all_doors&&g.all_doors.length)?g.all_doors:(g.doors||[]).map(x=>({name:x.name,ok:x.ok,chosen:true}));
+    const rows=list.map(x=>'<tr'+(x.chosen?' class="pick"':'')+'><td>'+esc(x.name)+'</td>'
+      +'<td class="num">'+(x.chosen?'<span class="badge live">в пропуске</span>':'<span class="dim">—</span>')+'</td>'
+      +'<td class="num">'+(x.ok?'<span class="badge in">ключ работает</span>':'<span class="badge out">нет доступа</span>')+'</td></tr>').join('');
+    const table=rows?'<div class="tblwrap" style="max-height:340px"><table><thead><tr><th>Дверь</th><th class="num">В пропуске</th><th class="num">Ключ в Gate</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+      :'<div class="empty">В картотеке Gate нет дверей</div>';
+    $('#mBody').innerHTML=head+table
+      +'<div class="row-actions"><button class="primary" id="gateRefresh">Обновить из Gate</button></div>';
+    const btn=$('#gateRefresh'); if(btn) btn.onclick=refreshGate;
+  }catch(e){ $('#mBody').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+document.addEventListener('click',(e)=>{
+  const b=e.target.closest('.gateBtn');
+  if(b){ e.preventDefault(); e.stopPropagation(); showPassGate(+b.dataset.id); }
+});
+
 /* ---------- настройки: пользователи и доступ к Gate ---------- */
 let ME={login:'',role:'viewer'};
+const canOperate = ()=>['admin','operator'].includes(ME.role);
+const isAdmin    = ()=>ME.role==='admin';
 
 async function loadMe(){
   try{
@@ -1518,6 +1901,7 @@ async function loadMe(){
     if(ME.role==='admin'){ btn.style.display=''; }
     else { btn.style.display='none'; }
     const ml=$('#meLogin'); if(ml) ml.textContent=ME.login+' · '+ME.roleTitle;
+    if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }
     const gu=$('#gateUser'); if(gu && ME.gate_user) gu.value=ME.gate_user;
   }catch(e){ /* тихо */ }
 }
@@ -1666,6 +2050,13 @@ function initDates(){
   initDates();
   await loadMe();
   await loadStatus();
+  setupCardReader();
+  passDaysRender();
+  $('#passVisit').value=todayISO();
+  $('#passTo').value=todayISO();
+  $('#passFltFrom').value=todayISO();
+  $('#passAllDays').onchange=()=>{ $('#passTimeFrom').disabled=$('#passAllDays').checked; $('#passTimeTo').disabled=$('#passAllDays').checked; };
+  if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }
   await loadRefs();
   await loadMon();
   startStream();

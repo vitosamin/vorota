@@ -135,6 +135,13 @@ def smb_get(remote_dir, name, local_path):
     return os.path.getsize(local_path)
 
 
+def smb_put(remote_dir, local_path, name, timeout=60):
+    tmp = name + ".part"
+    smb_run("cd %s; put %s %s" % (remote_dir, local_path, tmp), timeout=timeout)
+    smb_run("cd %s; rename %s %s" % (remote_dir, tmp, name), timeout=timeout)
+    return True
+
+
 def mdb_export(mdb_path, table, timeout=180):
     """Таблица MDB → список словарей."""
     p = subprocess.run([os.path.join(MDB, "mdb-export"), mdb_path, table],
@@ -179,9 +186,23 @@ CREATE INDEX IF NOT EXISTS ix_events_user ON events(user_ptr, day);
 CREATE INDEX IF NOT EXISTS ix_events_pass ON events(event_type, event_code, day);
 CREATE INDEX IF NOT EXISTS ix_events_day_type ON events(day, event_type, alarm_status);
 
+CREATE TABLE IF NOT EXISTS readers (
+    rdr_ptr INTEGER PRIMARY KEY,
+    dev_ptr INTEGER,
+    name    TEXT
+);
+CREATE TABLE IF NOT EXISTS access_table (
+    rdr_ptr  INTEGER,
+    user_ptr INTEGER,
+    always   INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_access_user ON access_table(user_ptr);
+
 CREATE TABLE IF NOT EXISTS users (
     user_ptr   INTEGER PRIMARY KEY,
     number     TEXT,
+    number_u   TEXT,
+    number_mifare TEXT,
     last_name  TEXT,
     first_name TEXT,
     father_name TEXT,
@@ -204,6 +225,9 @@ CREATE TABLE IF NOT EXISTS passes (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     number     TEXT UNIQUE,
     visitor    TEXT NOT NULL,
+    card       TEXT,
+    position   TEXT,
+    schedule   TEXT,
     document   TEXT,
     phone      TEXT,
     org        TEXT,
@@ -215,6 +239,9 @@ CREATE TABLE IF NOT EXISTS passes (
     doors      TEXT,
     note       TEXT,
     status     TEXT DEFAULT 'active',
+    gate_job   TEXT,
+    gate_state TEXT,
+    gate_error TEXT,
     created_by TEXT,
     created_at TEXT
 );
@@ -242,10 +269,30 @@ def connect():
     return con
 
 
+def _migrate(con):
+    """Добавить недостающие колонки в существующие таблицы."""
+    try:
+        cols = {r["name"] for r in con.execute("PRAGMA table_info(passes)")}
+    except Exception:                            # noqa: BLE001
+        return
+    for col in ("card", "position", "schedule", "gate_job", "gate_state", "gate_error"):
+        if cols and col not in cols:
+            con.execute("ALTER TABLE passes ADD COLUMN %s TEXT" % col)
+    try:
+        ucols = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
+        for col in ("number_u", "number_mifare"):
+            if ucols and col not in ucols:
+                con.execute("ALTER TABLE users ADD COLUMN %s TEXT" % col)
+    except Exception:                            # noqa: BLE001
+        pass
+    con.commit()
+
+
 def init_db(con=None):
     own = con is None
     con = con or connect()
     con.executescript(SCHEMA)
+    _migrate(con)
     con.commit()
     if own:
         con.close()
@@ -334,6 +381,9 @@ def _int(v):
 # --------------------------------------------------------------------------
 
 
+CONFIG_IMPORT_VERSION = "2"   # менять при изменении набора импортируемых таблиц
+
+
 def sync_config(force=False, con=None):
     """Скачать config.mdb и обновить сотрудников/подразделения/устройства."""
     own = con is None
@@ -343,8 +393,24 @@ def sync_config(force=False, con=None):
     if "config.mdb" not in listing:
         raise RuntimeError("config.mdb не найден в Server")
     size, mtime, _ = listing["config.mdb"]
-    stamp = "%s|%s" % (size, mtime)
-    if not force and meta_get(con, "config_stamp") == stamp and os.path.exists(CONFIG_MDB):
+    stamp = "%s|%s|v%s" % (size, mtime, CONFIG_IMPORT_VERSION)
+    need = force or meta_get(con, "config_stamp") != stamp or not os.path.exists(CONFIG_MDB)
+    if not need:
+        # страховка: производные таблицы должны быть заполнены
+        try:
+            if con.execute("SELECT COUNT(*) c FROM readers").fetchone()["c"] == 0:
+                need = True
+        except Exception:                        # noqa: BLE001
+            need = True
+    if not need:
+        # обновить отметки даже без переимпорта
+        try:
+            cnt = con.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
+            meta_set(con, "config_mtime", mtime)
+            meta_set(con, "config_users", cnt)
+            con.commit()
+        except Exception:                        # noqa: BLE001
+            pass
         if own:
             con.close()
         return False
@@ -355,7 +421,9 @@ def sync_config(force=False, con=None):
         last = (r.get("LastName") or r.get("Фамилия") or "").strip()
         first = (r.get("FirstName") or r.get("Имя") or "").strip()
         father = (r.get("FatherName") or r.get("Отчество") or "").strip()
-        users.append((_int(r.get("UserPtr")), (r.get("Number") or "").strip(), last, first, father,
+        users.append((_int(r.get("UserPtr")), (r.get("Number") or "").strip(),
+                      (r.get("NumberU") or "").strip(), (r.get("NumberMifare") or "").strip(),
+                      last, first, father,
                       _int(r.get("GroupPtr")), (r.get("Details1") or "").strip(),
                       1 if str(r.get("Deleted")).strip() in ("1", "-1", "True") else 0,
                       1 if str(r.get("Visitor")).strip() in ("1", "-1", "True") else 0))
@@ -363,14 +431,28 @@ def sync_config(force=False, con=None):
     devices = [(_int(r.get("DevPtr")), (r.get("Name") or "").strip(), _int(r.get("DevType")))
                for r in mdb_export(CONFIG_MDB, "Devices")]
 
+    readers = [(_int(r.get("RdrPtr")), _int(r.get("DevPtr")), (r.get("Name") or "").strip())
+               for r in mdb_export(CONFIG_MDB, "Readers")]
+    access = [(_int(r.get("RdrPtr")), _int(r.get("UserPtr")), _int(r.get("Always")))
+              for r in mdb_export(CONFIG_MDB, "AccessTable")]
+
     with _lock:
         con.execute("DELETE FROM users")
-        con.executemany("INSERT OR REPLACE INTO users VALUES(?,?,?,?,?,?,?,?,?)", users)
+        con.executemany(
+            "INSERT OR REPLACE INTO users(user_ptr, number, number_u, number_mifare,"
+            " last_name, first_name, father_name, group_ptr, position, deleted, visitor)"
+            " VALUES(?,?,?,?,?,?,?,?,?,?,?)", users)
+        con.execute("DELETE FROM readers")
+        con.executemany("INSERT OR REPLACE INTO readers(rdr_ptr, dev_ptr, name) VALUES(?,?,?)", readers)
+        con.execute("DELETE FROM access_table")
+        con.executemany("INSERT INTO access_table(rdr_ptr, user_ptr, always) VALUES(?,?,?)", access)
         con.execute("DELETE FROM groups")
         con.executemany("INSERT OR REPLACE INTO groups VALUES(?,?)", groups)
         con.execute("DELETE FROM devices")
         con.executemany("INSERT OR REPLACE INTO devices VALUES(?,?,?)", devices)
         meta_set(con, "config_stamp", stamp)
+        meta_set(con, "config_mtime", mtime)
+        meta_set(con, "config_users", len(users))
         meta_set(con, "config_synced", dt.datetime.now().isoformat(timespec="seconds"))
         con.commit()
     if own:
@@ -830,6 +912,109 @@ def analytics(con, from_day, to_day, group=None, point=None):
 
 
 # --------------------------------------------------------------------------
+# запись ключей в Gate: очередь SQL-заданий для агента на сервере
+# --------------------------------------------------------------------------
+
+QUEUE_DIR = "_skud_queue"   # от корня шары GATE (она же C:\GATE)
+
+
+def card_to_gate(number):
+    """«140/39939» → (facility, card, NumberU)."""
+    raw = (number or "").strip()
+    if "/" in raw:
+        a, b = raw.split("/", 1)
+        if a.isdigit() and b.isdigit():
+            fac, card = int(a), int(b)
+            return fac, card, "%012X" % ((fac << 16) | card)
+    return None
+
+
+def build_add_user_sql(con, data, user_ptr):
+    """SQL для агента: создать пользователя и раздать доступы на двери."""
+    cfg = os.path.join(DATA, "config.mdb")
+    users = mdb_export(cfg, "Users")
+    access = mdb_export(cfg, "AccessTable")
+    readers = mdb_export(cfg, "Readers")
+    devices = mdb_export(cfg, "Devices")
+    if not users:
+        raise ValueError("нет картотеки Gate")
+    tpl = max(users, key=lambda u: _int(u.get("UserPtr")))
+    parsed = card_to_gate(data.get("card"))
+    if not parsed:
+        raise ValueError("номер карты должен быть в виде 140/39939")
+    fac, card, number_u = parsed
+    number = "%03d/%05d" % (fac, card)
+    dev_by_name = {}
+    for d in devices:
+        dev_by_name.setdefault((d.get("Name") or "").strip().lower(), set()).add(_int(d.get("DevPtr")))
+    rdrs = []
+    for name in (data.get("doors") or []):
+        for r in readers:
+            if _int(r.get("DevPtr")) in dev_by_name.get(str(name).strip().lower(), set()):
+                rdrs.append(_int(r.get("RdrPtr")))
+    rdrs = sorted(set(rdrs))
+    if not rdrs:
+        raise ValueError("не найдены считыватели выбранных дверей")
+
+    def q(v):
+        if v is None or v == "":
+            return "NULL"
+        return "'" + str(v).replace("'", "''") + "'"
+
+    fio = (data.get("visitor") or "").replace("Карта ", "").split()
+    last = fio[0] if fio else "Гость"
+    first = fio[1] if len(fio) > 1 else ""
+    father = fio[2] if len(fio) > 2 else ""
+    cols = ["UserPtr", "KeyType", "Number", "NumberU", "NumberMifare", "LastName", "FirstName",
+            "FatherName", "GroupPtr", "Deleted", "UseExpiry", "ExpiryDate", "ExpiryTime",
+            "IdleNotLimited", "NoFacility", "Details1", "Status", "Visitor", "SendSms", "Phone",
+            "SendMail", "Mail", "UniPassMode", "FormatW26"]
+    expiry = data.get("valid_to") or data.get("visit_date") or ""
+    exp_sql = "NULL"
+    if expiry:
+        y, m, d = expiry.split("-")
+        exp_sql = "#%s/%s/%s#" % (m, d, y)
+    vals = [str(user_ptr), tpl.get("KeyType") or "1", q(number), q(number_u), "NULL",
+            q(last), q(first), q(father), tpl.get("GroupPtr") or "2", "0",
+            "1" if exp_sql != "NULL" else "0", exp_sql, exp_sql or "NULL", "0", "0",
+            q("Водитель"), "0", "0", "0", "NULL", "0", "NULL", "0", "0"]
+    lines = ["# СКУД Gate: новый пользователь из приложения",
+             "INSERT INTO [Users] (%s) VALUES (%s)" % (", ".join("[%s]" % c for c in cols), ", ".join(vals))]
+    for rdr in rdrs:
+        vals_inner = [_int(a.get("InnerNum")) for a in access if _int(a.get("RdrPtr")) == rdr]
+        inner = (max(vals_inner) + 1) if vals_inner else 1
+        lines.append(
+            "INSERT INTO [AccessTable] ([RdrPtr],[UserPtr],[InnerNum],[Always],[Schedule1],[Schedule2],"
+            "[Schedule3],[Schedule4],[Schedule5],[Schedule6],[Schedule7],[RecordState],[APB],[Inside],"
+            "[CardType],[CardCode],[NoEntry],[NoExit]) VALUES (%d,%d,%d,1,0,0,0,0,0,0,0,0,0,0,0,NULL,0,0)"
+            % (rdr, user_ptr, inner))
+    return "\r\n".join(lines) + "\r\n"
+
+
+def queue_put(name, sql_text):
+    """Положить SQL-задание в очередь на сервере Gate (cp1251)."""
+    os.makedirs(DATA, exist_ok=True)
+    local = os.path.join(DATA, name)
+    with open(local, "wb") as fh:
+        fh.write(sql_text.encode("cp1251", "replace"))
+    smb_put(QUEUE_DIR, local, name)
+    return name
+
+
+def queue_result(name):
+    """Прочитать результат задания из очереди (если уже есть)."""
+    local = os.path.join(DATA, "res_" + name)
+    try:
+        smb_get(QUEUE_DIR, name + ".result", local)
+    except Exception:                            # noqa: BLE001
+        return None
+    try:
+        return open(local, "rb").read().decode("cp1251", "replace")
+    except OSError:
+        return None
+
+
+# --------------------------------------------------------------------------
 # журнал событий СКУД (все типы: устройства, тревоги, связь, операторы…)
 # --------------------------------------------------------------------------
 
@@ -1086,6 +1271,48 @@ def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
 
 
 
+WD_SHORT = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+
+
+def schedule_text(sched):
+    """Человеческий вид графика: «Пн–Пт, 08:00–20:00»."""
+    if not sched:
+        return "—"
+    days = sched.get("days") or []
+    t1, t2 = (sched.get("from") or ""), (sched.get("to") or "")
+    days = sorted({int(d) for d in days if str(d).lstrip("-").isdigit() and 0 <= int(d) <= 6})
+    if len(days) == 7:
+        d = "ежедневно"
+    elif days == [0, 1, 2, 3, 4]:
+        d = "Пн–Пт"
+    elif days == [5, 6]:
+        d = "Сб–Вс"
+    elif not days:
+        d = "ни одного дня"
+    else:
+        d = ", ".join(WD_SHORT[i] for i in days)
+    if t1 and t2:
+        d += ", %s–%s" % (t1, t2)
+    return d
+
+
+def schedule_allows(sched, when=None):
+    """Разрешён ли проход в этот момент по графику."""
+    if not sched:
+        return True
+    when = when or dt.datetime.now()
+    days = sched.get("days")
+    if days:
+        days = {int(d) for d in days if str(d).lstrip("-").isdigit()}
+        if when.weekday() not in days:
+            return False
+    t1, t2 = sched.get("from"), sched.get("to")
+    if t1 and t2:
+        cur = when.strftime("%H:%M")
+        return t1 <= cur <= t2
+    return True
+
+
 PASS_STATUS = {"active": "Действует", "expired": "Истёк", "upcoming": "Ещё не действует",
                "revoked": "Отозван"}
 
@@ -1107,6 +1334,12 @@ def _pass_row(row):
         d["doors"] = json.loads(d.get("doors") or "[]")
     except ValueError:
         d["doors"] = []
+    try:
+        d["schedule"] = json.loads(d.get("schedule") or "null") if d.get("schedule") else None
+    except ValueError:
+        d["schedule"] = None
+    d["schedule_text"] = schedule_text(d["schedule"])
+    d["in_schedule"] = schedule_allows(d["schedule"])
     d["state"] = _pass_status(row)
     d["state_title"] = PASS_STATUS.get(d["state"], d["state"])
     return d
@@ -1114,9 +1347,161 @@ def _pass_row(row):
 
 def doors_list(con):
     """Двери (устройства) из картотеки Gate."""
-    out = [{"dev_ptr": r["dev_ptr"], "name": r["name"] or ("Точка %s" % r["dev_ptr"])}
-           for r in con.execute("SELECT dev_ptr, name FROM devices ORDER BY name")]
+    out = []
+    for r in con.execute("SELECT dev_ptr, name FROM devices ORDER BY name"):
+        name = (r["name"] or "").strip()
+        if not name or name.lower() in ("нет", "нет "):
+            continue
+        out.append({"dev_ptr": r["dev_ptr"], "name": name})
     return out
+
+
+def _norm_card(v):
+    return (v or "").upper().replace(" ", "").replace("-", "").replace(":", "").replace(".", "")
+
+
+def _card_variants(card):
+    """Варианты записи номера: как есть, хвост после «/», без нулей, добивка до 12."""
+    n = _norm_card(card)
+    if not n:
+        return []
+    out = {n}
+    if "/" in n:
+        parts = n.split("/")
+        out.add(parts[-1])                 # «140/39939» → 39939
+        out.add("".join(parts))            # → 14039939
+    s = n.lstrip("0")
+    if s:
+        out.add(s)
+    if len(n) < 12 and all(c in "0123456789ABCDEF" for c in n):
+        out.add(n.rjust(12, "0"))
+    if len(n) == 12:
+        out.add(n[-8:])
+    return list(out)
+
+
+def gate_index(con):
+    """Индексы картотеки Gate: карта → пользователь, доступы по считывателям."""
+    by_card, users = {}, {}
+    for r in con.execute("SELECT user_ptr, number, number_u, number_mifare, last_name,"
+                         " first_name, father_name, deleted FROM users"):
+        users[r["user_ptr"]] = r
+        keys = set()
+        for k in (r["number_u"], r["number_mifare"]):
+            n = _norm_card(k)
+            if n:
+                keys.add(n)
+        num = r["number"] or ""
+        if "/" in num:
+            parts = num.split("/")
+            keys.add(_norm_card(parts[-1]))
+            keys.add(_norm_card("".join(parts)))
+            keys.add(_norm_card(num))
+        else:
+            keys.add(_norm_card(num))
+        for k in keys:
+            if k:
+                by_card.setdefault(k, r["user_ptr"])
+    access = {}
+    for r in con.execute("SELECT rdr_ptr, user_ptr FROM access_table"):
+        access.setdefault(r["user_ptr"], set()).add(r["rdr_ptr"])
+    readers = {r["rdr_ptr"]: r for r in con.execute("SELECT rdr_ptr, dev_ptr, name FROM readers")}
+    devices = {}
+    for r in con.execute("SELECT dev_ptr, name FROM devices"):
+        name = (r["name"] or "").strip()
+        if name and name.lower() != "нет":
+            devices.setdefault(name, set()).add(r["dev_ptr"])
+    return {"by_card": by_card, "users": users, "access": access,
+            "readers": readers, "devices": devices}
+
+
+def find_cards(con, query, limit=25):
+    """Поиск карты в картотеке Gate: точное и частичное совпадение, плюс последние добавленные."""
+    q = _norm_card(query)
+    idx = gate_index(con)
+    hits = []
+    for uid, r in idx["users"].items():
+        keys = [_norm_card(r["number"]), _norm_card(r["number_u"]), _norm_card(r["number_mifare"])]
+        if q and any(q in k for k in keys if k):
+            hits.append((uid, r))
+    # точное совпадение — первым
+    hits.sort(key=lambda x: (0 if any(_norm_card(k) == q for k in (x[1]["number"], x[1]["number_u"], x[1]["number_mifare"])) else 1,
+                             x[1]["last_name"] or ""))
+    out = []
+    for uid, r in hits[:limit]:
+        acc = idx["access"].get(uid, set())
+        devs = {idx["readers"][x]["dev_ptr"] for x in acc if x in idx["readers"]}
+        names = sorted(n for n, ptrs in idx["devices"].items() if ptrs & devs)
+        fio = " ".join(x for x in (r["last_name"], r["first_name"], r["father_name"]) if x).strip()
+        out.append({"user_ptr": uid, "fio": fio or "ID %s" % uid, "number": r["number"],
+                    "number_u": r["number_u"], "number_mifare": r["number_mifare"],
+                    "deleted": bool(r["deleted"]), "doors": names,
+                    "exact": any(_norm_card(k) == q for k in (r["number"], r["number_u"], r["number_mifare"]) if k)})
+    recent = []
+    for r in con.execute("SELECT user_ptr, number, number_u, last_name, first_name, father_name"
+                         " FROM users ORDER BY user_ptr DESC LIMIT 10"):
+        recent.append({"user_ptr": r["user_ptr"], "number": r["number"], "number_u": r["number_u"],
+                       "fio": " ".join(x for x in (r["last_name"], r["first_name"], r["father_name"]) if x).strip()})
+    return {"query": query, "count": len(out), "items": out, "recent": recent}
+
+
+def pass_gate_status(con, p, index=None):
+    """Готовность ключа в Gate: есть ли карта и на какие двери она открыта."""
+    idx = index or gate_index(con)
+    doors = p.get("doors") or []
+    total = len(doors)
+    card = _norm_card(p.get("card"))
+    uid = None
+    if card:
+        for cand in _card_variants(card):
+            uid = idx["by_card"].get(cand)
+            if uid:
+                break
+    if uid is None:
+        return {"in_gate": False, "user": None, "card": p.get("card") or "",
+                "doors": [{"name": d, "ok": False} for d in doors],
+                "ok_count": 0, "total": total, "all_doors": [], "granted": 0,
+                "note": "ключа нет в картотеке Gate" if card else "карта не указана"}
+    u = idx["users"][uid]
+    allowed = idx["access"].get(uid, set())
+    dev_ok = {idx["readers"][r]["dev_ptr"] for r in allowed if r in idx["readers"]}
+    result_doors, ok_count = [], 0
+    for d in doors:
+        devs = idx["devices"].get(d, set())
+        ok = bool(devs & dev_ok)
+        ok_count += 1 if ok else 0
+        result_doors.append({"name": d, "ok": ok})
+    # все двери Gate — куда ключ реально прошёл
+    chosen = set(doors)
+    all_doors = [{"name": name, "ok": bool(devs & dev_ok), "chosen": name in chosen}
+                 for name, devs in sorted(idx["devices"].items())]
+    fio = " ".join(x for x in (u["last_name"], u["first_name"], u["father_name"]) if x).strip()
+    return {"in_gate": True,
+            "user": {"user_ptr": uid, "fio": fio or "ID %s" % uid, "number": u["number"],
+                     "deleted": bool(u["deleted"])},
+            "card": p.get("card") or "",
+            "doors": result_doors, "ok_count": ok_count, "total": total,
+            "all_doors": all_doors,
+            "granted": sum(1 for d in all_doors if d["ok"]),
+            "note": "" if ok_count else "карта есть, но ни на одну из этих дверей доступа нет"}
+
+
+def pass_check_job(con, p):
+    """Проверить результат задания в очереди (если ждём)."""
+    if not p.get("gate_job") or (p.get("gate_state") or "") in ("ok", "error"):
+        return p
+    res = queue_result(p["gate_job"])
+    if res is None:
+        return p
+    bad = [l for l in res.splitlines() if l.startswith("err=")]
+    with _lock:
+        if bad:
+            con.execute("UPDATE passes SET gate_state='error', gate_error=? WHERE id=?",
+                        ("; ".join(b[4:] for b in bad)[:400], p["id"]))
+        else:
+            con.execute("UPDATE passes SET gate_state='ok', gate_error='' WHERE id=?", (p["id"],))
+        con.commit()
+    return pass_get(con, p["id"])
 
 
 def passes_list(con, from_day=None, to_day=None, state=None, search=None, limit=500):
@@ -1129,14 +1514,20 @@ def passes_list(con, from_day=None, to_day=None, state=None, search=None, limit=
         where.append("(valid_from IS NULL OR valid_from <= ?)")
         params.append(to_day)
     if search:
-        where.append("(instr_ru(visitor, ?) OR instr_ru(org, ?) OR instr_ru(host, ?) OR instr_ru(number, ?))")
-        params += [search] * 4
+        where.append("(instr_ru(visitor, ?) OR instr_ru(org, ?) OR instr_ru(host, ?)"
+                     " OR instr_ru(number, ?) OR instr_ru(card, ?) OR instr_ru(document, ?))")
+        params += [search] * 6
     sql = "SELECT * FROM passes"
     if where:
         sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY id DESC LIMIT ?"
     params.append(int(limit))
     rows = [ _pass_row(r) for r in con.execute(sql, params)]
+    for i, r in enumerate(rows):
+        if (r.get("gate_state") or "") == "sent":
+            upd = pass_check_job(con, r)
+            if upd:
+                rows[i] = upd
     if state and state not in ("", "all"):
         rows = [r for r in rows if r["state"] == state]
     return rows
@@ -1149,8 +1540,11 @@ def pass_get(con, pid):
 
 def pass_create(con, data, created_by=""):
     visitor = (data.get("visitor") or "").strip()
+    card = (data.get("card") or "").strip()
+    if not visitor and card:
+        visitor = "Карта %s" % card          # выдача по номеру карты
     if not visitor:
-        raise ValueError("не указано ФИО посетителя")
+        raise ValueError("укажите ФИО посетителя или номер карты")
     visit = (data.get("visit_date") or dt.date.today().isoformat()).strip()
     valid_to = (data.get("valid_to") or visit).strip()
     if valid_to < visit:
@@ -1163,17 +1557,46 @@ def pass_create(con, data, created_by=""):
     number = "П-%s-%04d" % (year, n + 1)
     with _lock:
         con.execute(
-            "INSERT INTO passes(number,visitor,document,phone,org,host,purpose,visit_date,"
+            "INSERT INTO passes(number,visitor,card,position,schedule,document,phone,org,host,purpose,visit_date,"
             "valid_from,valid_to,doors,note,status,created_by,created_at)"
-            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (number, visitor, (data.get("document") or "").strip(), (data.get("phone") or "").strip(),
+            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (number, visitor, (data.get("card") or "").strip(),
+             (data.get("position") or "").strip(),
+             json.dumps(data.get("schedule"), ensure_ascii=False) if data.get("schedule") else None,
+             (data.get("document") or "").strip(), (data.get("phone") or "").strip(),
              (data.get("org") or "").strip(), (data.get("host") or "").strip(),
              (data.get("purpose") or "").strip(), visit, visit, valid_to,
              json.dumps(doors, ensure_ascii=False), (data.get("note") or "").strip(),
              "active", created_by, dt.datetime.now().isoformat(timespec="seconds")))
         con.commit()
         pid = con.execute("SELECT last_insert_rowid() i").fetchone()["i"]
-    return pass_get(con, pid)
+    result = pass_get(con, pid)
+    # если карта в формате Gate и выбраны двери — ставим задание агенту
+    if card and card_to_gate(card) and (data.get("doors") or []):
+        try:
+            users = mdb_export(os.path.join(DATA, "config.mdb"), "Users")
+            next_ptr = max((_int(u.get("UserPtr")) for u in users), default=0) + 1
+            job = "pass_%s" % pid
+            sql = build_add_user_sql(con, dict(data, card=card, visitor=visitor, valid_to=valid_to), next_ptr)
+            queue_put(job + ".sql", sql)
+            with _lock:
+                con.execute("UPDATE passes SET gate_job=?, gate_state='sent' WHERE id=?", (job, pid))
+                con.commit()
+            result = pass_get(con, pid)
+        except Exception as exc:                 # noqa: BLE001
+            with _lock:
+                con.execute("UPDATE passes SET gate_state='queue_error', gate_error=? WHERE id=?",
+                            (str(exc)[:200], pid))
+                con.commit()
+            result = pass_get(con, pid)
+    if card:
+        dup = con.execute(
+            "SELECT number FROM passes WHERE card=? AND id<>? AND status='active'"
+            " AND (valid_to IS NULL OR valid_to>=?)",
+            (card, pid, dt.date.today().isoformat())).fetchone()
+        if dup:
+            result["warning"] = "карта уже используется действующим пропуском %s" % dup["number"]
+    return result
 
 
 def pass_revoke(con, pid):
@@ -1233,6 +1656,8 @@ def db_status(con):
         "first_day": days["first"],
         "last_day": days["last"],
         "config_synced": meta_get(con, "config_synced", ""),
+        "config_mtime": meta_get(con, "config_mtime", ""),
+        "config_users": int(meta_get(con, "config_users", "0") or 0),
     }
 
 

@@ -1,7 +1,7 @@
 {
   "share": "//192.168.2.160/GATE",
-  "user": "alm\\shapovalenko",
-  "password": "Adminfzd13m08g07",
+  "user": "ALM\\skudnew",
+  "password": "Admin910327",
   "smbclient": "/home/dsh/projects/gates/.tools/smb/root/usr/bin/smbclient",
   "smb_lib": "/home/dsh/projects/gates/.tools/smb/root/usr/lib/x86_64-linux-gnu:/home/dsh/projects/gates/.tools/smb/root/lib/x86_64-linux-gnu",
   "mdbtools": "/home/dsh/projects/gates/reports/tools/mdbroot/usr/bin",

@@ -135,11 +135,11 @@ class GateBridge
     static void Click(int x, int y)
     {
         SetCursorPos(x, y);
-        Thread.Sleep(35);
+        Thread.Sleep(15);
         mouse_event(MDOWN, 0, 0, 0, IntPtr.Zero);
-        Thread.Sleep(25);
+        Thread.Sleep(15);
         mouse_event(MUP, 0, 0, 0, IntPtr.Zero);
-        Thread.Sleep(90);
+        Thread.Sleep(45);
     }
 
     /// <summary>Принудительно сортирует таблицу по первому столбцу (два клика = убывание),
@@ -232,18 +232,18 @@ class GateBridge
         try
         {
             int y = gr.Top + ROW_BASE + row * ROW_H;
-            using (var bmp = new Bitmap(4, 4))
+            using (var bmp = new Bitmap(2, 2))
             using (var g = Graphics.FromImage(bmp))
             {
-                g.CopyFromScreen(gr.Left + 40, y - 2, 0, 0, new Size(4, 4));
+                g.CopyFromScreen(gr.Left + 40, y - 1, 0, 0, new Size(2, 2));
                 int r = 0, gg = 0, b = 0;
-                for (int i = 0; i < 4; i++)
-                    for (int j = 0; j < 4; j++)
+                for (int i = 0; i < 2; i++)
+                    for (int j = 0; j < 2; j++)
                     {
                         Color c = bmp.GetPixel(i, j);
                         r += c.R; gg += c.G; b += c.B;
                     }
-                return (b / 16) > (r / 16) + 40;
+                return (b / 4) > (r / 4) + 40;
             }
         }
         catch { return false; }
@@ -256,7 +256,7 @@ class GateBridge
         {
             int y = gr.Top + ROW_BASE + row * ROW_H + (attempt == 0 ? 0 : (attempt == 1 ? 2 : -2));
             Click(gr.Left + 60, y);
-            Thread.Sleep(90);
+            Thread.Sleep(60);
             if (VerifyRow(gr, row)) return true;
         }
         Log("select failed row=" + row);
@@ -297,10 +297,9 @@ class GateBridge
     {
         RECT br; GetWindowRect(openBtn, out br);
         int cx = (br.Left + br.Right) / 2, cy = (br.Top + br.Bottom) / 2;
-        // первый клик активирует окно, второй — нажимает кнопку
+        bool active = GetForegroundWindow() == accessWnd;
         Click(cx, cy);
-        Thread.Sleep(180);
-        Click(cx, cy);
+        if (!active) { Thread.Sleep(70); Click(cx, cy); }
     }
 
     /// <summary>Нажимает кнопку окна по подписи (Открыть дверь / Заблокировать / Разблокировать).</summary>
@@ -524,15 +523,16 @@ class GateBridge
                 Focus();
                 if (!sortChecked) { ForceSort(); sortChecked = true; }
                 var opened = new List<int>();
+                var swTotal = System.Diagnostics.Stopwatch.StartNew();
                 var failed = new List<int>();
                 foreach (int row in rows)
                 {
                     if (!SelectRow(row)) { failed.Add(row); continue; }
                     ClickOpen();
-                    Thread.Sleep(120);
                     opened.Add(row);
                     Log("open row=" + row);
                 }
+                Log("open took " + swTotal.ElapsedMilliseconds + " ms");
                 return "{\"ok\":" + (failed.Count == 0 ? "true" : "false")
                     + ",\"opened\":[" + string.Join(",", opened.ConvertAll(x => x.ToString()).ToArray()) + "]"
                     + ",\"failed\":[" + string.Join(",", failed.ConvertAll(x => x.ToString()).ToArray()) + "]}";

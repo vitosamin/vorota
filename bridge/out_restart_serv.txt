@@ -1,0 +1,19 @@
+=== ╨▒╤Л╨╗╨╛ === 
+
+Имя образа                     PID Имя сессии          № сеанса       Память
+========================= ======== ================ =========== ============
+GateServ.exe                  6660 Console                    1    79 040 КБ
+=== ╨╛╤Б╤В╨░╨╜╨░╨▓╨╗╨╕╨▓╨░╤О === 
+Успешно: Процесс "GateServ.exe", с идентификатором 6660, был завершен.
+=== ╨╖╨░╨┐╤Г╤Б╨║╨░╤О === 
+Connecting to local system...Starting PSEXESVC service on local system...Copying authentication key to SKUD...Connecting with PsExec service on SKUD...Starting C:\GATE\Server\GateServ.exe on SKUD...
+C:\GATE\Server\GateServ.exe started on SKUD with process ID 4092.
+=== ╤Б╤В╨░╨╗╨╛ === 
+
+Имя образа                     PID Имя сессии          № сеанса       Память
+========================= ======== ================ =========== ============
+GateServ.exe                  4092 Console                    1    45 652 КБ
+
+Имя образа                     PID Имя сессии          № сеанса       Память
+========================= ======== ================ =========== ============
+GateTerm.exe                   876 Console                    1    32 280 КБ
