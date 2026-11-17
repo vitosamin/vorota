@@ -356,12 +356,12 @@ public class MainActivity extends Activity {
         c.root = card;
 
         FrameLayout iconBox = new FrameLayout(this);
-        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(52), dp(52));
+        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(46), dp(46));
         iconBox.setLayoutParams(ilp);
         iconBox.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(16)));
 
         ImageView icon = new ImageView(this);
-        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(dp(26), dp(26), Gravity.CENTER);
+        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER);
         icon.setLayoutParams(flp);
         icon.setImageResource(Device.typeIcon(d.type));
         icon.setColorFilter(getColor(R.color.accent));
@@ -380,9 +380,10 @@ public class MainActivity extends Activity {
         TextView name = new TextView(this);
         name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
         name.setTextColor(getColor(R.color.text_primary));
-        name.setTextSize(16);
+        name.setTextSize(15);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(true);
+        name.setSingleLine(false);
+        name.setMaxLines(2);
         name.setEllipsize(TextUtils.TruncateAt.END);
         c.name = name;
         texts.addView(name);
@@ -417,7 +418,7 @@ public class MainActivity extends Activity {
         card.addView(texts);
 
         ImageButton star = new ImageButton(this);
-        star.setLayoutParams(new LinearLayout.LayoutParams(dp(38), dp(38)));
+        star.setLayoutParams(new LinearLayout.LayoutParams(dp(34), dp(34)));
         star.setPadding(dp(7), dp(7), dp(7), dp(7));
         star.setBackgroundResource(R.drawable.bg_circle_ripple);
         star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
@@ -513,12 +514,12 @@ public class MainActivity extends Activity {
 
     private Button dirButton(Device d, String dir, String label) {
         Button b = new Button(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(84), dp(40));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(72), dp(38));
         lp.bottomMargin = dp(4);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(13);
+        b.setTextSize(12);
         b.setTextColor(getColor(R.color.bg));
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setBackgroundResource(R.drawable.btn_primary);
@@ -823,7 +824,8 @@ public class MainActivity extends Activity {
         name.setTextColor(getColor(R.color.text_primary));
         name.setTextSize(15);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(true);
+        name.setSingleLine(false);
+        name.setMaxLines(2);
         name.setEllipsize(TextUtils.TruncateAt.END);
         col.addView(name);
 

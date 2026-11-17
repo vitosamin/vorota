@@ -133,6 +133,42 @@ pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;paddi
 .chart-box svg{width:100%;height:auto;display:block;overflow:visible}
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 12px 10px;color:var(--muted);font-size:11.5px}
 .legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+/* --- строгая полировка --- */
+body:before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:60;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 55%,var(--accent) 100%)}
+.delta{font-size:11.5px;font-weight:600;margin-left:4px;white-space:nowrap}
+.delta.up{color:#1a7f37}
+.delta.down{color:#b42318}
+.delta.flat{color:#8b95a1}
+[data-uid]{cursor:pointer}
+[data-uid]:hover .nm{color:var(--accent);text-decoration:underline}
+tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
+.modal{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;
+  align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+  width:min(900px,96vw);max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 60px -20px rgba(16,24,40,.5)}
+.modal-hd{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--head);
+  border-bottom:1px solid var(--line);border-radius:5px 5px 0 0}
+.modal-hd h3{margin:0;font-size:13.5px;font-weight:600}
+.modal-hd .who2{color:var(--muted);font-size:12px}
+.modal-bd{padding:14px;overflow:auto}
+.modal-bd .kpis{margin-bottom:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:4px 10px;font-size:12px;color:var(--muted)}
+.chip b{color:var(--text)}
+@media(max-width:900px){
+  .wrap{padding:10px 10px 30px}
+  header.top{padding:8px 10px;gap:8px}
+  .brand h1{font-size:14px}
+  .brand .sub{display:none}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+  .kpi .val{font-size:20px}
+  nav.tabs button{padding:7px 12px;font-size:12.5px}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -174,7 +210,7 @@ pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;paddi
       <div class="kpi"><div class="lbl">Проходов сегодня</div><div class="val" id="kPasses">—</div><div class="sub" id="kPassesSub">—</div></div>
       <div class="kpi g"><div class="lbl">Сейчас на объекте</div><div class="val" id="kOnSite">—</div><div class="sub" id="kOnSiteSub">последний проход — вход</div></div>
       <div class="kpi c"><div class="lbl">Входов / выходов</div><div class="val" id="kInOut">—</div><div class="sub">за текущие сутки</div></div>
-      <div class="kpi a"><div class="lbl">Людей за день</div><div class="val" id="kPeople">—</div><div class="sub">уникальных сотрудников</div></div>
+      <div class="kpi a"><div class="lbl">Людей за день</div><div class="val" id="kPeople">—</div><div class="sub" id="kPeopleSub">уникальных</div></div>
       <div class="kpi r"><div class="lbl">Тревог и взломов</div><div class="val" id="kAlerts">—</div><div class="sub">события устройств</div></div>
     </div>
 
@@ -307,6 +343,7 @@ pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;paddi
           <div><label class="f">Вид</label><select id="rView">
             <option value="detail">По дням</option>
             <option value="summary">Свод по сотрудникам</option>
+            <option value="late">Опоздания</option>
             <option value="absent">Не приходили (нет проходов)</option>
           </select></div>
           <div><label class="f">Начало смены</label><input type="time" id="rShiftS" value="08:00"></div>
@@ -352,6 +389,7 @@ pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;paddi
             <div><label class="f">Вид</label><select id="eView">
               <option value="detail">По дням (табель)</option>
               <option value="summary">Свод по сотрудникам</option>
+              <option value="late">Опоздания</option>
               <option value="absent">Не приходили</option>
             </select></div>
             <div><label class="f">Начало смены</label><input type="time" id="eShiftS" value="08:00"></div>
@@ -392,6 +430,17 @@ pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;paddi
 
   <div class="foot">СКУД Gate-IP · источник: суточные журналы <span class="mono">Server\Events\nГГММДД.mdb</span> · отчёты «Ворота»</div>
 </div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 id="mTitle">Сотрудник</h3>
+      <span class="who2" id="mSub"></span>
+      <button id="mClose" style="margin-left:auto">✕ Закрыть</button>
+    </div>
+    <div class="modal-bd" id="mBody"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -407,6 +456,16 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','
 function toast(msg,isErr){const t=$('#toast');t.textContent=msg;t.classList.toggle('err',!!isErr);t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),5000);}
 async function api(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+function delta(v, suffix){
+  if(!v) return '<span class="delta flat">= '+suffix+'</span>';
+  return '<span class="delta '+(v>0?'up':'down')+'">'+(v>0?'▲':'▼')+' '+NUM(Math.abs(v))+'</span> '+suffix;
+}
+function pct(cur, prev){
+  if(!prev) return '';
+  const p=Math.round((cur-prev)/prev*100);
+  if(!p) return ' <span class="delta flat">0%</span>';
+  return ' <span class="delta '+(p>0?'up':'down')+'">'+(p>0?'+':'')+p+'%</span>';
+}
 function dirBadge(d){ if(d==='in')return '<span class="badge in">▲ вход</span>';
   if(d==='out')return '<span class="badge out">▼ выход</span>'; return '<span class="badge na">• проход</span>'; }
 
@@ -573,10 +632,11 @@ async function loadMon(){
   try{
     const [k,p]=await Promise.all([api('/api/kpi?day='+state.day), api('/api/presence?day='+state.day)]);
     $('#kPasses').textContent=NUM(k.passes);
-    $('#kPassesSub').textContent=k.day;
+    $('#kPassesSub').innerHTML=k.day+(k.prev?' · '+delta(k.passes-k.prev.passes,'к вчера'):'');
     $('#kOnSite').textContent=NUM(k.on_site);
     $('#kInOut').innerHTML='<span style="color:#1a7f37">'+(k.in||0)+'</span> <span class="dim">/</span> <span style="color:#b42318">'+(k.out||0)+'</span>';
     $('#kPeople').textContent=NUM(k.people);
+    $('#kPeopleSub').innerHTML='уникальных'+(k.prev?' · '+delta(k.people-k.prev.people,'к вчера'):'');
     $('#kAlerts').textContent=NUM(k.alerts);
     const isToday = state.day===todayISO();
     $('#mNote').textContent = isToday? 'данные обновляются вживую' : 'архив за '+state.day;
@@ -593,7 +653,7 @@ function renderPresence(people){
   $('#presCount').textContent=people.length+' чел.';
   if(!people.length){$('#presence').innerHTML='<div class="empty">Пока никого — нет проходов «вход»</div>';return;}
   $('#presence').innerHTML=people.map(p=>
-    '<div class="it"><div class="avatar">'+esc(initials(p.fio))+'</div>'
+    '<div class="it" data-uid="'+p.user_ptr+'"><div class="avatar">'+esc(initials(p.fio))+'</div>'
     +'<div style="flex:1;min-width:0"><div class="person"><span class="nm">'+esc(p.fio)+'</span></div>'
     +'<div class="pos">'+esc(p.group||'')+(p.position?' · '+esc(p.position):'')+'</div></div>'
     +'<span class="tag mono">'+esc(p.since)+'</span></div>').join('');
@@ -603,7 +663,7 @@ function renderPresence(people){
 let feedItems=[], es=null, kpiTimer=null;
 function feedRow(it, isNew){
   const pass = it.event_type===1;
-  return '<div class="row'+(isNew?' new':'')+'">'
+  return '<div class="row'+(isNew?' new':'')+'"'+(it.user_ptr?' data-uid="'+it.user_ptr+'"':'')+'>'
     +'<span class="t mono">'+esc(it.time)+'</span>'
     + (pass
         ? '<div class="avatar">'+esc(initials(it.fio))+'</div>'
@@ -661,11 +721,12 @@ async function loadAnalytics(){
   if($('#aPoint').value)p.set('point',$('#aPoint').value);
   try{
     const d=await api('/api/analytics?'+p.toString());
-    $('#aPasses').textContent=NUM(d.by_day.reduce((a,x)=>a+x.passes,0));
+    const totPasses=d.by_day.reduce((a,x)=>a+x.passes,0), pt=d.prev_totals||{};
+    $('#aPasses').innerHTML=NUM(totPasses)+pct(totPasses,pt.rows);
     $('#aPeriod').textContent=d.from+' — '+d.to;
-    $('#aPeople').textContent=NUM(d.totals.people);
-    $('#aHours').textContent=fmtHours(d.totals.hours);
-    $('#aLate').textContent=NUM(d.late.late);
+    $('#aPeople').innerHTML=NUM(d.totals.people)+pct(d.totals.people,pt.people);
+    $('#aHours').innerHTML=fmtHours(d.totals.hours)+pct(d.totals.hours,pt.hours);
+    $('#aLate').innerHTML=NUM(d.late.late)+pct(d.late.late,pt.late);
     $('#chDays').innerHTML=chartLine(d.by_day.map(x=>({label:x.day.slice(5),value:x.passes,second:x.people})),{h:250});
     $('#chHour2').innerHTML=chartBars(d.by_hour.map(x=>({label:x.hour,a:x.in,b:x.out})),{h:230,pb:28});
     $('#chHeat').innerHTML=chartHeat(d.heatmap);
@@ -784,7 +845,8 @@ async function loadReport(){
     $('#sHours').textContent=fmtHours(d.total_hours);
     $('#sLate').textContent=NUM(d.late_days);
     $('#repTitle').textContent = view==='detail'?'Посещаемость по дням'
-      : view==='absent'?'Сотрудники без проходов за период':'Свод по сотрудникам';
+      : view==='absent'?'Сотрудники без проходов за период'
+      : view==='late'?'Опоздания по сотрудникам':'Свод по сотрудникам';
     $('#repHint').textContent=(d.from===d.to?d.from:d.from+' — '+d.to);
     renderReport(d,view);
   }catch(e){ $('#repWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
@@ -792,8 +854,22 @@ async function loadReport(){
 function renderReport(d,view){
   const rows = view==='detail'?(d.rows||[]):(d.summary||[]);
   if(!rows.length){$('#repWrap').innerHTML='<div class="empty">Нет данных за выбранный период</div>';return;}
-  let head,body;
-  if(view==='absent'){
+  let head,body,foot='';
+  if(view==='late'){
+    head=['Сотрудник','Табельный','Подразделение','Дней','Дней с опозданием','Минут всего','Средне','Максимум','Худший день'];
+    body=rows.map(r=>'<tr><td><div class="person" data-uid="'+r.user_ptr+'"><div class="avatar">'+esc(initials(r.fio))+'</div>'
+      +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
+      +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
+      +'<td class="num mono">'+r.days+'</td>'
+      +'<td class="num"><span class="badge late">'+r.late_days+'</span></td>'
+      +'<td class="num mono"><b>'+r.late_total+'</b></td>'
+      +'<td class="num mono">'+r.avg_late+'</td>'
+      +'<td class="num mono">'+r.max_late+'</td>'
+      +'<td class="tag mono">'+esc(r.worst_day)+' '+esc(r.worst_time)+'</td></tr>').join('');
+    foot='<tr><td colspan="3">Итого: '+rows.length+' чел.</td><td class="num">'+rows.reduce((a,x)=>a+x.days,0)+'</td>'
+      +'<td class="num">'+rows.reduce((a,x)=>a+x.late_days,0)+'</td>'
+      +'<td class="num">'+rows.reduce((a,x)=>a+x.late_total,0)+'</td><td colspan="3"></td></tr>';
+  }else if(view==='absent'){
     head=['Сотрудник','Табельный','Подразделение','Должность','Дней в периоде','Проходов'];
     body=rows.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div></div></div></td>'
@@ -807,7 +883,7 @@ function renderReport(d,view){
       const late=r.late?'<span class="badge late">+'+r.late+' мин</span>':'<span class="dim">—</span>';
       const early=(r.early===null||r.early===undefined)?'<span class="dim">—</span>':(r.early?r.early+' мин':'<span class="dim">—</span>');
       return '<tr><td class="mono">'+esc(r.day)+'</td>'
-      +'<td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div><div style="min-width:0">'
+      +'<td><div class="person" data-uid="'+r.user_ptr+'"><div class="avatar">'+esc(initials(r.fio))+'</div><div style="min-width:0">'
       +'<div class="nm">'+esc(r.fio)+open+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
       +'<td class="tag">'+esc(r.group)+'</td>'
       +'<td class="num mono" style="color:#1a7f37">'+esc(r.enter)+'</td>'
@@ -817,16 +893,29 @@ function renderReport(d,view){
       +'<td class="tag">'+esc(r.points||'')+'</td></tr>';}).join('');
   }else{
     head=['Сотрудник','Табельный','Подразделение','Дней','Часов','Средне/день','Проходов','Опозданий'];
-    body=rows.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
+    body=rows.map(r=>'<tr><td><div class="person" data-uid="'+r.user_ptr+'"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
       +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
       +'<td class="num mono">'+r.days+'</td><td class="num mono"><b>'+fmtHours(r.hours)+'</b></td>'
       +'<td class="num mono">'+fmtHours(r.avg_hours)+'</td><td class="num mono">'+r.passes+'</td>'
       +'<td class="num">'+(r.late_days?'<span class="badge late">'+r.late_days+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('');
   }
-  const NUMH=new Set(['Дата','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Дней','Средне/день','Опозданий','Дней в периоде','Табельный']);
+  if(!foot){
+    if(view==='detail'){
+      const th=rows.reduce((a,x)=>a+(x.hours||0),0), tp=rows.reduce((a,x)=>a+x.passes,0);
+      foot='<tr><td colspan="5">Итого: '+rows.length+' человеко-дней</td>'
+        +'<td class="num">'+fmtHours(Math.round(th*100)/100)+'</td>'
+        +'<td class="num">'+tp+'</td><td colspan="3"></td></tr>';
+    }else{
+      const th=rows.reduce((a,x)=>a+(x.hours||0),0), td=rows.reduce((a,x)=>a+x.days,0);
+      foot='<tr><td colspan="3">Итого: '+rows.length+' чел.</td>'
+        +'<td class="num">'+td+'</td><td class="num">'+fmtHours(Math.round(th*100)/100)+'</td>'
+        +'<td colspan="3"></td></tr>';
+    }
+  }
+  const NUMH=new Set(['Дата','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Дней','Средне/день','Опозданий','Дней в периоде','Табельный','Дней с опозданием','Минут всего','Средне','Максимум']);
   $('#repWrap').innerHTML='<table><thead><tr>'+head.map(h=>'<th'+(NUMH.has(h)?' class="num"':'')+'>'+h+'</th>').join('')
-    +'</tr></thead><tbody>'+body+'</tbody></table>';
+    +'</tr></thead><tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
 }
 $('#rGo').onclick=loadReport;
 $('#rPrint').onclick=()=>window.open('/print?'+reportQS('#r').toString(),'_blank');
@@ -858,6 +947,51 @@ $('#rXls').onclick=()=>{const p=reportQS('#r');p.set('view',$('#rView').value);
 $('#rCsv').onclick=()=>{const p=reportQS('#r');p.set('view',$('#rView').value);
   p.set('enc','utf-8');p.set('sep','semicolon');p.set('dec',',');p.set('header','1');
   download('/export/1c.csv?'+p.toString(),'poseshchaemost.csv');};
+
+
+/* ---------- карточка сотрудника ---------- */
+function closePerson(){ $('#modal').classList.remove('open'); }
+async function openPerson(uid, from, to){
+  if(!uid) return;
+  const f=from||$('#rFrom').value||shiftISO(29);
+  const t=to||$('#rTo').value||todayISO();
+  $('#modal').classList.add('open');
+  $('#mBody').innerHTML='<div class="empty"><span class="spin"></span> Загрузка…</div>';
+  try{
+    const d=await api('/api/person?user_ptr='+encodeURIComponent(uid)+'&from='+f+'&to='+t);
+    renderPerson(d);
+  }catch(e){ $('#mBody').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+function renderPerson(d){
+  const u=d.user||{}, sm=d.summary||{}, rows=d.rows||[];
+  $('#mTitle').textContent=u.fio||'Сотрудник';
+  $('#mSub').textContent=[u.group,u.position,u.number].filter(Boolean).join(' · ');
+  const chips='<div class="chips">'
+    +'<span class="chip">дней: <b>'+NUM(sm.days||0)+'</b></span>'
+    +'<span class="chip">часов: <b>'+fmtHours(sm.hours||0)+'</b></span>'
+    +'<span class="chip">средне/день: <b>'+fmtHours(sm.avg_hours||0)+'</b></span>'
+    +'<span class="chip">проходов: <b>'+NUM(sm.passes||0)+'</b></span>'
+    +'<span class="chip">дней с опозданием: <b>'+NUM(sm.late_days||0)+'</b></span>'
+    +'<span class="chip">минут опозданий: <b>'+NUM(sm.late_total||0)+'</b></span></div>';
+  const chart = rows.length
+    ? '<div class="chart-box" style="padding:4px 0 8px">'+chartBars(rows.map(r=>({label:r.day.slice(5),value:r.hours||0})),{h:170,maxBar:30})+'</div>'
+    : '';
+  const table = rows.length
+    ? '<div class="tblwrap" style="max-height:300px"><table><thead><tr><th>Дата</th><th class="num">Приход</th><th class="num">Уход</th><th class="num">Часов</th><th class="num">Проходов</th><th class="num">Опоздание</th></tr></thead><tbody>'
+      + rows.map(r=>'<tr><td class="mono">'+esc(r.day)+'</td><td class="num mono">'+esc(r.enter)+'</td><td class="num mono">'+esc(r.exit)+'</td>'
+        +'<td class="num mono">'+fmtHours(r.hours)+'</td><td class="num mono">'+r.passes+'</td>'
+        +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
+      + '</tbody></table></div>'
+    : '<div class="empty">Проходов за период нет</div>';
+  $('#mBody').innerHTML = chips + chart + table;
+}
+$('#mClose').onclick=closePerson;
+$('#modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') closePerson(); });
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePerson(); });
+document.addEventListener('click',(e)=>{
+  const el=e.target.closest('[data-uid]');
+  if(el && !e.target.closest('.modal')){ e.preventDefault(); openPerson(el.dataset.uid); }
+});
 
 /* ===================== выгрузка ===================== */
 function exportQS(){

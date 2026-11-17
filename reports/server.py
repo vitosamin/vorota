@@ -158,6 +158,19 @@ COLS_SUM = [
     ("late_total", "ОпозданиеМинВсего"),
 ]
 
+COLS_LATE = [
+    ("number", "ТабельныйНомер"),
+    ("fio", "ФИО"),
+    ("group", "Подразделение"),
+    ("position", "Должность"),
+    ("late_days", "ДнейСОпозданием"),
+    ("late_total", "ОпозданиеМинВсего"),
+    ("avg_late", "СреднееОпозданиеМин"),
+    ("max_late", "МаксимальноеОпозданиеМин"),
+    ("worst_day", "ХудшийДень"),
+    ("worst_time", "ПриходВХудшийДень"),
+]
+
 COLS_ABS = [
     ("number", "ТабельныйНомер"),
     ("fio", "ФИО"),
@@ -327,6 +340,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_events_summary(q)
             if path == "/api/events/list":
                 return self.api_events_list(q)
+            if path == "/api/late":
+                return self.api_late(q)
+            if path == "/api/person":
+                return self.api_person(q)
             if path == "/api/sync":
                 return self.send_json(do_sync(days=q.get("days")))
             if path == "/export/1c.csv":
@@ -414,6 +431,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"from": frm, "to": to, "view": view, "count": len(rows),
                                    "people": len(rows), "total_hours": 0, "late_days": 0,
                                    "rows": rows, "summary": rows})
+        if view == "late":
+            items = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
+                                     shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+            con.close()
+            return self.send_json({"from": frm, "to": to, "view": view, "count": len(items),
+                                   "people": len(items),
+                                   "total_hours": 0,
+                                   "late_days": sum(x["late_days"] for x in items),
+                                   "rows": items, "summary": items})
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
                                point=q.get("point"), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",
@@ -435,6 +461,29 @@ class Handler(BaseHTTPRequestHandler):
         con = gate.connect()
         data = gate.analytics(con, frm, to, group=q.get("group"), point=q.get("point"))
         con.close()
+        return self.send_json(data)
+
+    def api_late(self, q):
+        frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
+        to = q.get("to") or dt.date.today().isoformat()
+        con = gate.connect()
+        items = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
+                                 shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+        con.close()
+        return self.send_json({"from": frm, "to": to, "count": len(items), "items": items})
+
+    def api_person(self, q):
+        try:
+            uid = int(q.get("user_ptr", "0"))
+        except ValueError:
+            return self.send_json({"error": "user_ptr"}, code=400)
+        frm = q.get("from") or (dt.date.today() - dt.timedelta(days=29)).isoformat()
+        to = q.get("to") or dt.date.today().isoformat()
+        con = gate.connect()
+        data = gate.person_history(con, uid, frm, to)
+        con.close()
+        if data is None:
+            return self.send_json({"error": "not found"}, code=404)
         return self.send_json(data)
 
     def api_events_summary(self, q):
@@ -524,6 +573,11 @@ class Handler(BaseHTTPRequestHandler):
             rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"))
             con.close()
             return rows, COLS_ABS, frm, to
+        if view == "late":
+            rows = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
+                                    shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+            con.close()
+            return rows, COLS_LATE, frm, to
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
                                point=q.get("point"), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",

@@ -458,21 +458,36 @@ class GateBridge
                         report.Append("row ").Append(row).Append(": select failed; ");
                         break;
                     }
-                    string stamp = LastStamp();
                     int[] ev = null;
                     for (int attempt = 0; attempt < 3 && ev == null; attempt++)
                     {
+                        if (attempt > 0)
+                        {
+                            // перевыбор строки: клик по соседней, затем по нужной
+                            int other = row == 1 ? 2 : 1;
+                            SelectRow(other);
+                            SelectRow(row);
+                        }
+                        string stamp = LastStamp();
+                        int sinceIdx = 0;
+                        int.TryParse(stamp, out sinceIdx);
                         ClickOpen();
-                        for (int w = 0; w < 8 && ev == null; w++)
+                        for (int w = 0; w < 30 && ev == null; w++)
                         {
                             Thread.Sleep(500);
-                            ev = LastEvent(stamp);
+                            ev = LastEvent(sinceIdx.ToString());
+                        }
+                        // если открылась та же дверь, что и на прошлой строке — выбор не сработал
+                        if (ev != null && Map.ContainsKey(row - 1) && Map[row - 1].Rdr == ev[1])
+                        {
+                            Log("calibrate row=" + row + " duplicate rdr=" + ev[1] + ", retry");
+                            ev = null;
                         }
                     }
                     if (ev == null)
                     {
-                        report.Append("row ").Append(row).Append(": no new event; ");
-                        Log("calibrate row=" + row + " no new event");
+                        report.Append("row ").Append(row).Append(": no event; ");
+                        Log("calibrate row=" + row + " no event");
                         continue;
                     }
                     var e = new Entry { Row = row, Dev = ev[0], Rdr = ev[1], Num = NumOfReader(ev[1]) };

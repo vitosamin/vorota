@@ -448,6 +448,13 @@ def kpi(con, day=None):
     on_site = [pid for pid, d in present.items() if d == "in" and pid in users]
     alerts = con.execute(
         "SELECT COUNT(*) c FROM events WHERE day=? AND event_type=2 AND alarm_status=1", (day,)).fetchone()["c"]
+
+    prev = (dt.date.fromisoformat(day) - dt.timedelta(days=1)).isoformat()
+    cutoff = dt.datetime.now().strftime("%H:%M:%S") if day == dt.date.today().isoformat() else "23:59:59"
+    pc = con.execute(
+        "SELECT COUNT(*) c, COUNT(DISTINCT user_ptr) u FROM events WHERE day=? AND event_type=?"
+        " AND event_code=? AND ts<=?", (prev, PASS_TYPE, PASS_CODE, prev + " " + cutoff)).fetchone()
+
     return {
         "day": day,
         "passes": len(passes),
@@ -459,12 +466,13 @@ def kpi(con, day=None):
                            for pid in sorted(on_site, key=lambda x: users[x]["fio"])],
         "alerts": alerts,
         "by_hour": by_hour,
+        "prev": {"day": prev, "passes": pc["c"] or 0, "people": pc["u"] or 0, "cutoff": cutoff},
     }
 
 
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
-               shift_start=None, shift_end=None):
+               shift_start=None, shift_end=None, user_ptr=None):
     """Свод посещаемости по сотрудникам и дням.
 
     Приход — первый проход дня, уход — последний проход дня.
@@ -477,6 +485,9 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     if point:
         sql += " AND unit LIKE ?"
         params.append("%" + point + "%")
+    if user_ptr:
+        sql += " AND user_ptr = ?"
+        params.append(int(user_ptr))
     sql += " ORDER BY ts"
     passes = con.execute(sql, params).fetchall()
 
@@ -692,6 +703,13 @@ def analytics(con, from_day, to_day, group=None, point=None):
         buckets[idx] = (buckets[idx][0], buckets[idx][1] + 1)
 
     top_late = sorted(attendance_summary(rows), key=lambda a: -a["late_total"])[:10]
+
+    d0 = dt.date.fromisoformat(from_day)
+    d1 = dt.date.fromisoformat(to_day)
+    n = (d1 - d0).days + 1
+    prev_rows = attendance(con, (d0 - dt.timedelta(days=n)).isoformat(),
+                           (d0 - dt.timedelta(days=1)).isoformat(), group=group, point=point)
+
     return {
         "from": from_day, "to": to_day,
         "by_day": days,
@@ -707,6 +725,10 @@ def analytics(con, from_day, to_day, group=None, point=None):
                      and "гост" not in (a["group"] or "").lower()],
         "totals": {"rows": len(rows), "people": len({r["user_ptr"] for r in rows}),
                    "hours": round(sum(r["hours"] or 0 for r in rows), 2)},
+        "prev_totals": {"rows": len(prev_rows),
+                        "people": len({r["user_ptr"] for r in prev_rows}),
+                        "hours": round(sum(r["hours"] or 0 for r in prev_rows), 2),
+                        "late": sum(1 for r in prev_rows if r["late"])},
     }
 
 
@@ -749,13 +771,22 @@ def events_summary(con, from_day, to_day):
                for r in con.execute(
                    "SELECT CAST(substr(ts,12,2) AS INTEGER) h, COUNT(*) c FROM events"
                    " WHERE day BETWEEN ? AND ? GROUP BY h ORDER BY h", params)]
+    messages = [{"message": (r["message"] or "—"), "type": r["et"], "count": r["c"]}
+                for r in con.execute(
+                    "SELECT message, MIN(event_type) et, COUNT(*) c FROM events"
+                    " WHERE day BETWEEN ? AND ? GROUP BY message ORDER BY c DESC LIMIT 80", params)]
     return {"from": from_day, "to": to_day, "total": total, "alarms": alarms,
-            "types": types, "top": top, "by_day": by_day, "by_hour": by_hour}
+            "types": types, "top": top, "by_day": by_day, "by_hour": by_hour,
+            "messages": messages}
 
 
 def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=False,
-                limit=200, offset=0):
-    """Страница журнала событий (новые сверху)."""
+                limit=200, offset=0, message=None):
+    """Страница журнала событий (новые сверху).
+
+    `search` — ФИО, табельный номер или текст события (без учёта регистра);
+    `message` — точное название события из выпадающего списка.
+    """
     where = ["day BETWEEN ? AND ?"]
     params = [from_day, to_day]
     if etype:
@@ -763,9 +794,22 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
         params.append(int(etype))
     if alarms_only:
         where.append("alarm_status = 1")
+    if message:
+        where.append("message = ?")
+        params.append(message)
     if search:
-        where.append("(instr_ru(message, ?) OR instr_ru(unit, ?) OR instr_ru(name, ?))")
-        params += [search, search, search]
+        clauses = ["instr_ru(message, ?)", "instr_ru(unit, ?)", "instr_ru(name, ?)"]
+        sparams = [search, search, search]
+        uids = [r["user_ptr"] for r in con.execute(
+            "SELECT user_ptr FROM users WHERE"
+            " instr_ru(last_name || ' ' || first_name || ' ' || father_name, ?)"
+            " OR instr_ru(last_name, ?) OR instr_ru(number, ?)",
+            (search, search, search))]
+        if uids:
+            clauses.append("user_ptr IN (%s)" % ",".join("?" * len(uids)))
+            sparams += uids
+        where.append("(" + " OR ".join(clauses) + ")")
+        params += sparams
     w = " AND ".join(where)
     total = con.execute("SELECT COUNT(*) c FROM events WHERE " + w, params).fetchone()["c"]
     rows = con.execute(
@@ -778,6 +822,53 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
               "name": (r["name"] or "").strip(), "alarm": bool(r["alarm_status"])}
              for r in rows]
     return {"total": total, "offset": int(offset), "limit": int(limit), "items": items}
+
+
+
+def late_report(con, from_day, to_day, group=None, search=None,
+                shift_start=None, shift_end=None):
+    """Опоздания за период: по сотрудникам, с худшим днём."""
+    rows = attendance(con, from_day, to_day, group=group, search=search,
+                      shift_start=shift_start, shift_end=shift_end)
+    per = {}
+    for r in rows:
+        a = per.setdefault(r["user_ptr"], {
+            "user_ptr": r["user_ptr"], "fio": r["fio"], "number": r["number"],
+            "group": r["group"], "position": r["position"], "days": 0, "hours": 0.0,
+            "late_days": 0, "late_total": 0, "max_late": 0,
+            "worst_day": "", "worst_time": "", "worst_shift": ""})
+        a["days"] += 1
+        a["hours"] += r["hours"] or 0
+        if r["late"]:
+            a["late_days"] += 1
+            a["late_total"] += r["late"]
+            if r["late"] > a["max_late"]:
+                a["max_late"] = r["late"]
+                a["worst_day"] = r["day"]
+                a["worst_time"] = r["enter"]
+                a["worst_shift"] = r["group"]
+    out = [a for a in per.values() if a["late_days"]
+           and _real_name(a["fio"]) and "гост" not in (a["group"] or "").lower()]
+    for a in out:
+        a["hours"] = round(a["hours"], 2)
+        a["avg_late"] = int(round(a["late_total"] / a["late_days"])) if a["late_days"] else 0
+    out.sort(key=lambda x: (-x["late_total"], x["fio"]))
+    return out
+
+
+def person_history(con, user_ptr, from_day, to_day):
+    """Карточка сотрудника: дни, часы, опоздания за период."""
+    users = _user_names(con)
+    u = users.get(int(user_ptr))
+    if u is None:
+        return None
+    rows = attendance(con, from_day, to_day, user_ptr=user_ptr,
+                      include_deleted=True, include_visitors=True)
+    summ = attendance_summary(rows)
+    summary = summ[0] if summ else {
+        "days": 0, "hours": 0.0, "passes": 0, "late_days": 0, "late_total": 0,
+        "avg_hours": 0.0, "early_total": 0, "open": False}
+    return {"user": u, "from": from_day, "to": to_day, "rows": rows, "summary": summary}
 
 
 def points_list(con):
