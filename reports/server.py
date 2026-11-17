@@ -502,6 +502,7 @@ class Handler(BaseHTTPRequestHandler):
             con, frm, to,
             etype=q.get("type") or None,
             search=(q.get("search") or "").strip() or None,
+            message=(q.get("message") or "").strip() or None,
             alarms_only=(q.get("alarms") == "1"),
             limit=max(1, min(500, int(q.get("limit", 200)))),
             offset=max(0, int(q.get("offset", 0))))

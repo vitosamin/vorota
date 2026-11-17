@@ -303,12 +303,14 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
       <div id="evBody" style="display:none">
         <div class="bd">
           <div class="filters">
+            <div><label class="f">Событие</label><select id="evMsg"><option value="">любое событие</option></select></div>
+            <div><label class="f">ФИО или табельный</label><input type="text" id="evSearch" placeholder="Пыхтеев, Антоненко, 032/57959…"></div>
             <div><label class="f">Тип события</label><select id="evType"><option value="">все типы</option></select></div>
-            <div><label class="f">Поиск по тексту</label><input type="text" id="evSearch" placeholder="взлом, дверь, тревога…"></div>
             <div><label class="f">Только тревоги</label><select id="evAlarms"><option value="0">нет</option><option value="1">да</option></select></div>
             <div><label class="f">Строк</label><select id="evLimit"><option value="100">100</option><option value="200" selected>200</option><option value="500">500</option></select></div>
           </div>
-          <div class="row-actions"><button class="primary" id="evApply">Показать события</button></div>
+          <div class="row-actions"><button class="primary" id="evApply">Показать события</button>
+            <button id="evReset">Сбросить фильтры</button></div>
           <div class="kpis" style="margin-top:12px">
             <div class="kpi"><div class="lbl">Событий за период</div><div class="val" id="evTotal">—</div><div class="sub" id="evPeriod">—</div></div>
             <div class="kpi r"><div class="lbl">Тревог</div><div class="val" id="evAlarmCnt">—</div><div class="sub">взлом, дверь не закрыта</div></div>
@@ -759,11 +761,16 @@ $('#evHead').onclick=(e)=>{ if(!e.target.closest('#evToggle')) evToggleBox(); };
 $('#evToggle').onclick=(e)=>{ e.stopPropagation(); evToggleBox(); };
 $('#evApply').onclick=()=>loadEvents(true);
 $('#evMore').onclick=()=>loadEvents(false);
+$('#evReset').onclick=()=>{
+  $('#evMsg').value=''; $('#evSearch').value=''; $('#evType').value=''; $('#evAlarms').value='0';
+  loadEvents(true);
+};
 
 function evQuery(reset){
   const p=new URLSearchParams();
   p.set('from',$('#aFrom').value||shiftISO(6));
   p.set('to',$('#aTo').value||todayISO());
+  if($('#evMsg').value) p.set('message',$('#evMsg').value);
   if($('#evType').value) p.set('type',$('#evType').value);
   const s=$('#evSearch').value.trim(); if(s) p.set('search',s);
   if($('#evAlarms').value==='1') p.set('alarms','1');
@@ -800,6 +807,11 @@ async function loadEventSummary(){
     sel.innerHTML='<option value="">все типы</option>'+s.types.map(t=>
       '<option value="'+t.type+'">'+esc(t.title)+' ('+NUM(t.count)+')</option>').join('');
     sel.value=cur;
+    const msg=$('#evMsg'), curMsg=msg.value;
+    msg.innerHTML='<option value="">любое событие</option>'+(s.messages||[]).map(m=>
+      '<option value="'+esc(m.message)+'">'+esc(m.message)+' ('+NUM(m.count)+')</option>').join('');
+    msg.value=curMsg;
+    if(msg.value!==curMsg) msg.value='';
     $('#evDayChart').innerHTML=chartBars(s.by_day.map(x=>({label:x.day.slice(5),value:x.count})),{h:190,maxBar:34});
     $('#evTypeChart').innerHTML=chartHBars(s.types.map(t=>({label:t.title,value:t.count})),{w:520,rh:24});
   }catch(e){ /* тихо */ }
