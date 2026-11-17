@@ -1,2 +1,0 @@
-ControlPeriod теперь = 1
-done

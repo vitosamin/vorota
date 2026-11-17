@@ -1,2 +1,0 @@
-IdleLimit=0 | SolidWiegand=Ложь | FireDevPtr=0 | FireInput=1 | UseBackup=Истина | BackupDir=C:\GATE\Server\Backup\ | BackupPeriod=1 | LastBackupDate=17.11.2026 | ControlPeriod=3 | UseDevLine=Ложь | LeftCarInfoOn=Ложь | VAlarmsOn=Ложь | VLockLeftOn=Ложь | VFirstAlarmTime=0 | VNextAlarmTime=0 | VUnlockTime=0 | LangStr=RU | UseZK=Ложь | UseAnviz=Ложь | InterfaceMode=66 | ApiId= | 
-done
