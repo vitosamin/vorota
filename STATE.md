@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 13:12 (Europe/Kaliningrad)
-> main · последний коммит: 2aac212 «1.8: карточка Ворота; веб: вход и сессия»
-> Версия 1.8 (`versionCode 9`), пакет `ru.smartsystem39.gates`
+> Обновлено: 2026-11-17 13:30 (Europe/Kaliningrad)
+> main · последний коммит: acf9686 «1.9: светлая тема, спокойные кнопки»
+> Версия 1.9 (`versionCode 10`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
