@@ -35,6 +35,13 @@
 
     <color name="btn_neutral">#222933</color>
 
+    <!-- В тёмной теме те же типы, но ярче — как делает iOS -->
+    <color name="type_gate">#2E9E4F</color>
+    <color name="type_wide">#0A84FF</color>
+    <color name="type_barrier">#C46A00</color>
+    <color name="type_relay">#BF5AF2</color>
+    <color name="on_type">#FFFFFF</color>
+
     <color name="text_primary">#E7ECF3</color>
     <color name="text_secondary">#94A2B6</color>
     <color name="text_muted">#7C8798</color>

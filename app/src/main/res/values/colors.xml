@@ -35,6 +35,13 @@
 
     <color name="btn_neutral">#F1F1F2</color>
 
+    <!-- Плашки типов устройств: цвета iOS, чуть глубже ради белого значка -->
+    <color name="type_gate">#248A3D</color>
+    <color name="type_wide">#0A6CD4</color>
+    <color name="type_barrier">#C46A00</color>
+    <color name="type_relay">#9B59C4</color>
+    <color name="on_type">#FFFFFF</color>
+
     <color name="text_primary">#15181C</color>
     <color name="text_secondary">#4E5560</color>
     <color name="text_muted">#6B7280</color>

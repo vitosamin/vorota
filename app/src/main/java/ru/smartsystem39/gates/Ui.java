@@ -100,16 +100,20 @@ public final class Ui {
         }
     }
 
-    /** Красит кнопку и ставит иконку слева — один вид на все действия. */
+    /** Красит кнопку и ставит иконку слева — один вид на все действия.
+     *  Размер иконки задаём сами: у векторных drawable он иначе крупнее кнопки. */
     public static void styleButton(Context c, Button b, int background, int textColor, int icon) {
         b.setBackgroundResource(background);
         int color = c.getColor(textColor);
         b.setTextColor(color);
         if (icon != 0) {
-            b.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
+            Drawable d = c.getResources().getDrawable(icon, c.getTheme()).mutate();
+            int size = dp(c, 13);
+            d.setBounds(0, 0, size, size);
+            b.setCompoundDrawables(d, null, null, null);
             b.setCompoundDrawableTintList(ColorStateList.valueOf(color));
         } else {
-            b.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            b.setCompoundDrawables(null, null, null, null);
         }
     }
 }

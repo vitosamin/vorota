@@ -405,7 +405,7 @@ public class MainActivity extends Activity {
         // статус и кнопки действий. В ряд помещается две плитки.
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(12), dp(12), dp(12), dp(12));
+        card.setPadding(dp(10), dp(10), dp(10), dp(10));
         card.setBackground(Ui.cardBackground(this));
         c.root = card;
 
@@ -416,13 +416,13 @@ public class MainActivity extends Activity {
 
         FrameLayout chip = new FrameLayout(this);
         chip.setLayoutParams(new LinearLayout.LayoutParams(dp(28), dp(28)));
-        chip.setBackground(Ui.fill(getColor(Device.typeSoft(d.type)), dp(6)));
+        chip.setBackground(Ui.fill(getColor(Device.typeColor(d.type)), dp(7)));
 
         ImageView icon = new ImageView(this);
         icon.setLayoutParams(new FrameLayout.LayoutParams(dp(16), dp(16), Gravity.CENTER));
         icon.setImageResource(Device.typeIcon(d.type));
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        icon.setColorFilter(getColor(Device.typeTint(d.type)));
+        icon.setColorFilter(getColor(R.color.on_type));
         c.icon = icon;
         chip.addView(icon);
         top.addView(chip);
@@ -487,7 +487,7 @@ public class MainActivity extends Activity {
             action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(34), 1f));
             action.setText(R.string.action_open);
             action.setAllCaps(false);
-            action.setTextSize(12);
+            action.setTextSize(11);
             action.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
             action.setSingleLine(true);
             action.setMinWidth(0);
@@ -495,6 +495,8 @@ public class MainActivity extends Activity {
             action.setMinimumWidth(0);
             action.setMinimumHeight(0);
             action.setCompoundDrawablePadding(dp(5));
+            action.setPadding(dp(6), 0, dp(6), 0);
+            action.setEllipsize(TextUtils.TruncateAt.END);
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
             actions.addView(action);
@@ -611,7 +613,7 @@ public class MainActivity extends Activity {
         } else if (s.isOpenish()) {
             Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_primary, icon);
         } else {
-            Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.accent, icon);
+            Ui.styleButton(this, c.action, R.drawable.btn_tint, R.color.accent, icon);
         }
         c.action.setAlpha(online ? 1f : 0.6f);
     }
@@ -626,7 +628,7 @@ public class MainActivity extends Activity {
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(12);
+        b.setTextSize(11);
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setSingleLine(true);
         b.setMinWidth(0);
@@ -634,6 +636,8 @@ public class MainActivity extends Activity {
         b.setMinimumWidth(0);
         b.setMinimumHeight(0);
         b.setCompoundDrawablePadding(dp(5));
+        b.setPadding(dp(6), 0, dp(6), 0);
+        b.setEllipsize(TextUtils.TruncateAt.END);
         Ui.styleButton(this, b, R.drawable.btn_secondary,
                 out ? R.color.text_primary : R.color.accent,
                 out ? R.drawable.ic_log_out : R.drawable.ic_log_in);

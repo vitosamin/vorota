@@ -143,13 +143,14 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .trow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .chip { width: 28px; height: 28px; border-radius: var(--radius-xs); flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center; }
-.tint-blue { background: var(--accent-soft); color: var(--accent); }
-.tint-cyan { background: rgba(34,211,238,0.12); color: var(--cyan); }
-.tint-amber { background: rgba(251,191,36,0.12); color: var(--warn); }
-.tint-purple { background: rgba(167,139,250,0.14); color: var(--purple); }
-[data-theme="light"] .tint-cyan { background: rgba(13,111,138,0.10); }
-[data-theme="light"] .tint-amber { background: rgba(168,98,11,0.10); }
-[data-theme="light"] .tint-purple { background: rgba(113,84,204,0.10); }
+/* Плашки как у значков в настройках iOS: сплошной цвет, белый глиф */
+.tint-gate { background: #248a3d; color: #fff; }
+.tint-wide { background: #0a6cd4; color: #fff; }
+.tint-barrier { background: #c46a00; color: #fff; }
+.tint-relay { background: #9b59c4; color: #fff; }
+[data-theme="dark"] .tint-gate { background: #2e9e4f; }
+[data-theme="dark"] .tint-wide { background: #0a84ff; }
+[data-theme="dark"] .tint-relay { background: #bf5af2; }
 .tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
 .tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -165,7 +166,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
        border: 1px solid var(--border); background: rgba(128,128,128,0.08);
        color: var(--text); font-family: inherit; font-size: var(--fs-s);
        font-weight: 500; cursor: pointer; padding: 0 6px; }
-.btn.accent { color: var(--accent); }
+.btn.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
 .btn.primary { background: var(--accent-fill); border-color: var(--accent-fill);
                color: #fff; box-shadow: var(--shadow-accent); }
 .btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
@@ -196,17 +197,17 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 def build():
     icons = lucide.load()
     main = grid([
-        tile("Калитка", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-cyan",
+        tile("Калитка", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-gate",
              [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
-        tile("Шлагбаум", "Home Assistant · cover", "Открыто", "ok", "Fence", "tint-amber",
+        tile("Шлагбаум", "Home Assistant · cover", "Открыто", "ok", "Fence", "tint-barrier",
              [("Закрыть", "", None)]),
-        tile("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen", "tint-cyan",
+        tile("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen", "tint-gate",
              [("Стоп", "warn", "Square")]),
-        tile("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed", "tint-blue",
+        tile("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed", "tint-wide",
              [("Вход", "", "LogIn")]),
-        tile("Ворота", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-blue",
+        tile("Ворота", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-wide",
              [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
-        tile("Реле освещения", "Tasmota · реле 1", "Выключено", "dim", "Power", "tint-purple",
+        tile("Реле освещения", "Tasmota · реле 1", "Выключено", "dim", "Power", "tint-relay",
              [("Включить", "accent", "Power")]),
     ])
 
@@ -247,8 +248,8 @@ def build():
 <body>
 <h1>Приложение «Доступ»</h1>
 <p class="note">Оформление панели sing-box: её палитра, радиусы, высота элементов и иконки Lucide.
-Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка бирюзовая,
-ворота синие, шлагбаум янтарный, реле сиреневое. Название занимает две строки и подбирает кегль,
+Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка зелёная,
+ворота синие, шлагбаум оранжевый, реле сиреневое. Название занимает две строки и подбирает кегль,
 поэтому длинное имя видно целиком.</p>
 <div class="frames">
 {screen("Доступ", "Мост СКУД доступен", main, active_tab=0, theme="light")}

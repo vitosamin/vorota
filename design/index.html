@@ -66,13 +66,14 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .trow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .chip { width: 28px; height: 28px; border-radius: var(--radius-xs); flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center; }
-.tint-blue { background: var(--accent-soft); color: var(--accent); }
-.tint-cyan { background: rgba(34,211,238,0.12); color: var(--cyan); }
-.tint-amber { background: rgba(251,191,36,0.12); color: var(--warn); }
-.tint-purple { background: rgba(167,139,250,0.14); color: var(--purple); }
-[data-theme="light"] .tint-cyan { background: rgba(13,111,138,0.10); }
-[data-theme="light"] .tint-amber { background: rgba(168,98,11,0.10); }
-[data-theme="light"] .tint-purple { background: rgba(113,84,204,0.10); }
+/* Плашки как у значков в настройках iOS: сплошной цвет, белый глиф */
+.tint-gate { background: #248a3d; color: #fff; }
+.tint-wide { background: #0a6cd4; color: #fff; }
+.tint-barrier { background: #c46a00; color: #fff; }
+.tint-relay { background: #9b59c4; color: #fff; }
+[data-theme="dark"] .tint-gate { background: #2e9e4f; }
+[data-theme="dark"] .tint-wide { background: #0a84ff; }
+[data-theme="dark"] .tint-relay { background: #bf5af2; }
 .tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
 .tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -88,7 +89,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
        border: 1px solid var(--border); background: rgba(128,128,128,0.08);
        color: var(--text); font-family: inherit; font-size: var(--fs-s);
        font-weight: 500; cursor: pointer; padding: 0 6px; }
-.btn.accent { color: var(--accent); }
+.btn.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
 .btn.primary { background: var(--accent-fill); border-color: var(--accent-fill);
                color: #fff; box-shadow: var(--shadow-accent); }
 .btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
@@ -119,8 +120,8 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 <body>
 <h1>Приложение «Доступ»</h1>
 <p class="note">Оформление панели sing-box: её палитра, радиусы, высота элементов и иконки Lucide.
-Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка бирюзовая,
-ворота синие, шлагбаум янтарный, реле сиреневое. Название занимает две строки и подбирает кегль,
+Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка зелёная,
+ворота синие, шлагбаум оранжевый, реле сиреневое. Название занимает две строки и подбирает кегль,
 поэтому длинное имя видно целиком.</p>
 <div class="frames">
   <div class="phone" data-theme="light">
@@ -133,7 +134,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
       <div class="grid">
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-cyan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status ok">Готов</div>
           </div>
           <div class="tname">Калитка</div>
@@ -145,7 +146,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
+            <div class="chip tint-barrier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
             <div class="status ok">Открыто</div>
           </div>
           <div class="tname">Шлагбаум</div>
@@ -156,7 +157,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-cyan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status warn">Открывается…</div>
           </div>
           <div class="tname">КПП производство</div>
@@ -167,7 +168,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
+            <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
             <div class="status err">Нет связи</div>
           </div>
           <div class="tname">Северные ворота склад №3</div>
@@ -178,7 +179,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status ok">Готов</div>
           </div>
           <div class="tname">Ворота</div>
@@ -190,7 +191,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
+            <div class="chip tint-relay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
             <div class="status dim">Выключено</div>
           </div>
           <div class="tname">Реле освещения</div>
@@ -217,7 +218,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
       <div class="grid">
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-cyan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status ok">Готов</div>
           </div>
           <div class="tname">Калитка</div>
@@ -229,7 +230,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
+            <div class="chip tint-barrier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
             <div class="status ok">Открыто</div>
           </div>
           <div class="tname">Шлагбаум</div>
@@ -240,7 +241,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-cyan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status warn">Открывается…</div>
           </div>
           <div class="tname">КПП производство</div>
@@ -251,7 +252,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
+            <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
             <div class="status err">Нет связи</div>
           </div>
           <div class="tname">Северные ворота склад №3</div>
@@ -262,7 +263,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+            <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
             <div class="status ok">Готов</div>
           </div>
           <div class="tname">Ворота</div>
@@ -274,7 +275,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         </div>
         <div class="tile">
           <div class="trow">
-            <div class="chip tint-purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
+            <div class="chip tint-relay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
             <div class="status dim">Выключено</div>
           </div>
           <div class="tname">Реле освещения</div>

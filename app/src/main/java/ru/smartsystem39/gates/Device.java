@@ -81,20 +81,12 @@ public class Device {
         return R.drawable.ic_fence;
     }
 
-    /** Цвет значка по типу устройства: у каждого типа свой, чтобы список не был серым. */
-    public static int typeTint(String type) {
-        if (TYPE_GATE.equals(type)) return R.color.info;
-        if (TYPE_WIDE.equals(type)) return R.color.accent;
-        if (TYPE_RELAY.equals(type)) return R.color.violet;
-        return R.color.warn;
-    }
-
-    /** Подложка под значок — тот же цвет, но приглушённый. */
-    public static int typeSoft(String type) {
-        if (TYPE_GATE.equals(type)) return R.color.info_soft;
-        if (TYPE_WIDE.equals(type)) return R.color.accent_soft;
-        if (TYPE_RELAY.equals(type)) return R.color.violet_soft;
-        return R.color.warn_soft;
+    /** Цвет плашки устройства: у каждого типа свой, как у значков в настройках iOS. */
+    public static int typeColor(String type) {
+        if (TYPE_GATE.equals(type)) return R.color.type_gate;
+        if (TYPE_WIDE.equals(type)) return R.color.type_wide;
+        if (TYPE_RELAY.equals(type)) return R.color.type_relay;
+        return R.color.type_barrier;
     }
 
     public static String protocolLabel(String protocol) {
