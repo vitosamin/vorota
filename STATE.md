@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:18 (Europe/Kaliningrad)
-> main · последний коммит: 0e5b05e «2.1: переключатель темы»
-> Версия 2.1 (`versionCode 12`), пакет `ru.smartsystem39.gates`
+> Обновлено: 2026-11-17 14:40 (Europe/Kaliningrad)
+> main · последний коммит: 669ec38 «2.2: статус шапки, 2FA в вебе»
+> Версия 2.2 (`versionCode 13`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
@@ -31,7 +31,13 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
   `gate_audit.log` (входы, открытия, правка пользователей).
   Токен `vorota-2026` работает **только из локальной сети** (RFC1918) и только
   для API приложения — в HTML страницы его больше нет.
-  `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от localhost.
+  `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от localhost,
+  а `TokenAllowed()` вообще не пускает токен через прокси без реального IP.
+- **2FA (TOTP)**: страница `/2fa` — включение/отключение, секрет base32,
+  otpauth-ссылка, подтверждение кодом. Вход: пароль → `/2fa` → код → сессия.
+  У `vitosamin` 2FA включена (секрет в `gate_users.json`).
+- Публикацию наружу планируется делать через npm-прокси пользователя:
+  нужен HTTPS, заголовки `X-Forwarded-For` и `X-Forwarded-Proto: https`.
 - Автозапуск: задачи `GateBridgeStartup` (при входе) и `GateBridgeWatchdog`
   (каждые 2 минуты: поднимает мост, если порт 8099 не слушается, и запускает
   `GateServ.exe` / `GateTerm.exe`, если их нет). Проверено: убитый мост
