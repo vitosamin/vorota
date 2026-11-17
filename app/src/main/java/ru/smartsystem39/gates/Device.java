@@ -21,8 +21,17 @@ public class Device {
     public static final String P_ESPHOME = "esphome";
     public static final String P_CUSTOM = "custom";
 
+    /** Метка стандартной заготовки: по ней устройство узнаётся даже после переименования. */
+    public static final String SEED_DRIVE = "drive";
+    public static final String SEED_GATE = "gate";
+    public static final String SEED_BARRIER = "barrier";
+
     public String id = "";
     public String name = "";
+    /** Имя задал человек — импорт из моста его больше не перезаписывает. */
+    public boolean nameEdited = false;
+    /** Пусто у обычных устройств; у заготовок — SEED_*. */
+    public String seed = "";
     public String type = TYPE_BARRIER;
     public String source = SRC_HA;
 
@@ -102,6 +111,8 @@ public class Device {
         try {
             o.put("id", id);
             o.put("name", name);
+            o.put("nameEdited", nameEdited);
+            o.put("seed", seed);
             o.put("type", type);
             o.put("source", source);
             o.put("entity", entity);
@@ -129,6 +140,8 @@ public class Device {
         Device d = new Device();
         d.id = o.optString("id", "");
         d.name = o.optString("name", "");
+        d.nameEdited = o.optBoolean("nameEdited", false);
+        d.seed = o.optString("seed", "");
         d.type = o.optString("type", TYPE_BARRIER);
         d.source = o.optString("source", SRC_HA);
         d.entity = o.optString("entity", "");

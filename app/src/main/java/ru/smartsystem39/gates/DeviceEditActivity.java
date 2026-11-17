@@ -150,6 +150,7 @@ public class DeviceEditActivity extends Activity {
     private void populate() {
         editTitle.setText(isNew ? R.string.edit_new : R.string.edit_title);
         nameInput.setText(device.name);
+        nameInput.setHint(R.string.rename_hint);
         entityValue.setText(entityLabel());
         addressInput.setText(device.address);
         channelInput.setText(String.valueOf(device.channel));
@@ -287,6 +288,8 @@ public class DeviceEditActivity extends Activity {
             nameInput.requestFocus();
             return;
         }
+        // Имя, которое человек ввёл сам, загрузка дверей больше не перезапишет.
+        if (!name.equals(device.name)) device.nameEdited = true;
         device.name = name;
         device.favorite = favoriteCheck.isChecked();
 

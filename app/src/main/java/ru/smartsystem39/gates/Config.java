@@ -115,26 +115,37 @@ public class Config {
         boolean changed = false;
         boolean hasBarrier = false, hasGate = false, hasDrive = false;
         for (Device d : devices) {
-            if ("Шлагбаум".equals(d.name)) hasBarrier = true;
-            if ("Калитка".equals(d.name)) hasGate = true;
-            if ("Ворота".equals(d.name)) hasDrive = true;
+            // Записи прежних версий опознаём по имени и сразу помечаем меткой:
+            // после этого имя можно менять на любое, заготовка не вернётся.
+            if (d.seed.isEmpty()) {
+                if ("Ворота".equals(d.name)) d.seed = Device.SEED_DRIVE;
+                else if ("Калитка".equals(d.name)) d.seed = Device.SEED_GATE;
+                else if ("Шлагбаум".equals(d.name)) d.seed = Device.SEED_BARRIER;
+                if (!d.seed.isEmpty()) changed = true;
+            }
+            if (Device.SEED_BARRIER.equals(d.seed)) hasBarrier = true;
+            if (Device.SEED_GATE.equals(d.seed)) hasGate = true;
+            if (Device.SEED_DRIVE.equals(d.seed)) hasDrive = true;
         }
         int pos = 0;
         if (!hasDrive && !sp.getBoolean("deleted_drive", false)) {
             Device drive = new Device(Device.newId(), "Ворота", Device.TYPE_GATE);
             drive.favorite = true;
+            drive.seed = Device.SEED_DRIVE;
             devices.add(pos++, drive);
             changed = true;
         }
         if (!hasGate && !sp.getBoolean("deleted_gate", false)) {
             Device gate = new Device(Device.newId(), "Калитка", Device.TYPE_GATE);
             gate.favorite = true;
+            gate.seed = Device.SEED_GATE;
             devices.add(Math.min(pos++, devices.size()), gate);
             changed = true;
         }
         if (!hasBarrier && !sp.getBoolean("deleted_barrier", false)) {
             Device barrier = new Device(Device.newId(), "Шлагбаум", Device.TYPE_BARRIER);
             barrier.favorite = true;
+            barrier.seed = Device.SEED_BARRIER;
             devices.add(Math.min(pos, devices.size()), barrier);
             changed = true;
         }
@@ -166,9 +177,9 @@ public class Config {
         List<Device> out = new ArrayList<>();
         for (Device d : list) {
             if (d.id.equals(id)) {
-                if ("Шлагбаум".equals(d.name)) sp.edit().putBoolean("deleted_barrier", true).apply();
-                if ("Калитка".equals(d.name)) sp.edit().putBoolean("deleted_gate", true).apply();
-                if ("Ворота".equals(d.name)) sp.edit().putBoolean("deleted_drive", true).apply();
+                if (Device.SEED_BARRIER.equals(d.seed)) sp.edit().putBoolean("deleted_barrier", true).apply();
+                if (Device.SEED_GATE.equals(d.seed)) sp.edit().putBoolean("deleted_gate", true).apply();
+                if (Device.SEED_DRIVE.equals(d.seed)) sp.edit().putBoolean("deleted_drive", true).apply();
             } else {
                 out.add(d);
             }

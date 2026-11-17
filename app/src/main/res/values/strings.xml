@@ -54,6 +54,9 @@
     <string name="label_on_value">Значение «включено»</string>
     <string name="save">Сохранить</string>
     <string name="delete">Удалить</string>
+    <string name="rename">Переименовать</string>
+    <string name="device_settings">Настройки устройства</string>
+    <string name="rename_hint">Своё название двери</string>
     <string name="delete_title">Удалить устройство?</string>
     <string name="delete_text">«%1$s» исчезнет с главного экрана.</string>
     <string name="cancel">Отмена</string>

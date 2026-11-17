@@ -525,6 +525,52 @@ public class MainActivity extends Activity {
         return c;
     }
 
+    private void showDeviceMenu(Device d) {
+        String[] items = {
+                getString(R.string.rename),
+                getString(R.string.device_settings),
+                getString(d.favorite ? R.string.fav_remove : R.string.fav_add),
+        };
+        new AlertDialog.Builder(this)
+                .setTitle(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name)
+                .setItems(items, (dialog, which) -> {
+                    if (which == 0) renameDevice(d);
+                    else if (which == 1) openEditor(d.id);
+                    else toggleFavorite(d);
+                })
+                .show();
+    }
+
+    /** Своё имя: сохраняется в устройстве и не сбрасывается загрузкой дверей. */
+    private void renameDevice(Device d) {
+        EditText input = new EditText(this);
+        input.setText(d.name);
+        input.setSelection(input.getText().length());
+        input.setSingleLine(true);
+        input.setSelectAllOnFocus(true);
+        int pad = dp(20);
+        FrameLayout box = new FrameLayout(this);
+        box.setPadding(pad, dp(8), pad, 0);
+        box.addView(input);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.rename)
+                .setView(box)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.save, (dialog, which) -> {
+                    String name = input.getText().toString().trim();
+                    if (name.isEmpty()) {
+                        toast(getString(R.string.error_name));
+                        return;
+                    }
+                    d.name = name;
+                    d.nameEdited = true;
+                    cfg.upsert(d);
+                    toast(getString(R.string.saved));
+                    reloadDevices();
+                })
+                .show();
+    }
+
     /** Подпись источника под названием: откуда устройство и чем управляет. */
     private String sourceLabel(Device d) {
         if (d.isGate()) {
@@ -882,7 +928,7 @@ public class MainActivity extends Activity {
                             found = new Device(Device.newId(), name, Device.TYPE_WIDE);
                             devices.add(found);
                         }
-                        found.name = name;
+                        if (!found.nameEdited) found.name = name;
                         found.source = Device.SRC_HTTP;
                         found.protocol = Device.P_CUSTOM;
                         found.address = base;
