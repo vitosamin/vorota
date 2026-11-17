@@ -2,6 +2,9 @@ import ru.smartsystem39.gates.Device;
 import ru.smartsystem39.gates.DirectClient;
 import ru.smartsystem39.gates.HaClient;
 import ru.smartsystem39.gates.Status;
+import ru.smartsystem39.gates.UpdateChecker;
+
+import java.io.File;
 
 import java.util.List;
 
@@ -17,6 +20,7 @@ public class ProtoTest {
         testCustom();
         testNormalize();
         testJson();
+        testUpdate();
         testHaService();
         testHa(args);
 
@@ -114,6 +118,28 @@ public class ProtoTest {
         check("custom close", r.ok, r.error);
         s = DirectClient.status(d, false);
         check("custom OFF after close", s.kind == Status.OFF, s.text);
+    }
+
+    private static void testUpdate() {
+        UpdateChecker.Info older = UpdateChecker.check("0.9");
+        check("update found for 0.9",
+                older.error == null && older.newer && older.apkUrl.endsWith(".apk"),
+                older.error + " tag=" + older.tag);
+        UpdateChecker.Info current = UpdateChecker.check("1.0");
+        check("no update for 1.0",
+                current.error == null && !current.newer,
+                current.error + " tag=" + current.tag);
+        if (older.error == null && !older.apkUrl.isEmpty()) {
+            try {
+                File tmp = File.createTempFile("vorota-update", ".apk");
+                String err = UpdateChecker.download(older.apkUrl, tmp);
+                check("update APK downloaded", err == null && tmp.length() > 100_000,
+                        err + " size=" + tmp.length());
+                tmp.delete();
+            } catch (Exception e) {
+                check("update APK downloaded", false, e.toString());
+            }
+        }
     }
 
     private static void testJson() {
