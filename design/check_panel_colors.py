@@ -20,6 +20,25 @@ THEMES = {
         fill="#1d4ed8", accent="#2b62d9", success="#15803d", warn="#a8620b", danger="#c0342a"),
 }
 
+# Значки устройств: цвет на своей приглушённой подложке
+CHIP_PAIRS = {
+    "тёмная (панель по умолчанию)": [("бирюзовый значок", "#22d3ee", 0.12),
+                                     ("синий значок", "#4a9eff", 0.10),
+                                     ("янтарный значок", "#fbbf24", 0.12),
+                                     ("сиреневый значок", "#a78bfa", 0.14)],
+    "светлая": [("бирюзовый значок", "#0d6f8a", 0.10),
+                ("синий значок", "#2b62d9", 0.08),
+                ("янтарный значок", "#9a5909", 0.10),
+                ("сиреневый значок", "#7154cc", 0.10)],
+}
+
+
+def blend(fg, alpha, bg):
+    f = [int(fg.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)]
+    b = [int(bg.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)]
+    return "#%02X%02X%02X" % tuple(round(f[i] * alpha + b[i] * (1 - alpha)) for i in range(3))
+
+
 PAIRS = [
     ("название на карточке", "text", "card"),
     ("подпись на карточке", "dim", "card"),
@@ -60,6 +79,13 @@ def main():
             if not ok:
                 failures.append(f"{name}: {label} {ratio:.2f}")
             print(f"{'OK   ' if ok else 'ПЛОХО'} {label:24} {fg_color} на {bg_color} — {ratio:.2f}")
+        for label, fg, alpha in CHIP_PAIRS[name]:
+            bg = blend(fg, alpha, theme["card"])
+            ratio = contrast(fg, bg)
+            ok = ratio >= WANT
+            if not ok:
+                failures.append(f"{name}: {label} {ratio:.2f}")
+            print(f"{'OK   ' if ok else 'ПЛОХО'} {label:24} {fg} на {bg} — {ratio:.2f}")
     if failures:
         print(f"\nПРОВАЛОВ: {len(failures)} — {'; '.join(failures)}")
         return 1

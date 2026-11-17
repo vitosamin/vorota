@@ -24,7 +24,7 @@
 
     <color name="success">#15803D</color>
     <color name="success_soft">#E8F3EA</color>
-    <color name="warn">#A8620B</color>
+    <color name="warn">#9A5909</color>
     <color name="warn_soft">#F3ECE4</color>
     <color name="warn_line">#DEC5A8</color>
     <color name="danger">#C0342A</color>

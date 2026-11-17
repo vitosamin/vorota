@@ -281,24 +281,49 @@ public class MainActivity extends Activity {
         }
 
         if (favorites.isEmpty()) {
-            for (Device d : others) addCard(d);
+            addTiles(others);
             return;
         }
         listMain.addView(buildSection(getString(R.string.section_favorites)));
-        for (Device d : favorites) addCard(d);
+        addTiles(favorites);
         if (!others.isEmpty()) {
             listMain.addView(buildAllHeader(allExpanded, others.size()));
-            if (allExpanded) for (Device d : others) addCard(d);
+            if (allExpanded) addTiles(others);
         }
     }
 
-    private void addCard(Device d) {
-        Card c = buildCard(d);
-        if (!cards.containsKey(d.id)) cards.put(d.id, new ArrayList<>());
-        cards.get(d.id).add(c);
-        listMain.addView(c.root);
-        Status known = lastStatus.get(d.id);
-        if (known != null) applyStatus(c, known);
+    /** Раскладывает устройства компактными плитками по две в ряд. */
+    private void addTiles(List<Device> list) {
+        LinearLayout row = null;
+        for (int i = 0; i < list.size(); i++) {
+            if (i % 2 == 0) {
+                row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                rlp.bottomMargin = dp(10);
+                row.setLayoutParams(rlp);
+                listMain.addView(row);
+            }
+            Card c = buildCard(list.get(i));
+            if (!cards.containsKey(c.id)) cards.put(c.id, new ArrayList<>());
+            cards.get(c.id).add(c);
+            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, dp(158), 1f);
+            if (i % 2 == 0) clp.rightMargin = dp(5); else clp.leftMargin = dp(5);
+            c.root.setLayoutParams(clp);
+            row.addView(c.root);
+            Status known = lastStatus.get(c.id);
+            if (known != null) applyStatus(c, known);
+        }
+        // Нечётное число: пустая плитка, чтобы последняя не растягивалась на весь ряд.
+        if (list.size() % 2 == 1 && row != null) {
+            View gap = new View(this);
+            LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0,
+                    ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+            glp.leftMargin = dp(5);
+            gap.setLayoutParams(glp);
+            row.addView(gap);
+        }
     }
 
     private TextView buildSection(String text) {
@@ -376,13 +401,12 @@ public class MainActivity extends Activity {
         c.id = d.id;
         c.device = d;
 
-        // Карточка как в панели sing-box: рамка 1 dp, радиус 12, внутри строка
-        // «значок — название — статус» и крупные кнопки под ней.
+        // Компактная плитка: значок со своим цветом, название в две строки,
+        // статус и кнопки действий. В ряд помещается две плитки.
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(14), dp(14), dp(14), dp(14));
+        card.setPadding(dp(12), dp(12), dp(12), dp(12));
         card.setBackground(Ui.cardBackground(this));
-        card.setLayoutParams(Ui.rowLp(this));
         c.root = card;
 
         LinearLayout top = new LinearLayout(this);
@@ -391,52 +415,27 @@ public class MainActivity extends Activity {
         card.addView(top);
 
         FrameLayout chip = new FrameLayout(this);
-        chip.setLayoutParams(new LinearLayout.LayoutParams(dp(34), dp(34)));
-        chip.setBackgroundResource(R.drawable.bg_icon_circle);
+        chip.setLayoutParams(new LinearLayout.LayoutParams(dp(28), dp(28)));
+        chip.setBackground(Ui.fill(getColor(Device.typeSoft(d.type)), dp(6)));
 
         ImageView icon = new ImageView(this);
-        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
+        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(16), dp(16), Gravity.CENTER));
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.accent));
+        icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        icon.setColorFilter(getColor(Device.typeTint(d.type)));
         c.icon = icon;
         chip.addView(icon);
         top.addView(chip);
 
-        LinearLayout texts = new LinearLayout(this);
-        texts.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        tlp.leftMargin = dp(11);
-        tlp.rightMargin = dp(8);
-        texts.setLayoutParams(tlp);
-
-        TextView name = new TextView(this);
-        name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
-        name.setTextColor(getColor(R.color.text_primary));
-        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(true);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setAutoSizeTextTypeUniformWithConfiguration(13, 15, 1, TypedValue.COMPLEX_UNIT_SP);
-        c.name = name;
-        texts.addView(name);
-
-        TextView source = new TextView(this);
-        source.setText(sourceLabel(d));
-        source.setTextColor(getColor(R.color.text_secondary));
-        source.setTextSize(12);
-        source.setSingleLine(true);
-        source.setEllipsize(TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        slp.topMargin = dp(2);
-        source.setLayoutParams(slp);
-        texts.addView(source);
-        top.addView(texts);
-
         TextView status = new TextView(this);
+        LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        stlp.leftMargin = dp(8);
+        status.setLayoutParams(stlp);
+        status.setGravity(Gravity.END);
         status.setText(R.string.status_checking);
         status.setTextColor(getColor(R.color.text_secondary));
-        status.setTextSize(12);
+        status.setTextSize(11);
         status.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         status.setSingleLine(true);
         c.status = status;
@@ -444,11 +443,38 @@ public class MainActivity extends Activity {
         c.dot = null;
         top.addView(status);
 
+        // Имя занимает обе строки и подбирает кегль — длинное название видно целиком.
+        TextView name = new TextView(this);
+        name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
+        name.setTextColor(getColor(R.color.text_primary));
+        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        name.setMaxLines(2);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        name.setAutoSizeTextTypeUniformWithConfiguration(12, 15, 1, TypedValue.COMPLEX_UNIT_SP);
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        nlp.topMargin = dp(8);
+        name.setLayoutParams(nlp);
+        c.name = name;
+        card.addView(name);
+
+        TextView source = new TextView(this);
+        source.setText(sourceLabel(d));
+        source.setTextColor(getColor(R.color.text_secondary));
+        source.setTextSize(11);
+        source.setSingleLine(true);
+        source.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        slp.topMargin = dp(2);
+        source.setLayoutParams(slp);
+        card.addView(source);
+
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        alp.topMargin = dp(12);
+        alp.topMargin = dp(8);
         actions.setLayoutParams(alp);
 
         if (d.isGate()) {
@@ -458,25 +484,24 @@ public class MainActivity extends Activity {
             c.action = null;
         } else {
             Button action = new Button(this);
-            action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
+            action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(34), 1f));
             action.setText(R.string.action_open);
             action.setAllCaps(false);
-            action.setTextSize(13);
+            action.setTextSize(12);
             action.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
             action.setSingleLine(true);
             action.setMinWidth(0);
             action.setMinHeight(0);
             action.setMinimumWidth(0);
             action.setMinimumHeight(0);
-            action.setCompoundDrawablePadding(dp(7));
+            action.setCompoundDrawablePadding(dp(5));
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
             actions.addView(action);
         }
-        actions.addView(favoriteButton(d));
         card.addView(actions);
 
-        // Команды запускаются только кнопками, не случайным касанием карточки.
+        // Избранное — в редакторе (долгое нажатие): в компактной плитке места нет.
         card.setOnLongClickListener(v -> {
             openEditor(d.id);
             return true;
@@ -492,20 +517,6 @@ public class MainActivity extends Activity {
             }
         }
         return c;
-    }
-
-    private ImageButton favoriteButton(Device d) {
-        ImageButton star = new ImageButton(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), dp(40));
-        lp.leftMargin = dp(8);
-        star.setLayoutParams(lp);
-        star.setPadding(dp(11), dp(11), dp(11), dp(11));
-        star.setBackgroundResource(d.favorite ? R.drawable.btn_primary : R.drawable.btn_secondary);
-        star.setImageResource(R.drawable.ic_star);
-        star.setColorFilter(getColor(d.favorite ? R.color.on_accent : R.color.text_secondary));
-        star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
-        star.setOnClickListener(v -> toggleFavorite(d));
-        return star;
     }
 
     /** Подпись источника под названием: откуда устройство и чем управляет. */
@@ -600,7 +611,7 @@ public class MainActivity extends Activity {
         } else if (s.isOpenish()) {
             Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_primary, icon);
         } else {
-            Ui.styleButton(this, c.action, R.drawable.btn_primary, R.color.on_accent, icon);
+            Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.accent, icon);
         }
         c.action.setAlpha(online ? 1f : 0.6f);
     }
@@ -609,23 +620,22 @@ public class MainActivity extends Activity {
         boolean out = "out".equals(dir);
         Button b = new Button(this);
         LinearLayout.LayoutParams lp = weight > 0
-                ? new LinearLayout.LayoutParams(0, dp(40), weight)
-                : new LinearLayout.LayoutParams(dp(96), dp(40));
-        if (marginRight) lp.rightMargin = dp(8);
+                ? new LinearLayout.LayoutParams(0, dp(34), weight)
+                : new LinearLayout.LayoutParams(dp(84), dp(34));
+        if (marginRight) lp.rightMargin = dp(6);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(13);
+        b.setTextSize(12);
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setSingleLine(true);
         b.setMinWidth(0);
         b.setMinHeight(0);
         b.setMinimumWidth(0);
         b.setMinimumHeight(0);
-        b.setCompoundDrawablePadding(dp(7));
-        Ui.styleButton(this, b,
-                out ? R.drawable.btn_secondary : R.drawable.btn_primary,
-                out ? R.color.text_primary : R.color.on_accent,
+        b.setCompoundDrawablePadding(dp(5));
+        Ui.styleButton(this, b, R.drawable.btn_secondary,
+                out ? R.color.text_primary : R.color.accent,
                 out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
         b.setOnClickListener(v -> onTapDir(d, dir));
         return b;

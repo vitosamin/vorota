@@ -5,6 +5,9 @@
 --card, --accent-fill и т. д.) и настоящие иконки Lucide из того же бандла,
 поэтому браузер рисует ровно то, что попадёт в приложение.
 
+Устройства — компактные плитки по две в ряд; у каждого типа свой цвет значка,
+чтобы список не выглядел серым.
+
 Запуск: python3 gates/design/build_mockup_html.py
 """
 import sys
@@ -20,22 +23,25 @@ def icon(name, size=16, stroke=2):
     return lucide.svg(lucide.load()[name], size=size, stroke=stroke)
 
 
-def device_card(name, sub, status, status_class, icon_name, buttons):
-    parts = [f'''      <div class="card">
-        <div class="row">
-          <div class="chip">{icon(icon_name, 18)}</div>
-          <div class="meta">
-            <div class="name">{name}</div>
-            <div class="sub">{sub}</div>
+def tile(name, sub, status, status_class, icon_name, tint, buttons):
+    """Компактная плитка: значок своего цвета, имя в две строки, кнопки."""
+    parts = [f'''        <div class="tile">
+          <div class="trow">
+            <div class="chip {tint}">{icon(icon_name, 16)}</div>
+            <div class="status {status_class}">{status}</div>
           </div>
-          <div class="status {status_class}">{status}</div>
-        </div>
-        <div class="btns">''']
+          <div class="tname">{name}</div>
+          <div class="tsub">{sub}</div>
+          <div class="btns">''']
     for label, kind, ic in buttons:
-        ic_html = icon(ic, 15) if ic else ""
-        parts.append(f'          <button class="btn {kind}">{ic_html}<span>{label}</span></button>')
-    parts.append("        </div>\n      </div>")
+        ic_html = icon(ic, 14) if ic else ""
+        parts.append(f'            <button class="btn {kind}">{ic_html}<span>{label}</span></button>')
+    parts.append("          </div>\n        </div>")
     return "\n".join(parts)
+
+
+def grid(tiles):
+    return '      <div class="grid">\n' + "\n".join(tiles) + "\n      </div>"
 
 
 def settings_row(label, value="", check=False, chevron=False):
@@ -49,10 +55,9 @@ def settings_row(label, value="", check=False, chevron=False):
     return f'        <div class="srow"><span>{label}</span>{right}</div>'
 
 
-def field(label, value, mono=True):
-    cls = "input mono" if mono else "input"
+def field(label, value):
     return (f'        <div class="field-label">{label}</div>\n'
-            f'        <div class="{cls}">{value}</div>')
+            f'        <div class="input mono">{value}</div>')
 
 
 def screen(title, subtitle, body, active_tab=0, theme="dark"):
@@ -95,59 +100,72 @@ CSS = """
   --border:#dcdfe4; --border-hi:#c6cbd3;
   --text:#15181c; --text-dim:#4e5560;
   --accent:#2b62d9; --accent-hi:#3b78ec; --accent-fill:#1d4ed8; --accent-fill-hi:#2b62d9;
-  --success:#15803d; --danger:#c0342a; --warn:#a8620b; --purple:#7154cc; --cyan:#0d6f8a;
+  --success:#15803d; --danger:#c0342a; --warn:#9a5909; --purple:#7154cc; --cyan:#0d6f8a;
   --accent-soft:rgba(43,98,217,0.08); --accent-soft-2:rgba(43,98,217,0.15);
   --shadow-accent:0 2px 10px rgba(43,98,217,0.22);
 }
 * { box-sizing: border-box; }
+svg { flex: 0 0 auto; display: block; }
 body {
-  margin: 0; padding: 28px 20px 48px;
+  margin: 0; padding: 24px 16px 48px;
   background: #0b0e12; color: #e7ecf3;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .note { color: #94a2b6; font-size: var(--fs-m); margin: 0 0 24px; max-width: 900px; }
-.frames { display: flex; gap: 28px; flex-wrap: wrap; }
+.frames { display: flex; gap: 24px; flex-wrap: wrap; }
 .caption { font-size: var(--fs-s); color: #94a2b6; margin: 10px 0 0 4px; }
 
-.phone { width: 390px; height: 780px; border-radius: 28px; overflow: hidden;
+.phone { width: min(390px, 100%); height: 780px; border-radius: 28px; overflow: hidden;
          border: 1px solid #27323f; background: var(--bg); flex: 0 0 auto; }
+@media (max-width: 460px) {
+  body { padding: 18px 12px 40px; }
+  .frames { gap: 18px; }
+  .phone { height: 720px; border-radius: 22px; }
+}
 .screen { height: 100%; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
-.head { padding: 22px 18px 12px; }
+.head { padding: 20px 14px 10px; }
 .title { font-size: var(--fs-xxl); font-weight: 600; letter-spacing: -0.01em; }
-.subtitle { margin-top: 8px; font-size: var(--fs-s); color: var(--text-dim);
+.subtitle { margin-top: 7px; font-size: var(--fs-s); color: var(--text-dim);
             display: flex; align-items: center; gap: 7px; }
 .subtitle::before { content: ""; width: 7px; height: 7px; border-radius: 999px;
                     background: var(--success); flex: 0 0 auto; }
-.list { flex: 1; overflow-y: auto; padding: 4px 14px 14px; display: flex;
-        flex-direction: column; gap: 10px; }
+.list { flex: 1; overflow-y: auto; padding: 2px 14px 14px; }
 .tabbar { display: flex; background: var(--bg-side); border-top: 1px solid var(--border); }
 .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
        padding: 9px 0 12px; font-size: var(--fs-xs); color: var(--text-dim); }
 .tab.active { color: var(--accent); }
 
-.card { background: var(--card); border: 1px solid var(--border);
-        border-radius: var(--radius-l); padding: 14px; }
-.row { display: flex; align-items: center; gap: 11px; }
-.chip { width: 34px; height: 34px; border-radius: var(--radius-xs); flex: 0 0 auto;
-        background: var(--accent-soft); color: var(--accent);
+/* Компактные плитки: две в ряд */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-l);
+        padding: 12px; display: flex; flex-direction: column; min-height: 158px; }
+.trow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chip { width: 28px; height: 28px; border-radius: var(--radius-xs); flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center; }
-.meta { flex: 1; min-width: 0; }
-.name { font-size: var(--fs-l); font-weight: 600; }
-.sub { font-size: var(--fs-s); color: var(--text-dim); margin-top: 2px;
-       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.status { font-size: var(--fs-s); font-weight: 500; flex: 0 0 auto; }
+.tint-blue { background: var(--accent-soft); color: var(--accent); }
+.tint-cyan { background: rgba(34,211,238,0.12); color: var(--cyan); }
+.tint-amber { background: rgba(251,191,36,0.12); color: var(--warn); }
+.tint-purple { background: rgba(167,139,250,0.14); color: var(--purple); }
+[data-theme="light"] .tint-cyan { background: rgba(13,111,138,0.10); }
+[data-theme="light"] .tint-amber { background: rgba(168,98,11,0.10); }
+[data-theme="light"] .tint-purple { background: rgba(113,84,204,0.10); }
+.tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
+.tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status { font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; }
 .status.ok { color: var(--success); }
 .status.warn { color: var(--warn); }
 .status.err { color: var(--danger); }
 .status.dim { color: var(--text-dim); }
 
-.btns { display: flex; gap: 8px; margin-top: 12px; }
+.btns { display: flex; gap: 6px; margin-top: auto; padding-top: 8px; }
 .btn { flex: 1; height: var(--control-h); display: inline-flex; align-items: center;
-       justify-content: center; gap: 7px; border-radius: var(--radius-s);
+       justify-content: center; gap: 5px; border-radius: var(--radius-s);
        border: 1px solid var(--border); background: rgba(128,128,128,0.08);
-       color: var(--text); font-family: inherit; font-size: var(--fs-m);
-       font-weight: 500; cursor: pointer; }
+       color: var(--text); font-family: inherit; font-size: var(--fs-s);
+       font-weight: 500; cursor: pointer; padding: 0 6px; }
+.btn.accent { color: var(--accent); }
 .btn.primary { background: var(--accent-fill); border-color: var(--accent-fill);
                color: #fff; box-shadow: var(--shadow-accent); }
 .btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
@@ -171,20 +189,25 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .input.mono { font-family: "SF Mono", ui-monospace, Consolas, monospace; }
 .box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-l);
        padding: 4px 12px 12px; }
+.group { display: flex; flex-direction: column; }
 """
 
 
 def build():
     icons = lucide.load()
-    main_cards = "\n".join([
-        device_card("Калитка", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen",
-                    [("Вход", "primary", "LogIn"), ("Выход", "", "LogOut")]),
-        device_card("Шлагбаум", "Home Assistant · cover.barrier", "Открыто", "ok", "Fence",
-                    [("Закрыть", "", None)]),
-        device_card("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen",
-                    [("Стоп", "warn", "Square")]),
-        device_card("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed",
-                    [("Вход", "", "LogIn")]),
+    main = grid([
+        tile("Калитка", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-cyan",
+             [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
+        tile("Шлагбаум", "Home Assistant · cover", "Открыто", "ok", "Fence", "tint-amber",
+             [("Закрыть", "", None)]),
+        tile("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen", "tint-cyan",
+             [("Стоп", "warn", "Square")]),
+        tile("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed", "tint-blue",
+             [("Вход", "", "LogIn")]),
+        tile("Ворота", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-blue",
+             [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
+        tile("Реле освещения", "Tasmota · реле 1", "Выключено", "dim", "Power", "tint-purple",
+             [("Включить", "accent", "Power")]),
     ])
 
     settings = "\n".join([
@@ -219,17 +242,17 @@ def build():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Доступ — макет в стиле панели sing-box</title>
 <style>{CSS}
-.group {{ display: flex; flex-direction: column; }}
 </style>
 </head>
 <body>
 <h1>Приложение «Доступ»</h1>
-<p class="note">Оформление взято из панели sing-box: палитра, радиусы, высота элементов и иконки
-Lucide — те же. Иконки: дверь открыта/закрыта, шлагбаум, вход, выход, стоп.
-Макет собран из настоящих SVG панели, поэтому в приложении они будут выглядеть так же.</p>
+<p class="note">Оформление панели sing-box: её палитра, радиусы, высота элементов и иконки Lucide.
+Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка бирюзовая,
+ворота синие, шлагбаум янтарный, реле сиреневое. Название занимает две строки и подбирает кегль,
+поэтому длинное имя видно целиком.</p>
 <div class="frames">
-{screen("Доступ", "Мост СКУД доступен", main_cards, active_tab=0, theme="light")}
-{screen("Доступ", "Мост СКУД доступен", main_cards, active_tab=0, theme="dark")}
+{screen("Доступ", "Мост СКУД доступен", main, active_tab=0, theme="light")}
+{screen("Доступ", "Мост СКУД доступен", main, active_tab=0, theme="dark")}
 {screen("Настройки", "", settings, active_tab=1, theme="light")}
 </div>
 <p class="caption">Слева — светлая тема, в центре — тёмная (как в панели по умолчанию), справа — настройки.</p>
