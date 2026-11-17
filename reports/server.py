@@ -25,6 +25,7 @@ import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import accounts
 import gate
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -94,7 +95,7 @@ def parse_cookies(header):
 
 
 def check_password(user, password):
-    return hmac.compare_digest(user or "", AUTH_USER) and hmac.compare_digest(password or "", AUTH_PASS)
+    return accounts.verify(user, password)
 
 
 # --------------------------------------------------------------------------
@@ -346,6 +347,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.serve_static("index.html")
             if path.startswith("/static/"):
                 return self.serve_static(path[len("/static/"):])
+            if path == "/api/me":
+                return self.api_me()
+            if path == "/api/accounts":
+                return self.api_accounts()
             if path == "/api/version":
                 return self.send_json({"version": page_version()})
             if path == "/api/status":
@@ -598,6 +603,84 @@ class Handler(BaseHTTPRequestHandler):
                                filename="События_СКУД_%s_%s.csv" % (frm, to),
                                ascii_name="events_%s_%s.csv" % (frm, to))
 
+    def api_me(self):
+        user = self.current_user()
+        if not user:
+            return self.send_json({"error": "unauthorized"}, code=401)
+        acc = accounts.get(user) or {}
+        role = accounts.role_of(user)
+        return self.send_json({"login": user, "role": role,
+                               "roleTitle": accounts.ROLE_TITLES.get(role, "—"),
+                               "name": acc.get("name", user),
+                               "gate_user": gate.SMB_USER if role == "admin" else None})
+
+    def api_accounts(self):
+        if not self.require_admin():
+            return
+        return self.send_json({"items": accounts.public(),
+                               "roles": [{"id": r, "title": accounts.ROLE_TITLES[r]} for r in accounts.ROLES]})
+
+    def require_admin(self):
+        user = self.current_user()
+        if not user:
+            self.send_json({"error": "нужно войти"}, code=401)
+            return None
+        if accounts.role_of(user) != "admin":
+            self.send_json({"error": "недостаточно прав"}, code=403)
+            return None
+        return user
+
+    def admin_post(self, path, body):
+        user = self.require_admin()
+        if not user:
+            return
+        try:
+            payload = json.loads(body or b"{}")
+        except ValueError:
+            payload = {}
+        try:
+            if path == "/api/accounts/add":
+                accounts.add(payload.get("login"), payload.get("password"),
+                             payload.get("role") or "viewer", payload.get("name"))
+                return self.send_json({"ok": True, "items": accounts.public()})
+            if path == "/api/accounts/delete":
+                accounts.delete(payload.get("login"))
+                return self.send_json({"ok": True, "items": accounts.public()})
+            if path == "/api/accounts/password":
+                accounts.set_password(payload.get("login"), payload.get("password"))
+                return self.send_json({"ok": True})
+            if path == "/api/accounts/role":
+                accounts.set_role(payload.get("login"), payload.get("role"))
+                return self.send_json({"ok": True, "items": accounts.public()})
+            if path == "/api/accounts/name":
+                accounts.set_name(payload.get("login"), payload.get("name"))
+                return self.send_json({"ok": True, "items": accounts.public()})
+            if path == "/api/settings/check-gate":
+                ok, msg = gate.check_smb()
+                return self.send_json({"ok": ok, "message": msg})
+            if path == "/api/settings/gate":
+                login = (payload.get("user") or "").strip()
+                pwd = payload.get("password") or ""
+                if not login or not pwd:
+                    return self.send_json({"ok": False, "error": "заполните логин и пароль"}, code=400)
+                old_user, old_pass = gate.SMB_USER, gate.SMB_PASS
+                gate.set_smb_credentials(login, pwd)
+                ok, msg = gate.check_smb()
+                if not ok:
+                    gate.set_smb_credentials(old_user, old_pass)
+                    return self.send_json({"ok": False, "error": "Gate не принял учётку: " + msg}, code=400)
+                return self.send_json({"ok": True, "message": msg})
+            if path == "/api/settings/password":
+                old = payload.get("old") or ""
+                new = payload.get("new") or ""
+                if not accounts.verify(user, old):
+                    return self.send_json({"ok": False, "error": "текущий пароль неверен"}, code=400)
+                accounts.set_password(user, new)
+                return self.send_json({"ok": True})
+            return self.send_json({"error": "not found"}, code=404)
+        except ValueError as exc:
+            return self.send_json({"ok": False, "error": str(exc)}, code=400)
+
     def api_events_summary(self, q):
         frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
         to = q.get("to") or dt.date.today().isoformat()
@@ -822,9 +905,10 @@ class Handler(BaseHTTPRequestHandler):
         body = self.rfile.read(length) if length else b""
         if path == "/login":
             form = {k: v[0] for k, v in urllib.parse.parse_qs(body.decode("utf-8", "replace")).items()}
-            if check_password(form.get("username", ""), form.get("password", "")):
+            login = (form.get("username") or "").strip()
+            if check_password(login, form.get("password", "")):
                 cookie = "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax" % (
-                    COOKIE, make_token(AUTH_USER), SESSION_HOURS * 3600)
+                    COOKIE, make_token(login), SESSION_HOURS * 3600)
                 return self.redirect("/", cookie=cookie)
             return self.redirect("/login?e=1")
         if not self.current_user():
@@ -835,6 +919,8 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError:
                 payload = {}
             return self.send_json(do_sync(days=payload.get("days")))
+        if path.startswith("/api/accounts") or path.startswith("/api/settings"):
+            return self.admin_post(path, body)
         return self.send_bytes(b"not found", "text/plain; charset=utf-8", code=404)
 
 
@@ -886,6 +972,8 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
     gate.init_db()
+    if accounts.ensure_admin(AUTH):
+        print("создан администратор из gate.config.json → auth", flush=True)
     threading.Thread(target=sync_worker, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print("СКУД Gate: http://0.0.0.0:%d/  вход: %s  (Ctrl+C — стоп)" % (port, AUTH_USER), flush=True)

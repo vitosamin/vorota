@@ -67,6 +67,34 @@ def _env(libpath):
     return env
 
 
+def set_smb_credentials(user, password):
+    """Сменить учётную запись для доступа к шаре Gate и сохранить в конфиг."""
+    global SMB_USER, SMB_PASS
+    user = (user or "").strip()
+    password = password or ""
+    if not user or not password:
+        raise ValueError("нужны логин и пароль")
+    SMB_USER, SMB_PASS = user, password
+    CFG["user"] = user
+    CFG["password"] = password
+    path = os.path.join(ROOT, "gate.config.json")
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(CFG, fh, ensure_ascii=False, indent=2)
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, path)
+    return True
+
+
+def check_smb(timeout=25):
+    """Проверить доступ к шаре Gate. Возвращает (ok, сообщение)."""
+    try:
+        items = smb_list("Server")
+        return True, "связь есть, файлов в Server: %d" % len(items)
+    except Exception as exc:                     # noqa: BLE001
+        return False, str(exc)
+
+
 def smb_run(command, timeout=120):
     """Выполнить команду smbclient (-c ...) и вернуть stdout."""
     args = [SMB, SHARE, "-U", "%s%%%s" % (SMB_USER, SMB_PASS),

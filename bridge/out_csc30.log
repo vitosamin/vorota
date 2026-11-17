@@ -1,0 +1,13 @@
+c:\Users\Public\GateBridge.cs(1005,49): error CS1525: Недопустимый терм "string" в выражении
+c:\Users\Public\GateBridge.cs(1005,55): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(1005,55): error CS1525: Недопустимый терм ")" в выражении
+c:\Users\Public\GateBridge.cs(1005,64): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(1005,64): error CS1525: Недопустимый терм ")" в выражении
+c:\Users\Public\GateBridge.cs(1005,65): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(1017,54): error CS1525: Недопустимый терм "string" в выражении
+c:\Users\Public\GateBridge.cs(1017,60): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(1017,60): error CS1525: Недопустимый терм ")" в выражении
+c:\Users\Public\GateBridge.cs(1027,55): error CS1525: Недопустимый терм "string" в выражении
+c:\Users\Public\GateBridge.cs(1027,61): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(1027,61): error CS1525: Недопустимый терм ")" в выражении
+rc=1 

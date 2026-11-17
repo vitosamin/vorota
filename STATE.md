@@ -1,6 +1,6 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:06 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 14:18 (Europe/Kaliningrad)
 > main · последний коммит: 0e5b05e «2.1: переключатель темы»
 > Версия 2.1 (`versionCode 12`), пакет `ru.smartsystem39.gates`
 
@@ -21,9 +21,17 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
 
 - API: `/status`, `/doors`, `/open?id=<dev>&dir=in|out`, `/calibrate`,
   `/reload`, `/press?id=<row>&btn=lock|unlock`.
-- **Веб-версия:** `http://192.168.2.160:8099/` — своя страница входа
-  (`vitosamin` / `Admin910327`), сессия в cookie на 12 ч, кнопка «Выйти»;
-  Basic Auth оставлен для скриптов. Автообновление 15 с.
+- **Веб-версия:** `http://192.168.2.160:8099/` — страница входа, сессии,
+  управление пользователями (`/admin`), журнал действий. Автообновление 15 с.
+- **Безопасность (v4):** пароли в PBKDF2-SHA1 (120 000 итераций, соль),
+  файл `C:\Users\Public\gate_users.json`; сессии в памяти на 8 ч;
+  cookie HttpOnly + SameSite=Strict (+Secure при HTTPS); CSRF-заголовок для
+  POST; блокировка после 5 неудач на логин и 10 на IP (15 мин);
+  заголовки CSP/X-Frame-Options/nosniff/Referrer-Policy; журнал
+  `gate_audit.log` (входы, открытия, правка пользователей).
+  Токен `vorota-2026` работает **только из локальной сети** (RFC1918) и только
+  для API приложения — в HTML страницы его больше нет.
+  `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от localhost.
 - Автозапуск: задачи `GateBridgeStartup` (при входе) и `GateBridgeWatchdog`
   (каждые 2 минуты: поднимает мост, если порт 8099 не слушается, и запускает
   `GateServ.exe` / `GateTerm.exe`, если их нет). Проверено: убитый мост

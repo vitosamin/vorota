@@ -658,45 +658,46 @@ button:active{transform:translateY(1px)}
 <style>
 :root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:30px 20px 44px}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 18px 40px}
 .wrap{max-width:1080px;margin:0 auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:4px}
-h1{font-size:30px;font-weight:600;margin:0;letter-spacing:-.02em}
-.who{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:12px}
-.who a{color:var(--mut);text-decoration:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;font-size:13px;transition:.15s}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:4px;flex-wrap:wrap}
+h1{font-size:28px;font-weight:600;margin:0;letter-spacing:-.02em}
+.who{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.who a{color:var(--mut);text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:13px}
 .who a:hover{color:var(--txt);border-color:#cfd8e3}
-.sub{color:var(--muted);font-size:13px;margin:0 0 22px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:.15s}
-.card:hover{box-shadow:0 2px 6px rgba(16,24,40,.06),0 12px 28px rgba(16,24,40,.05);border-color:#d5dee9}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px}
 .top{display:flex;align-items:center;gap:12px}
 .icon{width:42px;height:42px;border-radius:50%;background:#e4ede9;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.name{font-size:16px;font-weight:600;flex:1;letter-spacing:-.01em}
-.state{font-size:12px;color:var(--muted);background:#f0f2f5;border:1px solid var(--line);border-radius:999px;padding:4px 9px;display:flex;align-items:center;gap:6px}
-.dot{width:6px;height:6px;border-radius:50%;background:#0f9d76}
+.name{font-size:16px;font-weight:600;flex:1}
 .btns{display:flex;gap:10px}
 button{border-radius:11px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;flex:1;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
 .bin{background:#e6eee9;border:1px solid #cfddd5;color:#2f6b5b}
-.bin:hover{background:#dde8e1}
+.bin:hover{background:#dce8e1}
 .bout{background:#e7ebf2;border:1px solid #d2dae6;color:#44699b}
 .bout:hover{background:#dce3ee}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.55;cursor:default;transform:none}
-#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#3a424c;color:#f8f9fb;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#3a424c;color:#f8f9fb;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
 #toast.show{opacity:1}
 .empty{color:var(--muted);text-align:center;padding:40px 0}
 </style></head><body>
 <div class=""wrap"">
   <header>
     <h1>Ворота</h1>
-    <div class=""who""><span>СКУД · 192.168.2.160</span><a href=""/logout"">Выйти</a></div>
+    <div class=""who"">
+      <span>__LOGIN__</span>
+      __ADMINLINK__
+      <a href=""/logout"">Выйти</a>
+    </div>
   </header>
   <div class=""sub"" id=""sub"">Загрузка…</div>
   <div id=""list"" class=""grid""></div>
 </div>
 <div id=""toast""></div>
 <script>
-var TOKEN='vorota-2026';
+var CSRF='__CSRF__';
 var ICON='<svg width=""22"" height=""22"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2f6b5b"" stroke-width=""1.8"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16""/><path d=""M15 12h5""/><path d=""M2 21h20""/><circle cx=""11"" cy=""12"" r=""1""/></svg>';
 var ARR_IN='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2f6b5b"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M5 12h14""/><path d=""M13 6l6 6-6 6""/></svg>';
 var ARR_OUT='<svg width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#44699b"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""><path d=""M19 12H5""/><path d=""M11 6l-6 6 6 6""/></svg>';
@@ -707,15 +708,19 @@ async function openDoor(id,dir,name,btn){
   var html=btn.innerHTML;
   btn.disabled=true;btn.textContent='Отправлено…';
   try{
-    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+TOKEN);
-    var o=await x.json();
+    var r=await fetch('/open',{method:'POST',credentials:'same-origin',
+      headers:{'X-CSRF':CSRF,'Content-Type':'application/x-www-form-urlencoded'},
+      body:'id='+encodeURIComponent(id)+'&dir='+encodeURIComponent(dir)});
+    var o=await r.json();
+    if(r.status===401){location.href='/login';return;}
     toast(o.ok?'Открыто: '+name:'Ошибка: '+(o.error||'нет ответа'));
   }catch(e){toast('Ошибка сети');}
   setTimeout(function(){btn.disabled=false;btn.innerHTML=html;},1500);
 }
 async function load(){
   try{
-    var r=await fetch('/doors?token='+TOKEN);
+    var r=await fetch('/doors',{credentials:'same-origin'});
+    if(r.status===401){location.href='/login';return;}
     var j=await r.json();
     var list=document.getElementById('list');
     list.innerHTML='';
@@ -727,10 +732,6 @@ async function load(){
       var top=el('div','top');
       top.appendChild(iconBox());
       top.appendChild(el('div','name',d.name));
-      var st=el('div','state');
-      st.appendChild(el('span','dot'));
-      st.appendChild(document.createTextNode('на связи'));
-      top.appendChild(st);
       c.appendChild(top);
       var b=el('div','btns');
       d.readers.forEach(function(rd){
@@ -749,6 +750,82 @@ async function load(){
 }
 load();setInterval(load,15000);
 </script></body></html>
+";
+
+    const string AdminPage = @"<!doctype html>
+<html lang=""ru""><head><meta charset=""utf-8"">
+<meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+<title>Пользователи · Ворота</title>
+<style>
+:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 18px 40px}
+.wrap{max-width:900px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+h1{font-size:26px;font-weight:600;margin:0}
+a.btn{color:var(--mut);text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+input,select{width:100%;background:#f2f4f7;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--txt);outline:none}
+input:focus,select:focus{border-color:var(--acc)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:150px}
+button{border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;border:0;background:var(--acc);color:#fff}
+button.mini{background:#f2e6e4;color:#a9483f;border:1px solid #e7cfcb;padding:7px 10px;font-size:13px}
+button.mini:hover{background:#eddad7}
+.msg{background:#e6eee9;border:1px solid #cfddd5;color:#2f6b5b;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.err{background:#f2e6e4;border:1px solid #e7cfcb;color:#a9483f;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:320px;overflow:auto;margin:0}
+</style></head><body>
+<div class=""wrap"">
+  <header>
+    <h1>Пользователи</h1>
+    <a class=""btn"" href=""/"">← К дверям</a>
+  </header>
+  __MSG__
+  <div class=""card"">
+    <h2>Добавить пользователя</h2>
+    <form method=""post"" action=""/admin/add"">
+      <div class=""row"">
+        <div><input name=""login"" placeholder=""Логин"" autocomplete=""off""></div>
+        <div><input name=""pass"" type=""password"" placeholder=""Пароль (мин. 8)"" autocomplete=""new-password""></div>
+        <div>
+          <select name=""role"">
+            <option value=""user"">Пользователь</option>
+            <option value=""admin"">Администратор</option>
+          </select>
+        </div>
+        <div style=""flex:0 0 auto""><button type=""submit"">Добавить</button></div>
+      </div>
+    </form>
+  </div>
+  <div class=""card"">
+    <h2>Список</h2>
+    <table>
+      <tr><th>Логин</th><th>Роль</th><th>Создан</th><th></th></tr>
+      __ROWS__
+    </table>
+  </div>
+  <div class=""card"">
+    <h2>Сменить пароль</h2>
+    <form method=""post"" action=""/admin/pass"">
+      <div class=""row"">
+        <div><input name=""login"" placeholder=""Логин"" autocomplete=""off""></div>
+        <div><input name=""pass"" type=""password"" placeholder=""Новый пароль (мин. 8)"" autocomplete=""new-password""></div>
+        <div style=""flex:0 0 auto""><button type=""submit"">Сменить</button></div>
+      </div>
+    </form>
+  </div>
+  <div class=""card"">
+    <h2>Журнал действий</h2>
+    <pre>__AUDIT__</pre>
+  </div>
+</div>
+</body></html>
 ";
 
     static readonly Dictionary<string, DateTime> Sessions = new Dictionary<string, DateTime>();
@@ -820,6 +897,60 @@ load();setInterval(load,15000);
 
 
 
+
+    static void SecurityHeaders(HttpListenerContext ctx)
+    {
+        try
+        {
+            var h = ctx.Response.Headers;
+            h["X-Content-Type-Options"] = "nosniff";
+            h["X-Frame-Options"] = "DENY";
+            h["Referrer-Policy"] = "no-referrer";
+            h["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+            h["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'";
+            h["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            if (ctx.Request.IsSecureConnection) h["Strict-Transport-Security"] = "max-age=31536000";
+        }
+        catch { }
+    }
+
+    static string Escape(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        return s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;")
+                .Replace("\"", "&quot;").Replace("'", "&#39;");
+    }
+
+    static bool CsrfOk(HttpListenerContext ctx, WebAuth.Session s)
+    {
+        try
+        {
+            string h = ctx.Request.Headers["X-CSRF"];
+            if (!string.IsNullOrEmpty(h) && h == s.Csrf) return true;
+            string origin = ctx.Request.Headers["Origin"];
+            if (!string.IsNullOrEmpty(origin))
+            {
+                var u = ctx.Request.Url;
+                return origin == (u.Scheme + "://" + u.Authority);
+            }
+            return false;
+        }
+        catch { return false; }
+    }
+
+    static System.Collections.Specialized.NameValueCollection ParseForm(string body)
+    {
+        var nv = new System.Collections.Specialized.NameValueCollection();
+        foreach (string part in (body ?? "").Split('&'))
+        {
+            int i = part.IndexOf('=');
+            if (i <= 0) continue;
+            nv[Uri.UnescapeDataString(part.Substring(0, i))] =
+                Uri.UnescapeDataString(part.Substring(i + 1).Replace("+", " "));
+        }
+        return nv;
+    }
+
     static void Respond(HttpListenerContext ctx, int code, string body)
     {
         try
@@ -840,23 +971,50 @@ load();setInterval(load,15000);
         {
             var q = ctx.Request.QueryString;
             string path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
+            string ip = WebAuth.ClientIp(ctx);
+            SecurityHeaders(ctx);
+
             if (path == "/login")
             {
                 if (ctx.Request.HttpMethod == "POST")
                 {
-                    string body = ReadBody(ctx);
-                    string u = FormValue(body, "u"), pw = FormValue(body, "p");
-                    if (u == WEB_USER && pw == WEB_PASS)
+                    if (WebAuth.RateLimited(ip, null))
                     {
-                        string sid = Guid.NewGuid().ToString("N");
-                        lock (Sessions) Sessions[sid] = DateTime.UtcNow.AddHours(12);
-                        ctx.Response.AddHeader("Set-Cookie", "sid=" + sid + "; Path=/; HttpOnly; Max-Age=43200");
+                        WebAuth.Audit("login-blocked", "-", ip, "rate");
+                        RespondHtml(ctx, LoginPage.Replace("__ERROR__", "<div class='err'>Слишком много попыток. Подождите 15 минут.</div>"));
+                        return;
+                    }
+                    string body = ReadBody(ctx);
+                    string u = FormValue(body, "u").Trim(), pw = FormValue(body, "p");
+                    if (WebAuth.RateLimited(ip, u))
+                    {
+                        WebAuth.Audit("login-blocked", u, ip, "login");
+                        RespondHtml(ctx, LoginPage.Replace("__ERROR__", "<div class='err'>Слишком много попыток для этого логина. Подождите 15 минут.</div>"));
+                        return;
+                    }
+                    if (WebAuth.Check(u, pw))
+                    {
+                        var ses = WebAuth.CreateSession(u, ip);
+                        string ck = "s=" + WebAuth.CreateSession(u, ip) + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
+                            + (WebAuth.IsHttps(ctx) ? "; Secure" : "");
+                        ctx.Response.AddHeader("Set-Cookie", ck);
+                        WebAuth.Audit("login-ok", u, ip, "");
                         ctx.Response.StatusCode = 302;
                         ctx.Response.AddHeader("Location", "/");
                         ctx.Response.OutputStream.Close();
                         return;
                     }
+                    WebAuth.Fail(ip, u);
+                    WebAuth.Audit("login-fail", u, ip, "");
                     RespondHtml(ctx, LoginPage.Replace("__ERROR__", "<div class='err'>Неверный логин или пароль</div>"));
+                    return;
+                }
+                string dummy1 = null;
+                if (WebAuth.Get(ctx, out dummy1) != null)
+                {
+                    ctx.Response.StatusCode = 302;
+                    ctx.Response.AddHeader("Location", "/");
+                    ctx.Response.OutputStream.Close();
                     return;
                 }
                 RespondHtml(ctx, LoginPage.Replace("__ERROR__", ""));
@@ -864,25 +1022,137 @@ load();setInterval(load,15000);
             }
             if (path == "/logout")
             {
-                var ck = ctx.Request.Cookies["sid"];
-                if (ck != null) lock (Sessions) Sessions.Remove(ck.Value);
-                ctx.Response.AddHeader("Set-Cookie", "sid=; Path=/; Max-Age=0");
+                string dummy2 = null;
+                var sv = WebAuth.Get(ctx, out dummy2);
+                if (sv != null) WebAuth.Audit("logout", sv.Login, ip, "");
+                WebAuth.Drop(ctx);
+                ctx.Response.AddHeader("Set-Cookie", "s=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
                 ctx.Response.StatusCode = 302;
                 ctx.Response.AddHeader("Location", "/login");
                 ctx.Response.OutputStream.Close();
                 return;
             }
+
+            string dummy3 = null;
+            var session = WebAuth.Get(ctx, out dummy3);
+            bool lanToken = q["token"] == TOKEN && WebAuth.IsPrivate(ip);
+
             if (path == "" || path == "/index.html")
             {
-                if (CookieOk(ctx) || BasicAuthOk(ctx)) { RespondHtml(ctx, AppPage); return; }
-                ctx.Response.StatusCode = 302;
-                ctx.Response.AddHeader("Location", "/login");
-                ctx.Response.OutputStream.Close();
+                if (session == null)
+                {
+                    ctx.Response.StatusCode = 302;
+                    ctx.Response.AddHeader("Location", "/login");
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+                string page = AppPage.Replace("__CSRF__", session.Csrf)
+                                      .Replace("__LOGIN__", Escape(session.Login))
+                                      .Replace("__ADMINLINK__", session.Role == "admin"
+                                          ? "<a href='/admin'>Пользователи</a>" : "");
+                RespondHtml(ctx, page);
                 return;
             }
-            if (q["token"] != TOKEN) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"token\"}"); return; }
-            if (path == "/status") { Respond(ctx, 200, "{\"state\":\"CLOSED\",\"calibrated\":" + (Map.Count > 0 ? "true" : "false") + "}"); return; }
-            if (path == "/doors") { Respond(ctx, 200, DoorsJson()); return; }
+
+            if (path == "/admin" || path.StartsWith("/admin/"))
+            {
+                if (session == null || session.Role != "admin")
+                {
+                    ctx.Response.StatusCode = 302;
+                    ctx.Response.AddHeader("Location", "/login");
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+                string msg = "";
+                if (ctx.Request.HttpMethod == "POST")
+                {
+                    if (!CsrfOk(ctx, session)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                    string body = ReadBody(ctx);
+                    if (path == "/admin/add")
+                    {
+                        string err = WebAuth.AddUser(FormValue(body, "login"), FormValue(body, "pass"), FormValue(body, "role"));
+                        msg = err == null
+                            ? "<div class='msg'>Пользователь добавлен</div>"
+                            : "<div class='err'>" + Escape(err) + "</div>";
+                    }
+                    else if (path == "/admin/del")
+                    {
+                        bool ok = WebAuth.DeleteUser(FormValue(body, "login"));
+                        msg = ok ? "<div class='msg'>Удалён</div>" : "<div class='err'>Нельзя удалить этого пользователя</div>";
+                    }
+                    else if (path == "/admin/pass")
+                    {
+                        bool ok = WebAuth.SetPassword(FormValue(body, "login"), FormValue(body, "pass"));
+                        msg = ok ? "<div class='msg'>Пароль изменён</div>" : "<div class='err'>Не удалось: нет такого пользователя или пароль короче 8 символов</div>";
+                    }
+                }
+                var rows = new StringBuilder();
+                foreach (var u in WebAuth.All())
+                {
+                    rows.Append("<tr><td>").Append(Escape(u.Login)).Append("</td><td>")
+                        .Append(u.Role == "admin" ? "администратор" : "пользователь").Append("</td><td>")
+                        .Append(Escape(u.Created)).Append("</td><td>");
+                    if (!string.Equals(u.Login, "vitosamin", StringComparison.OrdinalIgnoreCase))
+                        rows.Append("<form method='post' action='/admin/del' style='margin:0'>")
+                            .Append("<input type='hidden' name='login' value='").Append(Escape(u.Login)).Append("'>")
+                            .Append("<button class='mini' type='submit'>Удалить</button></form>");
+                    rows.Append("</td></tr>");
+                }
+                string html = AdminPage.Replace("__ROWS__", rows.ToString())
+                                       .Replace("__AUDIT__", Escape(WebAuth.AuditTail(60)))
+                                       .Replace("__MSG__", msg);
+                RespondHtml(ctx, html);
+                return;
+            }
+
+            if (path == "/doors" || path == "/status")
+            {
+                if (session == null && !lanToken) { Respond(ctx, 401, "{\"ok\":false,\"error\":\"auth\"}"); return; }
+                if (path == "/status") { Respond(ctx, 200, "{\"state\":\"CLOSED\",\"calibrated\":" + (Map.Count > 0 ? "true" : "false") + "}"); return; }
+                Respond(ctx, 200, DoorsJson());
+                return;
+            }
+
+            if (path == "/open")
+            {
+                if (ctx.Request.HttpMethod == "POST")
+                {
+                    if (session == null) { Respond(ctx, 401, "{\"ok\":false,\"error\":\"auth\"}"); return; }
+                    if (!CsrfOk(ctx, session)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                    q = ParseForm(ReadBody(ctx));
+                }
+                else if (!lanToken)
+                {
+                    Respond(ctx, 403, "{\"ok\":false,\"error\":\"auth\"}");
+                    return;
+                }
+                if (Map.Count == 0) { Respond(ctx, 409, "{\"ok\":false,\"error\":\"not calibrated\"}"); return; }
+                int doorId;
+                if (!int.TryParse(q["id"] ?? "", out doorId)) { Respond(ctx, 400, "{\"ok\":false,\"error\":\"id\"}"); return; }
+                string dir = q["dir"] ?? "";
+                var rows2 = new List<int>();
+                var seen = new HashSet<int>();
+                foreach (var e in Map.Values)
+                {
+                    if (e.Dev != doorId) continue;
+                    if (!seen.Add(e.Rdr)) continue;
+                    bool isOut = IsOut(e.Rdr);
+                    if (dir == "in" && isOut) continue;
+                    if (dir == "out" && !isOut) continue;
+                    rows2.Add(e.Row);
+                }
+                if (rows2.Count == 0) { Respond(ctx, 404, "{\"ok\":false,\"error\":\"door\"}"); return; }
+                rows2.Sort();
+                WebAuth.Audit("open", session != null ? session.Login : "token", ip, "door=" + doorId + " dir=" + dir);
+                Respond(ctx, 200, OpenRows(rows2));
+                return;
+            }
+
+            if (q["token"] != TOKEN || !WebAuth.IsPrivate(ip))
+            {
+                Respond(ctx, 401, "{\"ok\":false,\"error\":\"auth\"}");
+                return;
+            }
             if (path == "/calibrate")
             {
                 int fromRow = 1;
@@ -891,8 +1161,8 @@ load();setInterval(load,15000);
                 return;
             }
             if (path == "/reload") { LoadMap(); Respond(ctx, 200, "{\"ok\":true,\"rows\":" + Map.Count + "}"); return; }
-            int id;
-            if (!int.TryParse(q["id"] ?? "", out id)) { Respond(ctx, 400, "{\"ok\":false,\"error\":\"id\"}"); return; }
+            int id2;
+            if (!int.TryParse(q["id"] ?? "", out id2)) { Respond(ctx, 400, "{\"ok\":false,\"error\":\"id\"}"); return; }
             if (path == "/press")
             {
                 string btnName = q["btn"] ?? "";
@@ -901,36 +1171,16 @@ load();setInterval(load,15000);
                 {
                     if (!EnsureReady()) { Respond(ctx, 500, "{\"ok\":false,\"error\":\"gate ui not ready\"}"); return; }
                     Focus();
-                    if (id > 0 && !SelectRow(id)) { Respond(ctx, 500, "{\"ok\":false,\"error\":\"select failed\"}"); return; }
+                    if (id2 > 0 && !SelectRow(id2)) { Respond(ctx, 500, "{\"ok\":false,\"error\":\"select failed\"}"); return; }
                     bool ok = PressButton(label);
                     Respond(ctx, 200, "{\"ok\":" + (ok ? "true" : "false") + ",\"button\":\"" + label + "\"}");
                 }
                 return;
             }
-            if (path == "/open")
-            {
-                if (Map.Count == 0) { Respond(ctx, 409, "{\"ok\":false,\"error\":\"not calibrated\"}"); return; }
-                string dir = q["dir"] ?? "";
-                var rows = new List<int>();
-                var seen = new HashSet<int>();
-                foreach (var e in Map.Values)
-                {
-                    if (e.Dev != id) continue;
-                    if (!seen.Add(e.Rdr)) continue;          // дедуп по считывателю
-                    bool isOut = IsOut(e.Rdr);
-                    if (dir == "in" && isOut) continue;
-                    if (dir == "out" && !isOut) continue;
-                    rows.Add(e.Row);
-                }
-                if (rows.Count == 0) { Respond(ctx, 404, "{\"ok\":false,\"error\":\"door\"}"); return; }
-                rows.Sort();
-                Respond(ctx, 200, OpenRows(rows));
-                return;
-            }
             if (path == "/openrow")
             {
                 if (Map.Count == 0) { Respond(ctx, 409, "{\"ok\":false,\"error\":\"not calibrated\"}"); return; }
-                Respond(ctx, 200, OpenRows(new List<int> { id }));
+                Respond(ctx, 200, OpenRows(new List<int> { id2 }));
                 return;
             }
             Respond(ctx, 404, "{\"ok\":false,\"error\":\"not found\"}");
@@ -945,7 +1195,8 @@ load();setInterval(load,15000);
     static void Main()
     {
         LoadMap();
-        Log("bridge 3.0 start, mapped rows=" + Map.Count);
+        WebAuth.Init();
+        Log("bridge 4.0 start, mapped rows=" + Map.Count);
         var listener = new HttpListener();
         listener.Prefixes.Add("http://+:" + PORT + "/");
         try { listener.Start(); }

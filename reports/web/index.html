@@ -276,6 +276,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     <button data-tab="rep">Посещаемость</button>
     <button data-tab="rpt">Отчёты</button>
     <button data-tab="exp">Выгрузка в 1С</button>
+    <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
   </nav>
 
   <!-- ================= МОНИТОРИНГ ================= -->
@@ -554,6 +555,60 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     </div>
   </section>
 
+
+  <!-- ================= НАСТРОЙКИ (админ) ================= -->
+  <section class="tab" id="tab-set">
+    <div class="grid2">
+      <div class="card">
+        <div class="hd"><h3>Пользователи</h3><span class="hint" id="accCount">—</span></div>
+        <div class="bd">
+          <div class="tblwrap" id="accList" style="max-height:360px"><div class="empty">Загрузка…</div></div>
+          <div class="filters" style="margin-top:12px">
+            <div><label class="f">Логин</label><input id="accLogin" autocomplete="off" placeholder="например ivanov"></div>
+            <div><label class="f">Имя</label><input id="accName" autocomplete="off" placeholder="Иванов И.И."></div>
+            <div><label class="f">Пароль</label><input id="accPass" type="password" autocomplete="new-password" placeholder="минимум 6 символов"></div>
+            <div><label class="f">Роль</label><select id="accRole">
+              <option value="viewer">Просмотр</option>
+              <option value="admin">Администратор</option>
+            </select></div>
+          </div>
+          <div class="row-actions"><button class="primary" id="accAdd">Добавить пользователя</button>
+            <span class="muted" id="accNote" style="font-size:12px;align-self:center"></span></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="hd"><h3>Доступ к серверу Gate</h3><span class="hint">учётная запись SMB</span></div>
+          <div class="bd">
+            <div class="filters">
+              <div><label class="f">Пользователь</label><input id="gateUser" autocomplete="off"></div>
+              <div><label class="f">Новый пароль</label><input id="gatePass" type="password" autocomplete="new-password" placeholder="оставьте пустым, чтобы не менять"></div>
+            </div>
+            <div class="row-actions">
+              <button class="primary" id="gateSave">Проверить и сохранить</button>
+              <button id="gateCheck">Проверить связь</button>
+              <span class="muted" id="gateStatus" style="font-size:12px;align-self:center"></span>
+            </div>
+            <div class="notice" style="margin:12px 0 0">
+              <span>ℹ️</span>
+              <div>Новый пароль сначала проверяется подключением к шаре — если Gate его не примет, старый останется.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hd"><h3>Мой пароль</h3><span class="hint" id="meLogin"></span></div>
+          <div class="bd">
+            <div class="filters">
+              <div><label class="f">Текущий</label><input id="myOld" type="password" autocomplete="current-password"></div>
+              <div><label class="f">Новый</label><input id="myNew" type="password" autocomplete="new-password" placeholder="минимум 6 символов"></div>
+            </div>
+            <div class="row-actions"><button class="primary" id="myPass">Сменить пароль</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="foot">СКУД Gate-IP · источник: суточные журналы <span class="mono">Server\Events\nГГММДД.mdb</span> · отчёты «Ворота» · <span id="buildTag" style="cursor:pointer" title="нажмите, чтобы принудительно перезагрузить страницу">сборка …</span></div>
 </div>
 
@@ -775,6 +830,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     if(state.tab==='mon') loadMon();
     if(state.tab==='ana') loadAnalytics();
     if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
+    if(state.tab==='set'){ ROLES_CACHE=[]; loadAccounts(); }
   };
 });
 
@@ -1451,6 +1507,123 @@ document.addEventListener('DOMContentLoaded', ()=>{
 window.addEventListener('focus', checkVersion);
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkVersion(); });
 
+
+/* ---------- настройки: пользователи и доступ к Gate ---------- */
+let ME={login:'',role:'viewer'};
+
+async function loadMe(){
+  try{
+    ME = await api('/api/me');
+    const btn=$('#tabBtnSet');
+    if(ME.role==='admin'){ btn.style.display=''; }
+    else { btn.style.display='none'; }
+    const ml=$('#meLogin'); if(ml) ml.textContent=ME.login+' · '+ME.roleTitle;
+    const gu=$('#gateUser'); if(gu && ME.gate_user) gu.value=ME.gate_user;
+  }catch(e){ /* тихо */ }
+}
+
+async function loadAccounts(){
+  try{
+    const d=await api('/api/accounts');
+    ROLES_CACHE=d.roles||[];
+    renderAccounts(d.items||[], ROLES_CACHE);
+  }catch(e){ const el=$('#accList'); if(el) el.innerHTML='<div class="empty">'+esc(e.message)+'</div>'; }
+}
+
+function renderAccounts(items, roles){
+  const cnt=$('#accCount'); if(cnt) cnt.textContent=items.length+' чел.';
+  const wrap=$('#accList'); if(!wrap) return;
+  if(!items.length){ wrap.innerHTML='<div class="empty">Пользователей нет</div>'; return; }
+  const roleOpts=r=>roles.map(x=>'<option value="'+x.id+'"'+(x.id===r?' selected':'')+'>'+esc(x.title)+'</option>').join('');
+  wrap.innerHTML='<table><thead><tr><th>Пользователь</th><th>Роль</th><th class="num">Создан</th><th>Действия</th></tr></thead><tbody>'
+    + items.map(u=>'<tr data-login="'+esc(u.login)+'">'
+      + '<td><div class="person"><div class="avatar">'+esc((u.login||'?').slice(0,2).toUpperCase())+'</div>'
+      + '<div style="min-width:0"><div class="nm">'+esc(u.login)+'</div><div class="pos">'+esc(u.name||'')+'</div></div></div></td>'
+      + '<td><select class="accRoleSel" style="width:auto;min-width:140px">'+roleOpts(u.role)+'</select></td>'
+      + '<td class="num mono tag">'+esc((u.created||'').slice(0,10))+'</td>'
+      + '<td><button class="accPwd" style="min-height:26px;padding:2px 8px;font-size:12px">Пароль</button> '
+      + '<button class="accDel" style="min-height:26px;padding:2px 8px;font-size:12px">Удалить</button></td></tr>').join('')
+    + '</tbody></table>';
+
+  wrap.querySelectorAll('tr[data-login]').forEach(tr=>{
+    const login=tr.dataset.login;
+    tr.querySelector('.accRoleSel').onchange=(e)=>saveRole(login, e.target.value);
+    tr.querySelector('.accDel').onclick=()=>delAccount(login);
+    tr.querySelector('.accPwd').onclick=()=>pwdInline(tr, login);
+  });
+}
+
+async function saveRole(login, role){
+  try{ const d=await postJSON('/api/accounts/role',{login,role}); renderAccounts(d.items||[], ROLES_CACHE); toast('Роль обновлена'); }
+  catch(e){ toast('Не удалось: '+e.message, true); loadAccounts(); }
+}
+async function delAccount(login){
+  if(!confirm('Удалить пользователя '+login+'?')) return;
+  try{ const d=await postJSON('/api/accounts/delete',{login}); renderAccounts(d.items||[], ROLES_CACHE); toast('Пользователь удалён'); }
+  catch(e){ toast('Не удалось: '+e.message, true); }
+}
+function pwdInline(tr, login){
+  const td=tr.querySelector('td:last-child');
+  td.innerHTML='<input type="password" class="accNewPwd" placeholder="новый пароль" style="width:130px;display:inline-block"> '
+    + '<button class="accPwdOk" style="min-height:26px;padding:2px 8px;font-size:12px">ОК</button> '
+    + '<button class="accPwdNo" style="min-height:26px;padding:2px 8px;font-size:12px">✕</button>';
+  td.querySelector('.accPwdNo').onclick=loadAccounts;
+  td.querySelector('.accPwdOk').onclick=async()=>{
+    const pass=td.querySelector('.accNewPwd').value;
+    if(pass.length<6){ toast('Пароль короче 6 символов', true); return; }
+    try{ await postJSON('/api/accounts/password',{login,password:pass}); toast('Пароль изменён для '+login); loadAccounts(); }
+    catch(e){ toast('Не удалось: '+e.message, true); }
+  };
+}
+
+let ROLES_CACHE=[];
+async function postJSON(url, payload){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload||{})});
+  let d={}; try{ d=await r.json(); }catch(e){}
+  if(!r.ok || d.ok===false) throw new Error(d.error||('HTTP '+r.status));
+  return d;
+}
+
+$('#accAdd').onclick=async()=>{
+  const login=$('#accLogin').value.trim(), name=$('#accName').value.trim(),
+        password=$('#accPass').value, role=$('#accRole').value;
+  if(!login||!password){ toast('Укажите логин и пароль', true); return; }
+  try{
+    const d=await postJSON('/api/accounts/add',{login,name,password,role});
+    renderAccounts(d.items||[], ROLES_CACHE);
+    $('#accLogin').value=''; $('#accName').value=''; $('#accPass').value=''; $('#accRole').value='viewer';
+    toast('Пользователь '+login+' добавлен');
+  }catch(e){ toast('Не удалось: '+e.message, true); }
+};
+
+$('#gateCheck').onclick=async()=>{
+  const st=$('#gateStatus'); st.textContent='проверяю…';
+  try{ const d=await postJSON('/api/settings/check-gate',{}); st.textContent=d.message; toast('Связь есть'); }
+  catch(e){ st.textContent='ошибка: '+e.message; toast('Нет связи: '+e.message, true); }
+};
+
+$('#gateSave').onclick=async()=>{
+  const u=$('#gateUser').value.trim(), p=$('#gatePass').value;
+  const st=$('#gateStatus');
+  if(!u||!p){ st.textContent='нужны логин и новый пароль'; return; }
+  st.textContent='проверяю и сохраняю…';
+  try{
+    const d=await postJSON('/api/settings/gate',{user:u,password:p});
+    st.textContent=d.message; $('#gatePass').value='';
+    toast('Доступ к Gate обновлён');
+    await loadStatus(); liveLastKey=''; loadMon(); loadLive();
+  }catch(e){ st.textContent='не сохранено: '+e.message; toast('Не сохранено: '+e.message, true); }
+};
+
+$('#myPass').onclick=async()=>{
+  const old=$('#myOld').value, nw=$('#myNew').value;
+  if(nw.length<6){ toast('Новый пароль короче 6 символов', true); return; }
+  try{ await postJSON('/api/settings/password',{old, new:nw});
+    $('#myOld').value=''; $('#myNew').value=''; toast('Пароль изменён');
+  }catch(e){ toast('Не удалось: '+e.message, true); }
+};
+
 /* ===================== старт ===================== */
 let REFS_OK=false;
 async function loadRefs(){
@@ -1491,6 +1664,7 @@ function initDates(){
 }
 (async function start(){
   initDates();
+  await loadMe();
   await loadStatus();
   await loadRefs();
   await loadMon();

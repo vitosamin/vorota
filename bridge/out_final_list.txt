@@ -1,0 +1,17 @@
+=== FINAL === 
+GateBridge.exe 
+GateCtl.exe 
+GateUnblock.exe 
+PsExec64.exe 
+compile_bridge3.vbs 
+kill_bridge.vbs 
+read_last_event.vbs 
+run_bridge.vbs 
+run_clean2.vbs 
+bridge_watchdog.bat 
+clean2.bat 
+compile_bridge3.bat 
+make_watchdog.bat 
+gate_map.json 
+bridge_watchdog.log 
+gate_bridge.log 

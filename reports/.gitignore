@@ -3,3 +3,5 @@ tools/*.deb
 tools/mdbroot/
 __pycache__/
 *.pyc
+users.json
+*.log
