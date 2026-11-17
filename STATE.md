@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 13:38 (Europe/Kaliningrad)
-> main · последний коммит: 6be75c2 «2.0: спокойная тема, значок приложения»
-> Версия 2.0 (`versionCode 11`), пакет `ru.smartsystem39.gates`
+> Обновлено: 2026-11-17 13:47 (Europe/Kaliningrad)
+> main · последний коммит: 0e5b05e «2.1: переключатель темы»
+> Версия 2.1 (`versionCode 12`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
