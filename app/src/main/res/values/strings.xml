@@ -95,6 +95,14 @@
     <string name="theme_system">Системная</string>
     <string name="dir_in">Вход</string>
     <string name="dir_out">Выход</string>
+    <string name="action_open">Открыть</string>
+    <string name="action_close">Закрыть</string>
+    <string name="action_stop">Стоп</string>
+    <string name="action_press">Нажать</string>
+    <string name="action_run">Запустить</string>
+    <string name="action_on">Включить</string>
+    <string name="action_off">Выключить</string>
+    <string name="action_setup">Настроить</string>
     <string name="updates_section">Обновления</string>
     <string name="version_fmt">Версия %1$s</string>
     <string name="update_check">Проверить обновления</string>

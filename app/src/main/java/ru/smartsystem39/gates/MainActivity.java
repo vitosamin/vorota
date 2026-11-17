@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,7 +101,7 @@ public class MainActivity extends Activity {
         TextView status;
         LinearLayout pill;
         View dot;
-        ImageButton action;
+        Button action;
         ImageView icon;
     }
 
@@ -254,9 +255,6 @@ public class MainActivity extends Activity {
     private void reloadDevices() {
         devicesRevision++;
         devices = cfg.getDevices();
-        boolean hasFavorite = false;
-        for (Device device : devices) if (device.favorite) { hasFavorite = true; break; }
-        if (!hasFavorite) allExpanded = true;
         cards.clear();
         lastStatus.clear();
         rebuildMain();
@@ -276,24 +274,21 @@ public class MainActivity extends Activity {
             listMain.addView(buildEmptyView());
             return;
         }
-        listMain.addView(buildOverview());
-
         List<Device> favorites = new ArrayList<>();
+        List<Device> others = new ArrayList<>();
         for (Device d : devices) {
-            if (d.favorite) favorites.add(d);
+            if (d.favorite) favorites.add(d); else others.add(d);
         }
 
         if (favorites.isEmpty()) {
-            listMain.addView(buildHint(getString(R.string.favorites_hint)));
-        } else {
-            listMain.addView(buildSection(getString(R.string.section_favorites)));
-            for (Device d : favorites) addCard(d);
+            for (Device d : others) addCard(d);
+            return;
         }
-
-        boolean expanded = allExpanded;
-        listMain.addView(buildAllHeader(expanded));
-        if (expanded) {
-            for (Device d : devices) addCard(d);
+        listMain.addView(buildSection(getString(R.string.section_favorites)));
+        for (Device d : favorites) addCard(d);
+        if (!others.isEmpty()) {
+            listMain.addView(buildAllHeader(allExpanded, others.size()));
+            if (allExpanded) for (Device d : others) addCard(d);
         }
     }
 
@@ -306,49 +301,17 @@ public class MainActivity extends Activity {
         if (known != null) applyStatus(c, known);
     }
 
-    private View buildOverview() {
-        LinearLayout panel = new LinearLayout(this);
-        panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(20), dp(18), dp(20), dp(18));
-        panel.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(22)));
-        LinearLayout.LayoutParams lp = Ui.rowLp(this);
-        lp.bottomMargin = dp(24);
-        panel.setLayoutParams(lp);
-
-        TextView label = new TextView(this);
-        label.setText("ВАШИ УСТРОЙСТВА");
-        label.setTextColor(getColor(R.color.accent_deep));
-        label.setTextSize(10);
-        label.setLetterSpacing(0.12f);
-        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        panel.addView(label);
-
-        TextView count = new TextView(this);
-        count.setText(String.valueOf(devices.size()));
-        count.setTextColor(getColor(R.color.text_primary));
-        count.setTextSize(32);
-        count.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        panel.addView(count);
-
-        TextView hint = new TextView(this);
-        hint.setText("Выберите действие на карточке устройства");
-        hint.setTextColor(getColor(R.color.text_secondary));
-        hint.setTextSize(13);
-        panel.addView(hint);
-        return panel;
-    }
-
     private TextView buildSection(String text) {
         TextView title = new TextView(this);
         title.setText(text);
         title.setTextColor(getColor(R.color.text_muted));
-        title.setTextSize(11);
+        title.setTextSize(10);
         title.setAllCaps(true);
-        title.setLetterSpacing(0.12f);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        title.setLetterSpacing(0.14f);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = dp(6);
+        lp.topMargin = dp(4);
         lp.bottomMargin = dp(10);
         title.setLayoutParams(lp);
         return title;
@@ -365,11 +328,11 @@ public class MainActivity extends Activity {
         return hint;
     }
 
-    private View buildAllHeader(boolean expanded) {
+    private View buildAllHeader(boolean expanded, int count) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(14), dp(14), dp(14), dp(14));
+        row.setPadding(dp(16), dp(14), dp(16), dp(14));
         row.setBackground(Ui.cardBackground(this));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -378,7 +341,7 @@ public class MainActivity extends Activity {
         row.setLayoutParams(lp);
 
         TextView title = new TextView(this);
-        title.setText(getString(R.string.section_all_count, devices.size()));
+        title.setText(getString(R.string.section_all_count, count));
         title.setTextColor(getColor(R.color.text_primary));
         title.setTextSize(15);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -404,9 +367,6 @@ public class MainActivity extends Activity {
     private void toggleFavorite(Device d) {
         d.favorite = !d.favorite;
         cfg.upsert(d);
-        boolean hasFavorite = false;
-        for (Device device : devices) if (device.favorite) { hasFavorite = true; break; }
-        if (!hasFavorite) allExpanded = true;
         toast(getString(d.favorite ? R.string.fav_added : R.string.fav_removed));
         rebuildMain();
     }
@@ -416,30 +376,27 @@ public class MainActivity extends Activity {
         c.id = d.id;
         c.device = d;
 
-        // Внешний контейнер: сверху иконка/название/звезда, снизу — кнопки направлений.
+        // Плитка: иконка и название сверху, статус справа, крупные кнопки снизу.
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(16), dp(14), dp(14), dp(14));
+        card.setPadding(dp(16), dp(16), dp(16), dp(16));
         card.setBackground(Ui.cardBackground(this));
-        card.setElevation(dp(1));
         card.setLayoutParams(Ui.rowLp(this));
         c.root = card;
 
         LinearLayout top = new LinearLayout(this);
         top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.setGravity(Gravity.TOP);
         card.addView(top);
 
         FrameLayout iconBox = new FrameLayout(this);
-        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(46), dp(46));
-        iconBox.setLayoutParams(ilp);
+        iconBox.setLayoutParams(new LinearLayout.LayoutParams(dp(46), dp(46)));
         iconBox.setBackgroundResource(R.drawable.bg_icon_circle);
 
         ImageView icon = new ImageView(this);
-        FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER);
-        icon.setLayoutParams(flp);
+        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER));
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.accent_deep));
+        icon.setColorFilter(getColor(R.color.accent));
         c.icon = icon;
         iconBox.addView(icon);
         top.addView(iconBox);
@@ -449,101 +406,95 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         tlp.leftMargin = dp(14);
-        tlp.rightMargin = dp(8);
+        tlp.rightMargin = dp(10);
         texts.setLayoutParams(tlp);
-
-        TextView category = new TextView(this);
-        category.setText(d.isGate() ? "GATE-IP" :
-                (Device.SRC_HA.equals(d.source) ? "HOME ASSISTANT" : Device.protocolLabel(d.protocol).toUpperCase(Locale.ROOT)));
-        category.setTextColor(getColor(R.color.text_muted));
-        category.setTextSize(10);
-        category.setLetterSpacing(0.08f);
-        category.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        category.setMaxLines(1);
-        category.setEllipsize(TextUtils.TruncateAt.END);
-        texts.addView(category);
 
         TextView name = new TextView(this);
         name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
         name.setTextColor(getColor(R.color.text_primary));
-        name.setTextSize(16);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(false);
-        name.setMaxLines(2);
+        name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
+        // Длинные названия уменьшаются сами, а не наезжают на статус.
+        name.setAutoSizeTextTypeUniformWithConfiguration(17, 20, 1, TypedValue.COMPLEX_UNIT_SP);
         c.name = name;
         texts.addView(name);
 
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(9), dp(4), dp(10), dp(4));
-        row.setBackground(Ui.fill(getColor(R.color.field), dp(999)));
-        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+        TextView source = new TextView(this);
+        source.setText(sourceLabel(d));
+        source.setTextColor(getColor(R.color.text_secondary));
+        source.setTextSize(10);
+        source.setAllCaps(true);
+        source.setLetterSpacing(0.08f);
+        source.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        source.setSingleLine(true);
+        source.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rlp.topMargin = dp(6);
-        row.setLayoutParams(rlp);
-        c.pill = row;
+        slp.topMargin = dp(3);
+        source.setLayoutParams(slp);
+        texts.addView(source);
+        top.addView(texts);
+
+        LinearLayout pill = new LinearLayout(this);
+        pill.setOrientation(LinearLayout.HORIZONTAL);
+        pill.setGravity(Gravity.CENTER_VERTICAL);
+        pill.setPadding(dp(10), dp(5), dp(11), dp(5));
+        pill.setBackground(Ui.fill(getColor(R.color.field), dp(12)));
+        c.pill = pill;
 
         View dot = new View(this);
         dot.setLayoutParams(new LinearLayout.LayoutParams(dp(7), dp(7)));
         dot.setBackgroundResource(R.drawable.dot_muted);
         c.dot = dot;
-        row.addView(dot);
+        pill.addView(dot);
 
         TextView status = new TextView(this);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        slp.leftMargin = dp(7);
-        status.setLayoutParams(slp);
+        stlp.leftMargin = dp(7);
+        status.setLayoutParams(stlp);
         status.setText(R.string.status_checking);
         status.setTextColor(getColor(R.color.text_secondary));
-        status.setTextSize(12);
+        status.setTextSize(11);
+        status.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         status.setSingleLine(true);
         c.status = status;
-        row.addView(status);
-        texts.addView(row);
-        top.addView(texts);
+        pill.addView(status);
+        top.addView(pill);
 
-        ImageButton star = new ImageButton(this);
-        star.setLayoutParams(new LinearLayout.LayoutParams(dp(48), dp(48)));
-        star.setPadding(dp(13), dp(13), dp(13), dp(13));
-        star.setBackgroundResource(R.drawable.bg_circle_ripple);
-        star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
-        star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_muted));
-        star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
-        star.setOnClickListener(v -> toggleFavorite(d));
-        top.addView(star);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        alp.topMargin = dp(14);
+        actions.setLayoutParams(alp);
 
-        ImageButton action = null;
         if (d.isGate()) {
-            LinearLayout dirs = new LinearLayout(this);
-            dirs.setOrientation(LinearLayout.HORIZONTAL);
-            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            dlp.topMargin = dp(12);
-            dirs.setLayoutParams(dlp);
             boolean both = d.dirIn && d.dirOut;
-            if (d.dirIn) dirs.addView(dirButton(d, "in", getString(R.string.dir_in), both ? 1f : 1f, both));
-            if (d.dirOut) dirs.addView(dirButton(d, "out", getString(R.string.dir_out), both ? 1f : 1f, false));
-            card.addView(dirs);
+            if (d.dirIn) actions.addView(dirButton(d, "in", getString(R.string.dir_in), 1f, both));
+            if (d.dirOut) actions.addView(dirButton(d, "out", getString(R.string.dir_out), 1f, false));
             c.action = null;
         } else {
-            action = new ImageButton(this);
-            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(dp(46), dp(46));
-            alp.leftMargin = dp(4);
-            action.setLayoutParams(alp);
-            action.setPadding(dp(12), dp(12), dp(12), dp(12));
-            action.setImageResource(R.drawable.ic_power);
-            action.setColorFilter(getColor(R.color.accent));
-            action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
-            action.setContentDescription("Управление: " + name.getText());
+            Button action = new Button(this);
+            action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(46), 1f));
+            action.setText(R.string.action_open);
+            action.setAllCaps(false);
+            action.setTextSize(16);
+            action.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            action.setSingleLine(true);
+            action.setMinWidth(0);
+            action.setMinHeight(0);
+            action.setMinimumWidth(0);
+            action.setMinimumHeight(0);
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
-            top.addView(action);
+            actions.addView(action);
         }
+        actions.addView(favoriteButton(d));
+        card.addView(actions);
 
-        // Команды запускаются только отдельными кнопками, не случайным касанием карточки.
+        // Команды запускаются только кнопками, не случайным касанием плитки.
         card.setOnLongClickListener(v -> {
             openEditor(d.id);
             return true;
@@ -553,36 +504,95 @@ public class MainActivity extends Activity {
             status.setText(R.string.not_configured_short);
             status.setTextColor(getColor(R.color.text_secondary));
             dot.setBackgroundResource(R.drawable.dot_muted);
-            if (action != null) {
-                action.setImageResource(R.drawable.ic_settings);
-                action.setColorFilter(getColor(R.color.text_secondary));
-                action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.field), dp(23)), dp(23)));
+            if (c.action != null) {
+                c.action.setText(R.string.action_setup);
+                c.action.setTextColor(getColor(R.color.text_primary));
+                c.action.setBackgroundResource(R.drawable.btn_secondary);
             }
         }
         return c;
+    }
+
+    private ImageButton favoriteButton(Device d) {
+        ImageButton star = new ImageButton(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(46), dp(46));
+        lp.leftMargin = dp(10);
+        star.setLayoutParams(lp);
+        star.setPadding(dp(12), dp(12), dp(12), dp(12));
+        star.setBackgroundResource(d.favorite ? R.drawable.btn_warn : R.drawable.btn_secondary);
+        star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
+        star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_secondary));
+        star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
+        star.setOnClickListener(v -> toggleFavorite(d));
+        return star;
+    }
+
+    /** Подпись источника под названием: откуда устройство и чем управляет. */
+    private String sourceLabel(Device d) {
+        if (d.isGate()) {
+            String dirs = d.dirIn && d.dirOut ? "вход и выход"
+                    : (d.dirIn ? "только вход" : (d.dirOut ? "только выход" : "нет направлений"));
+            return "Gate-IP · " + dirs;
+        }
+        if (Device.SRC_HA.equals(d.source)) {
+            return d.entity.isEmpty() ? "Home Assistant · не выбрана" : "Home Assistant · " + d.entity;
+        }
+        String base = Device.protocolLabel(d.protocol);
+        return d.address.isEmpty() ? base + " · не настроено" : base + " · " + hostOf(d.address);
+    }
+
+    private static String hostOf(String address) {
+        String value = address == null ? "" : address.trim();
+        int scheme = value.indexOf("://");
+        if (scheme >= 0) value = value.substring(scheme + 3);
+        int slash = value.indexOf('/');
+        if (slash >= 0) value = value.substring(0, slash);
+        return value;
+    }
+
+    private String actionLabel(Device d, Status s) {
+        if (!Device.SRC_HA.equals(d.source)) return getString(R.string.action_open);
+        switch (domainOf(d.entity)) {
+            case "cover":
+                if (s.isMoving()) return getString(R.string.action_stop);
+                return s.isOpenish() ? getString(R.string.action_close) : getString(R.string.action_open);
+            case "lock":
+                return s.isOpenish() ? getString(R.string.action_close) : getString(R.string.action_open);
+            case "button":
+                return getString(R.string.action_press);
+            case "script":
+                return getString(R.string.action_run);
+            default:
+                return s.kind == Status.ON ? getString(R.string.action_off) : getString(R.string.action_on);
+        }
     }
 
     private void applyStatus(Card c, Status s) {
         c.status.setText(s.text);
         int color;
         int dot;
+        int tint;
         switch (s.kind) {
             case Status.OPEN:
             case Status.ON:
                 color = getColor(R.color.accent);
                 dot = R.drawable.dot_green;
+                tint = R.color.accent_soft;
                 break;
             case Status.MOVING:
                 color = getColor(R.color.warn);
                 dot = R.drawable.dot_amber;
+                tint = R.color.warn_soft;
                 break;
             case Status.READY:
                 color = getColor(R.color.info);
                 dot = R.drawable.dot_blue;
+                tint = R.color.info_soft;
                 break;
             case Status.OFFLINE:
                 color = getColor(R.color.danger);
                 dot = R.drawable.dot_red;
+                tint = R.color.danger_soft;
                 break;
             case Status.CLOSED:
             case Status.OFF:
@@ -590,53 +600,50 @@ public class MainActivity extends Activity {
             default:
                 color = getColor(R.color.text_secondary);
                 dot = R.drawable.dot_muted;
+                tint = R.color.field;
                 break;
         }
         c.status.setTextColor(color);
         c.dot.setBackgroundResource(dot);
-        int tint;
-        switch (s.kind) {
-            case Status.OPEN:
-            case Status.ON: tint = R.color.accent_soft; break;
-            case Status.MOVING: tint = R.color.warn_soft; break;
-            case Status.READY: tint = R.color.info_soft; break;
-            case Status.OFFLINE: tint = R.color.danger_soft; break;
-            default: tint = R.color.field; break;
-        }
-        if (c.pill != null) c.pill.setBackground(Ui.fill(getColor(tint), dp(999)));
+        if (c.pill != null) c.pill.setBackground(Ui.fill(getColor(tint), dp(12)));
         if (c.action == null) return;
+
+        boolean online = s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
+        c.action.setText(actionLabel(c.device, s));
         if (s.isMoving()) {
-            c.action.setImageResource(R.drawable.ic_stop);
-            c.action.setColorFilter(getColor(R.color.warn));
-            c.action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.warn_soft), dp(23)), dp(23)));
+            c.action.setTextColor(getColor(online ? R.color.warn : R.color.text_muted));
+            c.action.setBackgroundResource(online ? R.drawable.btn_warn : R.drawable.btn_secondary);
+        } else if (s.isOpenish()) {
+            c.action.setTextColor(getColor(online ? R.color.text_primary : R.color.text_muted));
+            c.action.setBackgroundResource(R.drawable.btn_secondary);
         } else {
-            c.action.setImageResource(R.drawable.ic_power);
-            boolean online = s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
-            c.action.setColorFilter(getColor(online ? R.color.accent : R.color.text_muted));
-            c.action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
+            c.action.setTextColor(getColor(online ? R.color.on_accent : R.color.text_muted));
+            c.action.setBackgroundResource(online ? R.drawable.btn_primary : R.drawable.btn_secondary);
         }
+        c.action.setAlpha(online ? 1f : 0.55f);
     }
 
     private Button dirButton(Device d, String dir, String label, float weight, boolean marginRight) {
+        boolean out = "out".equals(dir);
         Button b = new Button(this);
         LinearLayout.LayoutParams lp = weight > 0
-                ? new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weight)
-                : new LinearLayout.LayoutParams(dp(88), ViewGroup.LayoutParams.WRAP_CONTENT);
+                ? new LinearLayout.LayoutParams(0, dp(46), weight)
+                : new LinearLayout.LayoutParams(dp(88), dp(46));
         if (marginRight) lp.rightMargin = dp(10);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(14);
+        b.setTextSize(15);
+        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         b.setSingleLine(true);
         b.setMinWidth(0);
-        b.setMinHeight(dp(48));
+        b.setMinHeight(0);
         b.setMinimumWidth(0);
-        b.setMinimumHeight(dp(48));
-        b.setTextColor(getColor("out".equals(dir) ? R.color.info : R.color.accent_deep));
-        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        b.setBackgroundResource("out".equals(dir) ? R.drawable.btn_out : R.drawable.btn_in);
+        b.setMinimumHeight(0);
+        b.setTextColor(getColor(out ? R.color.info : R.color.accent));
+        b.setBackgroundResource(out ? R.drawable.btn_out : R.drawable.btn_in);
         b.setCompoundDrawablesWithIntrinsicBounds(
-                "out".equals(dir) ? R.drawable.ic_arrow_out : R.drawable.ic_arrow_in, 0, 0, 0);
+                out ? R.drawable.ic_arrow_out : R.drawable.ic_arrow_in, 0, 0, 0);
         b.setCompoundDrawablePadding(dp(6));
         b.setPadding(dp(10), 0, dp(10), 0);
         b.setOnClickListener(v -> onTapDir(d, dir));

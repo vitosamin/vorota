@@ -1,33 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#F3F5F9</color>
-    <color name="bg_top">#F3F5F9</color>
-    <color name="bg_bottom">#E9EDF6</color>
+    <!-- Плоская светлая тема: холодный фон, белые плитки, тонкая рамка -->
+    <color name="bg">#F4F6FA</color>
+    <color name="bg_top">#F4F6FA</color>
+    <color name="bg_bottom">#EEF2F8</color>
     <color name="card">#FFFFFF</color>
     <color name="card_high">#FFFFFF</color>
-    <color name="card_stroke">#DFE5F0</color>
-    <color name="field">#F1F4FA</color>
-    <color name="field_stroke">#DCE3EF</color>
+    <color name="card_stroke">#DFE5EF</color>
+    <color name="field">#EDF1F8</color>
+    <color name="field_stroke">#DFE5EF</color>
     <color name="nav_bg">#FFFFFF</color>
-    <color name="accent">#3459C9</color>
-    <color name="accent_light">#5576DF</color>
-    <color name="accent_deep">#294CB7</color>
-    <color name="accent_dark">#203B92</color>
-    <color name="accent_soft">#E9EEFF</color>
-    <color name="accent_tint">#DBE4FF</color>
-    <color name="violet">#6758BA</color>
-    <color name="violet_soft">#EFECFB</color>
-    <color name="warn">#8B5900</color>
-    <color name="warn_soft">#FFF2D6</color>
-    <color name="danger">#B33943</color>
-    <color name="danger_soft">#FDEBED</color>
-    <color name="info">#1D6683</color>
-    <color name="info_soft">#E4F4F8</color>
-    <color name="text_primary">#18243B</color>
-    <color name="text_secondary">#526178</color>
-    <color name="text_muted">#65738A</color>
-    <color name="icon_bg">#E9EEFF</color>
-    <color name="icon_launcher">#17553F</color>
+
+    <color name="accent">#0B7A56</color>
+    <color name="accent_light">#0F8F66</color>
+    <color name="accent_deep">#0A6E4D</color>
+    <color name="accent_dark">#085C41</color>
+    <color name="accent_soft">#DFF6EC</color>
+    <color name="accent_tint">#CBEEDF</color>
+
+    <color name="violet">#5B4FBE</color>
+    <color name="violet_soft">#ECE9FB</color>
+
+    <color name="warn">#96600F</color>
+    <color name="warn_soft">#FBEEDA</color>
+    <color name="danger">#B3313C</color>
+    <color name="danger_soft">#FBE3E5</color>
+    <color name="info">#2F62D8</color>
+    <color name="info_soft">#E4EBFD</color>
+
+    <color name="text_primary">#101827</color>
+    <color name="text_secondary">#5A6779</color>
+    <color name="text_muted">#5C6B80</color>
+    <color name="icon_bg">#EDF1F8</color>
+    <color name="icon_launcher">#0B7A56</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="white">#FFFFFF</color>
     <color name="transparent">#00000000</color>

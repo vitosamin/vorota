@@ -1,34 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#101827</color>
-    <color name="bg_top">#101827</color>
-    <color name="bg_bottom">#0C1421</color>
-    <color name="card">#1B283C</color>
-    <color name="card_high">#24334B</color>
-    <color name="card_stroke">#30405A</color>
-    <color name="field">#142033</color>
-    <color name="field_stroke">#34445E</color>
-    <color name="nav_bg">#182438</color>
-    <color name="accent">#A9BCFF</color>
-    <color name="accent_light">#CBD6FF</color>
-    <color name="accent_deep">#B8C8FF</color>
-    <color name="accent_dark">#798FD9</color>
-    <color name="accent_soft">#293C68</color>
-    <color name="accent_tint">#344978</color>
-    <color name="violet">#C5B8FF</color>
-    <color name="violet_soft">#332C55</color>
-    <color name="warn">#FFD17A</color>
-    <color name="warn_soft">#49391E</color>
-    <color name="danger">#FFADB2</color>
-    <color name="danger_soft">#4C2B35</color>
-    <color name="info">#92D7E7</color>
-    <color name="info_soft">#203F4C</color>
-    <color name="text_primary">#F0F4FF</color>
-    <color name="text_secondary">#BAC6DA</color>
-    <color name="text_muted">#AAB8CE</color>
-    <color name="icon_bg">#293C68</color>
-    <color name="icon_launcher">#17553F</color>
-    <color name="on_accent">#142549</color>
+    <!-- Тёмная тема: почти чёрный фон, плитки чуть светлее, мягкие подложки без прозрачности -->
+    <color name="bg">#0A0D11</color>
+    <color name="bg_top">#0A0D11</color>
+    <color name="bg_bottom">#070A0D</color>
+    <color name="card">#141A21</color>
+    <color name="card_high">#1C242E</color>
+    <color name="card_stroke">#242E3A</color>
+    <color name="field">#1C242E</color>
+    <color name="field_stroke">#2B3644</color>
+    <color name="nav_bg">#12171E</color>
+
+    <color name="accent">#3DDC97</color>
+    <color name="accent_light">#5FE4AB</color>
+    <color name="accent_deep">#34C387</color>
+    <color name="accent_dark">#2AA671</color>
+    <color name="accent_soft">#1B3934</color>
+    <color name="accent_tint">#205042</color>
+
+    <color name="violet">#B3A8FF</color>
+    <color name="violet_soft">#2C2A45</color>
+
+    <color name="warn">#F5C25E</color>
+    <color name="warn_soft">#38352B</color>
+    <color name="danger">#FF8A8A</color>
+    <color name="danger_soft">#3A2C32</color>
+    <color name="info">#9DBBFF</color>
+    <color name="info_soft">#2A3445</color>
+
+    <color name="text_primary">#F1F5F9</color>
+    <color name="text_secondary">#9AA6B4</color>
+    <color name="text_muted">#8A94A4</color>
+    <color name="icon_bg">#1C242E</color>
+    <color name="icon_launcher">#0B7A56</color>
+    <color name="on_accent">#062117</color>
     <color name="white">#FFFFFF</color>
     <color name="transparent">#00000000</color>
     <color name="scrim">#99000000</color>
