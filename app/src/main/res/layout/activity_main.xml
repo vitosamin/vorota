@@ -199,6 +199,71 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="26dp"
+                        android:text="@string/gate_section" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_card"
+                        android:orientation="vertical"
+                        android:padding="18dp">
+
+                        <TextView
+                            style="@style/FieldLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/gate_url" />
+
+                        <EditText
+                            android:id="@+id/gateUrl"
+                            style="@style/Field"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="http://192.168.2.160:8099"
+                            android:importantForAutofill="no"
+                            android:inputType="textUri" />
+
+                        <TextView
+                            style="@style/FieldLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="@string/gate_token" />
+
+                        <EditText
+                            android:id="@+id/gateToken"
+                            style="@style/Field"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="vorota-2026"
+                            android:importantForAutofill="no"
+                            android:inputType="text" />
+
+                        <Button
+                            android:id="@+id/btnGateImport"
+                            style="@style/SecondaryButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/gate_import" />
+
+                        <TextView
+                            android:id="@+id/gateStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        style="@style/Section"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="26dp"
                         android:text="@string/settings_devices" />
 
                     <LinearLayout

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.net.Uri;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,6 +36,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
@@ -68,6 +72,10 @@ public class MainActivity extends Activity {
     private ImageButton btnRefresh;
     private EditText haUrl;
     private EditText haToken;
+    private EditText gateUrl;
+    private EditText gateToken;
+    private Button btnGateImport;
+    private TextView gateStatus;
     private CheckBox haInsecure;
     private Button btnTest;
     private Button btnAddDevice;
@@ -116,6 +124,10 @@ public class MainActivity extends Activity {
         btnRefresh = findViewById(R.id.btnRefresh);
         haUrl = findViewById(R.id.haUrl);
         haToken = findViewById(R.id.haToken);
+        gateUrl = findViewById(R.id.gateUrl);
+        gateToken = findViewById(R.id.gateToken);
+        btnGateImport = findViewById(R.id.btnGateImport);
+        gateStatus = findViewById(R.id.gateStatus);
         haInsecure = findViewById(R.id.haInsecure);
         btnTest = findViewById(R.id.btnTest);
         btnAddDevice = findViewById(R.id.btnAddDevice);
@@ -149,6 +161,22 @@ public class MainActivity extends Activity {
             }
         });
         haInsecure.setOnCheckedChangeListener((buttonView, isChecked) -> cfg.setHaInsecure(isChecked));
+
+        gateUrl.setText(cfg.getGateUrl());
+        gateToken.setText(cfg.getGateToken());
+        gateUrl.addTextChangedListener(new SimpleWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                cfg.setGateUrl(s.toString().trim());
+            }
+        });
+        gateToken.addTextChangedListener(new SimpleWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                cfg.setGateToken(s.toString().trim());
+            }
+        });
+        btnGateImport.setOnClickListener(v -> importGateDoors());
 
         btnTest.setOnClickListener(v -> testConnection());
         btnAddDevice.setOnClickListener(v -> openEditor(null));
@@ -456,6 +484,78 @@ public class MainActivity extends Activity {
                 if ("off".equals(state)) return new Status(Status.OFF, "Выключено");
                 return new Status(Status.UNKNOWN, state.isEmpty() ? "Нет данных" : state);
         }
+    }
+
+    private void importGateDoors() {
+        final String rawUrl = gateUrl.getText().toString().trim();
+        final String token = gateToken.getText().toString().trim();
+        cfg.setGateUrl(rawUrl);
+        cfg.setGateToken(token);
+        final String base = HaClient.normalizeBase(rawUrl);
+        if (base.isEmpty()) {
+            gateStatus.setTextColor(getColor(R.color.danger));
+            gateStatus.setText(getString(R.string.gate_error, "укажите адрес моста"));
+            return;
+        }
+        btnGateImport.setEnabled(false);
+        gateStatus.setTextColor(getColor(R.color.text_muted));
+        gateStatus.setText(R.string.gate_loading);
+        final String encToken = Uri.encode(token);
+        runIo(() -> {
+            Http.Response r = Http.get(base + "/doors?token=" + encToken, null, false);
+            String error = null;
+            int added = 0;
+            if (!r.ok()) {
+                error = r.error == null ? "HTTP " + r.code : r.error;
+            } else {
+                try {
+                    JSONArray arr = new JSONObject(r.body).getJSONArray("doors");
+                    List<Device> devices = cfg.getDevices();
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject o = arr.getJSONObject(i);
+                        String id = o.optString("id", "");
+                        String name = o.optString("name", "");
+                        if (id.isEmpty() || name.isEmpty()) continue;
+                        boolean exists = false;
+                        for (Device d : devices) {
+                            if (d.openUrl != null && d.openUrl.contains("/open?id=" + id + "&")) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (exists) continue;
+                        Device d = new Device(Device.newId(), name, Device.TYPE_GATE);
+                        d.source = Device.SRC_HTTP;
+                        d.protocol = Device.P_CUSTOM;
+                        d.address = base;
+                        d.pulse = true;
+                        d.openUrl = base + "/open?id=" + id + "&token=" + encToken;
+                        d.closeUrl = base + "/lock?id=" + id + "&token=" + encToken;
+                        d.statusUrl = base + "/status?id=" + id + "&token=" + encToken;
+                        d.statusField = "state";
+                        d.onValue = "OPEN";
+                        devices.add(d);
+                        added++;
+                    }
+                    cfg.saveDevices(devices);
+                } catch (Exception e) {
+                    error = "некорректный ответ моста";
+                }
+            }
+            final String ferr = error;
+            final int fadded = added;
+            ui.post(() -> {
+                btnGateImport.setEnabled(true);
+                if (ferr != null) {
+                    gateStatus.setTextColor(getColor(R.color.danger));
+                    gateStatus.setText(getString(R.string.gate_error, ferr));
+                } else {
+                    gateStatus.setTextColor(getColor(R.color.accent));
+                    gateStatus.setText(getString(R.string.gate_ok, fadded));
+                    reloadDevices();
+                }
+            });
+        });
     }
 
     private void testConnection() {

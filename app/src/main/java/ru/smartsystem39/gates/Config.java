@@ -47,6 +47,22 @@ public class Config {
         sp.edit().putBoolean(K_INSECURE, v).apply();
     }
 
+    public String getGateUrl() {
+        return sp.getString("gate_url", "http://192.168.2.160:8099");
+    }
+
+    public void setGateUrl(String v) {
+        sp.edit().putString("gate_url", v == null ? "" : v).apply();
+    }
+
+    public String getGateToken() {
+        return sp.getString("gate_token", "vorota-2026");
+    }
+
+    public void setGateToken(String v) {
+        sp.edit().putString("gate_token", v == null ? "" : v).apply();
+    }
+
     public boolean hasHa() {
         return !getHaUrl().trim().isEmpty() && !getHaToken().trim().isEmpty();
     }

@@ -70,6 +70,13 @@
     <string name="no_connection">Нет связи</string>
     <string name="ha_ok">Связь есть: %1$d устройств</string>
     <string name="ha_bad">%1$s</string>
+    <string name="gate_section">Gate-IP</string>
+    <string name="gate_url">Адрес моста Gate-IP</string>
+    <string name="gate_token">Токен моста</string>
+    <string name="gate_import">Загрузить двери</string>
+    <string name="gate_loading">Загрузка списка дверей…</string>
+    <string name="gate_ok">Добавлено дверей: %1$d</string>
+    <string name="gate_error">Не удалось: %1$s</string>
     <string name="updates_section">Обновления</string>
     <string name="version_fmt">Версия %1$s</string>
     <string name="update_check">Проверить обновления</string>
