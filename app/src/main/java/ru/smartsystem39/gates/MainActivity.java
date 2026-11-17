@@ -352,7 +352,7 @@ public class MainActivity extends Activity {
 
         ImageView chevron = new ImageView(this);
         chevron.setLayoutParams(new LinearLayout.LayoutParams(dp(24), dp(24)));
-        chevron.setImageResource(R.drawable.ic_chevron);
+        chevron.setImageResource(R.drawable.ic_chevron_right);
         chevron.setColorFilter(getColor(R.color.text_secondary));
         chevron.setRotation(expanded ? 90f : 0f);
         row.addView(chevron);
@@ -376,108 +376,79 @@ public class MainActivity extends Activity {
         c.id = d.id;
         c.device = d;
 
-        // Плитка: иконка и название сверху, статус справа, крупные кнопки снизу.
+        // Карточка как в панели sing-box: рамка 1 dp, радиус 12, внутри строка
+        // «значок — название — статус» и крупные кнопки под ней.
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(16), dp(16), dp(16), dp(16));
+        card.setPadding(dp(14), dp(14), dp(14), dp(14));
         card.setBackground(Ui.cardBackground(this));
         card.setLayoutParams(Ui.rowLp(this));
         c.root = card;
 
         LinearLayout top = new LinearLayout(this);
         top.setOrientation(LinearLayout.HORIZONTAL);
-        top.setGravity(Gravity.TOP);
+        top.setGravity(Gravity.CENTER_VERTICAL);
         card.addView(top);
 
-        FrameLayout iconBox = new FrameLayout(this);
-        iconBox.setLayoutParams(new LinearLayout.LayoutParams(dp(46), dp(46)));
-        iconBox.setBackgroundResource(R.drawable.bg_icon_circle);
+        FrameLayout chip = new FrameLayout(this);
+        chip.setLayoutParams(new LinearLayout.LayoutParams(dp(34), dp(34)));
+        chip.setBackgroundResource(R.drawable.bg_icon_circle);
 
         ImageView icon = new ImageView(this);
-        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER));
+        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(18), dp(18), Gravity.CENTER));
         icon.setImageResource(Device.typeIcon(d.type));
         icon.setColorFilter(getColor(R.color.accent));
         c.icon = icon;
-        iconBox.addView(icon);
-        top.addView(iconBox);
+        chip.addView(icon);
+        top.addView(chip);
 
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        tlp.leftMargin = dp(14);
-        tlp.rightMargin = dp(10);
+        tlp.leftMargin = dp(11);
+        tlp.rightMargin = dp(8);
         texts.setLayoutParams(tlp);
 
         TextView name = new TextView(this);
         name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
         name.setTextColor(getColor(R.color.text_primary));
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(false);
-        name.setMaxLines(2);
+        name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
-        // Имя занимает всю ширину плитки; длинное переносится на вторую строку и
-        // при необходимости уменьшается, а не обрезается на первом слове.
-        name.setAutoSizeTextTypeUniformWithConfiguration(15, 20, 1, TypedValue.COMPLEX_UNIT_SP);
+        name.setAutoSizeTextTypeUniformWithConfiguration(13, 15, 1, TypedValue.COMPLEX_UNIT_SP);
         c.name = name;
         texts.addView(name);
-        top.addView(texts);
-
-        // Источник и статус — отдельная строка: имя получает всю ширину.
-        LinearLayout meta = new LinearLayout(this);
-        meta.setOrientation(LinearLayout.HORIZONTAL);
-        meta.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        mlp.topMargin = dp(10);
-        meta.setLayoutParams(mlp);
 
         TextView source = new TextView(this);
         source.setText(sourceLabel(d));
         source.setTextColor(getColor(R.color.text_secondary));
-        source.setTextSize(10);
-        source.setAllCaps(true);
-        source.setLetterSpacing(0.08f);
-        source.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        source.setTextSize(12);
         source.setSingleLine(true);
         source.setEllipsize(TextUtils.TruncateAt.END);
-        source.setLayoutParams(new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        meta.addView(source);
-
-        LinearLayout pill = new LinearLayout(this);
-        pill.setOrientation(LinearLayout.HORIZONTAL);
-        pill.setGravity(Gravity.CENTER_VERTICAL);
-        pill.setPadding(dp(10), dp(5), dp(11), dp(5));
-        pill.setBackground(Ui.fill(getColor(R.color.field), dp(12)));
-        c.pill = pill;
-
-        View dot = new View(this);
-        dot.setLayoutParams(new LinearLayout.LayoutParams(dp(7), dp(7)));
-        dot.setBackgroundResource(R.drawable.dot_muted);
-        c.dot = dot;
-        pill.addView(dot);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        slp.topMargin = dp(2);
+        source.setLayoutParams(slp);
+        texts.addView(source);
+        top.addView(texts);
 
         TextView status = new TextView(this);
-        LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        stlp.leftMargin = dp(7);
-        status.setLayoutParams(stlp);
         status.setText(R.string.status_checking);
         status.setTextColor(getColor(R.color.text_secondary));
-        status.setTextSize(11);
-        status.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        status.setTextSize(12);
+        status.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         status.setSingleLine(true);
         c.status = status;
-        pill.addView(status);
-        meta.addView(pill);
-        card.addView(meta);
+        c.pill = null;
+        c.dot = null;
+        top.addView(status);
 
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        alp.topMargin = dp(14);
+        alp.topMargin = dp(12);
         actions.setLayoutParams(alp);
 
         if (d.isGate()) {
@@ -487,16 +458,17 @@ public class MainActivity extends Activity {
             c.action = null;
         } else {
             Button action = new Button(this);
-            action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(46), 1f));
+            action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(40), 1f));
             action.setText(R.string.action_open);
             action.setAllCaps(false);
-            action.setTextSize(16);
-            action.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            action.setTextSize(13);
+            action.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
             action.setSingleLine(true);
             action.setMinWidth(0);
             action.setMinHeight(0);
             action.setMinimumWidth(0);
             action.setMinimumHeight(0);
+            action.setCompoundDrawablePadding(dp(7));
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
             actions.addView(action);
@@ -504,7 +476,7 @@ public class MainActivity extends Activity {
         actions.addView(favoriteButton(d));
         card.addView(actions);
 
-        // Команды запускаются только кнопками, не случайным касанием плитки.
+        // Команды запускаются только кнопками, не случайным касанием карточки.
         card.setOnLongClickListener(v -> {
             openEditor(d.id);
             return true;
@@ -513,11 +485,10 @@ public class MainActivity extends Activity {
         if (!d.isConfigured() && !d.isGate()) {
             status.setText(R.string.not_configured_short);
             status.setTextColor(getColor(R.color.text_secondary));
-            dot.setBackgroundResource(R.drawable.dot_muted);
             if (c.action != null) {
                 c.action.setText(R.string.action_setup);
-                c.action.setTextColor(getColor(R.color.text_primary));
-                c.action.setBackgroundResource(R.drawable.btn_secondary);
+                Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_primary,
+                        R.drawable.ic_settings);
             }
         }
         return c;
@@ -525,13 +496,13 @@ public class MainActivity extends Activity {
 
     private ImageButton favoriteButton(Device d) {
         ImageButton star = new ImageButton(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(46), dp(46));
-        lp.leftMargin = dp(10);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), dp(40));
+        lp.leftMargin = dp(8);
         star.setLayoutParams(lp);
-        star.setPadding(dp(12), dp(12), dp(12), dp(12));
-        star.setBackgroundResource(d.favorite ? R.drawable.btn_warn : R.drawable.btn_secondary);
-        star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
-        star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_secondary));
+        star.setPadding(dp(11), dp(11), dp(11), dp(11));
+        star.setBackgroundResource(d.favorite ? R.drawable.btn_primary : R.drawable.btn_secondary);
+        star.setImageResource(R.drawable.ic_star);
+        star.setColorFilter(getColor(d.favorite ? R.color.on_accent : R.color.text_secondary));
         star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
         star.setOnClickListener(v -> toggleFavorite(d));
         return star;
@@ -577,85 +548,85 @@ public class MainActivity extends Activity {
         }
     }
 
+    private int actionIcon(Device d, Status s) {
+        if (s.isMoving()) return R.drawable.ic_square;
+        if (!Device.SRC_HA.equals(d.source)) return R.drawable.ic_log_in;
+        switch (domainOf(d.entity)) {
+            case "cover":
+            case "lock":
+                return s.isOpenish() ? R.drawable.ic_log_out : R.drawable.ic_log_in;
+            case "button":
+                return R.drawable.ic_log_in;
+            case "script":
+            default:
+                return R.drawable.ic_power;
+        }
+    }
+
     private void applyStatus(Card c, Status s) {
         c.status.setText(s.text);
         int color;
-        int dot;
-        int tint;
         switch (s.kind) {
             case Status.OPEN:
             case Status.ON:
-                color = getColor(R.color.accent);
-                dot = R.drawable.dot_green;
-                tint = R.color.accent_soft;
+                color = getColor(R.color.success);
                 break;
             case Status.MOVING:
                 color = getColor(R.color.warn);
-                dot = R.drawable.dot_amber;
-                tint = R.color.warn_soft;
                 break;
             case Status.READY:
-                color = getColor(R.color.info);
-                dot = R.drawable.dot_blue;
-                tint = R.color.info_soft;
+                color = getColor(R.color.accent);
                 break;
             case Status.OFFLINE:
                 color = getColor(R.color.danger);
-                dot = R.drawable.dot_red;
-                tint = R.color.danger_soft;
                 break;
             case Status.CLOSED:
             case Status.OFF:
             case Status.UNKNOWN:
             default:
                 color = getColor(R.color.text_secondary);
-                dot = R.drawable.dot_muted;
-                tint = R.color.field;
                 break;
         }
         c.status.setTextColor(color);
-        c.dot.setBackgroundResource(dot);
-        if (c.pill != null) c.pill.setBackground(Ui.fill(getColor(tint), dp(12)));
         if (c.action == null) return;
 
         boolean online = s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
         c.action.setText(actionLabel(c.device, s));
-        if (s.isMoving()) {
-            c.action.setTextColor(getColor(online ? R.color.warn : R.color.text_muted));
-            c.action.setBackgroundResource(online ? R.drawable.btn_warn : R.drawable.btn_secondary);
+        int icon = actionIcon(c.device, s);
+        if (!online) {
+            Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_muted, icon);
+        } else if (s.isMoving()) {
+            Ui.styleButton(this, c.action, R.drawable.btn_warn, R.color.warn, icon);
         } else if (s.isOpenish()) {
-            c.action.setTextColor(getColor(online ? R.color.text_primary : R.color.text_muted));
-            c.action.setBackgroundResource(R.drawable.btn_secondary);
+            Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_primary, icon);
         } else {
-            c.action.setTextColor(getColor(online ? R.color.on_accent : R.color.text_muted));
-            c.action.setBackgroundResource(online ? R.drawable.btn_primary : R.drawable.btn_secondary);
+            Ui.styleButton(this, c.action, R.drawable.btn_primary, R.color.on_accent, icon);
         }
-        c.action.setAlpha(online ? 1f : 0.55f);
+        c.action.setAlpha(online ? 1f : 0.6f);
     }
 
     private Button dirButton(Device d, String dir, String label, float weight, boolean marginRight) {
         boolean out = "out".equals(dir);
         Button b = new Button(this);
         LinearLayout.LayoutParams lp = weight > 0
-                ? new LinearLayout.LayoutParams(0, dp(46), weight)
-                : new LinearLayout.LayoutParams(dp(88), dp(46));
-        if (marginRight) lp.rightMargin = dp(10);
+                ? new LinearLayout.LayoutParams(0, dp(40), weight)
+                : new LinearLayout.LayoutParams(dp(96), dp(40));
+        if (marginRight) lp.rightMargin = dp(8);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(15);
-        b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        b.setTextSize(13);
+        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setSingleLine(true);
         b.setMinWidth(0);
         b.setMinHeight(0);
         b.setMinimumWidth(0);
         b.setMinimumHeight(0);
-        b.setTextColor(getColor(out ? R.color.info : R.color.accent));
-        b.setBackgroundResource(out ? R.drawable.btn_out : R.drawable.btn_in);
-        b.setCompoundDrawablesWithIntrinsicBounds(
-                out ? R.drawable.ic_arrow_out : R.drawable.ic_arrow_in, 0, 0, 0);
-        b.setCompoundDrawablePadding(dp(6));
-        b.setPadding(dp(10), 0, dp(10), 0);
+        b.setCompoundDrawablePadding(dp(7));
+        Ui.styleButton(this, b,
+                out ? R.drawable.btn_secondary : R.drawable.btn_primary,
+                out ? R.color.text_primary : R.color.on_accent,
+                out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
         b.setOnClickListener(v -> onTapDir(d, dir));
         return b;
     }
@@ -1028,7 +999,7 @@ public class MainActivity extends Activity {
         del.setLayoutParams(new LinearLayout.LayoutParams(dp(40), dp(40)));
         del.setPadding(dp(9), dp(9), dp(9), dp(9));
         del.setBackgroundResource(R.drawable.bg_circle_ripple);
-        del.setImageResource(R.drawable.ic_trash);
+        del.setImageResource(R.drawable.ic_trash_2);
         del.setColorFilter(getColor(R.color.text_muted));
         del.setContentDescription(getString(R.string.delete));
         del.setOnClickListener(v -> confirmDelete(d));
@@ -1072,7 +1043,7 @@ public class MainActivity extends Activity {
         circle.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(999)));
         ImageView icon = new ImageView(this);
         icon.setLayoutParams(new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.CENTER));
-        icon.setImageResource(R.drawable.ic_gate);
+        icon.setImageResource(R.drawable.ic_door_open);
         icon.setColorFilter(getColor(R.color.accent));
         circle.addView(icon);
         box.addView(circle);

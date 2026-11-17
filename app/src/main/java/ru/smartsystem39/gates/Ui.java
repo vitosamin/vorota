@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -96,6 +97,19 @@ public final class Ui {
     public static void margins(View v, int l, int t, int r, int b) {
         if (v.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
             ((ViewGroup.MarginLayoutParams) v.getLayoutParams()).setMargins(l, t, r, b);
+        }
+    }
+
+    /** Красит кнопку и ставит иконку слева — один вид на все действия. */
+    public static void styleButton(Context c, Button b, int background, int textColor, int icon) {
+        b.setBackgroundResource(background);
+        int color = c.getColor(textColor);
+        b.setTextColor(color);
+        if (icon != 0) {
+            b.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
+            b.setCompoundDrawableTintList(ColorStateList.valueOf(color));
+        } else {
+            b.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
     }
 }

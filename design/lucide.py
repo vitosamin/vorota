@@ -17,7 +17,8 @@ BUNDLE = Path("/home/dsh/projects/singbox-manager/internal/web/static/lucide.min
 # Иконки, которые нужны приложению «Доступ»
 WANTED = ["DoorOpen", "DoorClosed", "Fence", "LogIn", "LogOut", "Square", "Settings",
           "LayoutGrid", "RefreshCw", "Star", "Trash2", "ChevronRight", "Check",
-          "ShieldCheck", "Plus", "WifiOff", "Gauge", "ArrowRight", "ArrowLeft"]
+          "ShieldCheck", "WifiOff", "Wifi", "Power", "ToggleLeft", "Gauge",
+          "ArrowRight", "ArrowLeft", "Plus", "CircleCheck", "TriangleAlert"]
 
 
 def load(path=BUNDLE):
@@ -99,7 +100,7 @@ def svg(nodes, size=24, stroke=2, color="currentColor", cls=""):
             f'stroke-linejoin="round">' + "".join(body) + "</svg>")
 
 
-def vector_xml(nodes, color_res="@color/icon_tint", size=24, stroke=2):
+def vector_xml(nodes, color_res="@color/icon_tint", size=18, stroke=2):
     data = to_path_data(nodes)
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- Сгенерировано из Lucide (панель sing-box), не править вручную. -->
@@ -117,7 +118,10 @@ def vector_xml(nodes, color_res="@color/icon_tint", size=24, stroke=2):
 
 
 def snake(name):
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    """Trash2 -> trash_2, LayoutGrid -> layout_grid."""
+    step1 = re.sub(r"(?<=[A-Za-z])(?=[A-Z])", "_", name)
+    step2 = re.sub(r"(?<=[A-Za-z])(?=[0-9])", "_", step1)
+    return step2.lower()
 
 
 def main():

@@ -1,38 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Плоская светлая тема: холодный фон, белые плитки, тонкая рамка -->
-    <color name="bg">#F4F6FA</color>
-    <color name="bg_top">#F4F6FA</color>
-    <color name="bg_bottom">#EEF2F8</color>
-    <color name="card">#FFFFFF</color>
-    <color name="card_high">#FFFFFF</color>
-    <color name="card_stroke">#DFE5EF</color>
-    <color name="field">#EDF1F8</color>
-    <color name="field_stroke">#DFE5EF</color>
-    <color name="nav_bg">#FFFFFF</color>
+    <!-- Светлая тема панели sing-box (internal/web/static/style.css, [data-theme="light"]) -->
+    <color name="bg">#F1F2F4</color>
+    <color name="bg_top">#F1F2F4</color>
+    <color name="bg_bottom">#ECEEF1</color>
+    <color name="card">#FBFBFC</color>
+    <color name="card_high">#F4F5F7</color>
+    <color name="card_stroke">#DCDFE4</color>
+    <color name="field">#F1F2F4</color>
+    <color name="field_stroke">#DCDFE4</color>
+    <color name="nav_bg">#E9EBEF</color>
 
-    <color name="accent">#0B7A56</color>
-    <color name="accent_light">#0F8F66</color>
-    <color name="accent_deep">#0A6E4D</color>
-    <color name="accent_dark">#085C41</color>
-    <color name="accent_soft">#DFF6EC</color>
-    <color name="accent_tint">#CBEEDF</color>
+    <color name="accent">#2B62D9</color>
+    <color name="accent_light">#3B78EC</color>
+    <color name="accent_deep">#2456C4</color>
+    <color name="accent_dark">#1D4ED8</color>
+    <color name="accent_fill">#1D4ED8</color>
+    <color name="accent_soft">#EAEFF9</color>
+    <color name="accent_tint">#E2E9F8</color>
 
-    <color name="violet">#5B4FBE</color>
-    <color name="violet_soft">#ECE9FB</color>
+    <color name="violet">#7154CC</color>
+    <color name="violet_soft">#EFECFA</color>
 
-    <color name="warn">#96600F</color>
-    <color name="warn_soft">#FBEEDA</color>
-    <color name="danger">#B3313C</color>
-    <color name="danger_soft">#FBE3E5</color>
-    <color name="info">#2F62D8</color>
-    <color name="info_soft">#E4EBFD</color>
+    <color name="success">#15803D</color>
+    <color name="success_soft">#E8F3EA</color>
+    <color name="warn">#A8620B</color>
+    <color name="warn_soft">#F3ECE4</color>
+    <color name="warn_line">#DEC5A8</color>
+    <color name="danger">#C0342A</color>
+    <color name="danger_soft">#F7E9E7</color>
+    <color name="danger_line">#E0BAB6</color>
+    <color name="info">#0D6F8A</color>
+    <color name="info_soft">#E6F1F4</color>
 
-    <color name="text_primary">#101827</color>
-    <color name="text_secondary">#5A6779</color>
-    <color name="text_muted">#5C6B80</color>
-    <color name="icon_bg">#EDF1F8</color>
-    <color name="icon_launcher">#0B7A56</color>
+    <color name="btn_neutral">#F1F1F2</color>
+
+    <color name="text_primary">#15181C</color>
+    <color name="text_secondary">#4E5560</color>
+    <color name="text_muted">#6B7280</color>
+    <color name="icon_bg">#EAEFF9</color>
+    <color name="icon_tint">#15181C</color>
+    <color name="icon_launcher">#2B62D9</color>
     <color name="icon_mark">#FFFFFF</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="white">#FFFFFF</color>

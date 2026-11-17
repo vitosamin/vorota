@@ -75,10 +75,10 @@ public class Device {
     }
 
     public static int typeIcon(String type) {
-        if (TYPE_GATE.equals(type)) return R.drawable.ic_gate;
-        if (TYPE_WIDE.equals(type)) return R.drawable.ic_wide;
-        if (TYPE_RELAY.equals(type)) return R.drawable.ic_relay;
-        return R.drawable.ic_barrier;
+        if (TYPE_GATE.equals(type)) return R.drawable.ic_door_closed;
+        if (TYPE_WIDE.equals(type)) return R.drawable.ic_door_open;
+        if (TYPE_RELAY.equals(type)) return R.drawable.ic_power;
+        return R.drawable.ic_fence;
     }
 
     public static String protocolLabel(String protocol) {

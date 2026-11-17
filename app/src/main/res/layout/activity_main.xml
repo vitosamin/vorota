@@ -67,7 +67,7 @@
                 android:background="@drawable/bg_circle_ripple"
                 android:contentDescription="@string/refresh"
                 android:padding="10dp"
-                android:src="@drawable/ic_refresh"
+                android:src="@drawable/ic_refresh_cw"
                 android:tint="@color/text_secondary" />
         </LinearLayout>
 
@@ -416,9 +416,9 @@
 
                 <ImageView
                     android:id="@+id/navDevicesIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_gate"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_layout_grid"
                     android:tint="@color/text_secondary" />
 
                 <TextView
@@ -442,8 +442,8 @@
 
                 <ImageView
                     android:id="@+id/navSettingsIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/ic_settings"
                     android:tint="@color/text_secondary" />
 
