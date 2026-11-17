@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 12:58 (Europe/Kaliningrad)
-> main · последний коммит: 6c81bf6 «1.7: карточка с кнопками на всю ширину; веб-версия»
-> Версия 1.7 (`versionCode 8`), пакет `ru.smartsystem39.gates`
+> Обновлено: 2026-11-17 13:12 (Europe/Kaliningrad)
+> main · последний коммит: 2aac212 «1.8: карточка Ворота; веб: вход и сессия»
+> Версия 1.8 (`versionCode 9`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
@@ -21,8 +21,9 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
 
 - API: `/status`, `/doors`, `/open?id=<dev>&dir=in|out`, `/calibrate`,
   `/reload`, `/press?id=<row>&btn=lock|unlock`.
-- **Веб-версия:** `http://192.168.2.160:8099/` — Basic Auth `vitosamin` /
-  `Admin910327`, кнопки «Вход»/«Выход», автообновление 15 с.
+- **Веб-версия:** `http://192.168.2.160:8099/` — своя страница входа
+  (`vitosamin` / `Admin910327`), сессия в cookie на 12 ч, кнопка «Выйти»;
+  Basic Auth оставлен для скриптов. Автообновление 15 с.
 - Автозапуск: задачи `GateBridgeStartup` (при входе) и `GateBridgeWatchdog`
   (каждые 5 минут поднимает мост, если порт не слушается).
 - Вход Windows: `AutoAdminLogon=1`, `ALM\skudnew` (пароль `Admin910327`,
@@ -39,6 +40,10 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
 (Досмотровая вход), 10 = rdr25 (Вход из Зала), 11 = rdr26 (Вход из СЛ.ПОМ).
 Реальная таблица в GateTerm содержит 13 строк (первая — «Сан пропускник»),
 поэтому номера строк моста не равны визуальным.
+
+В приложении по умолчанию три карточки-заготовки: «Ворота», «Калитка»,
+«Шлагбаум» (в избранном, флаги `deleted_drive/gate/barrier`). В Home Assistant
+таких сущностей нет — это заготовки под будущее оборудование.
 
 Не показываются в приложении (не откалиброваны): Сан пропускник (rdr1, rdr2),
 Магазин/офлайн (rdr3), КПП2 выход (rdr10), Кадры выход (rdr16).
