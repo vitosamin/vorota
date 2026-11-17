@@ -662,9 +662,27 @@ function chartLine(rows, o){
   for(let i=0;i<=4;i++){ const yy=pt+H*i/4, v=max*(1-i/4);
     g+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(w-pr)+'" y2="'+yy+'" stroke="'+C.grid+'"/>';
     g+='<text x="'+(pl-7)+'" y="'+(yy+4)+'" fill="'+C.muted+'" font-size="11" text-anchor="end">'+Math.round(v)+'</text>'; }
-  const path = key => rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r[key]||0)).join(' ');
+  // гладкая кривая: точки соединяются кубическими Безье (Catmull-Rom)
+  const pts = key => rows.map((r,i)=>[x(i), y(r[key]||0)]);
+  const smooth = (pts) => {
+    if(!pts.length) return '';
+    if(pts.length===1) return 'M'+pts[0][0]+' '+pts[0][1];
+    const t = (o.tension==null? 0.18 : o.tension);
+    let d = 'M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);
+    for(let i=0;i<pts.length-1;i++){
+      const p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2;
+      const c1x = p1[0] + (p2[0]-p0[0])*t, c1y = p1[1] + (p2[1]-p0[1])*t;
+      const c2x = p2[0] - (p3[0]-p1[0])*t, c2y = p2[1] - (p3[1]-p1[1])*t;
+      // не выходим за пределы полотна по вертикали
+      const lim = (v)=>Math.max(pt, Math.min(pt+H, v));
+      d += ' C'+c1x.toFixed(1)+' '+lim(c1y).toFixed(1)+','+c2x.toFixed(1)+' '+lim(c2y).toFixed(1)
+         + ','+p2[0].toFixed(1)+' '+p2[1].toFixed(1);
+    }
+    return d;
+  };
+  const path = key => smooth(pts(key));
   if(o.area!==false){
-    const ar = rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r.value||0)).join(' ')
+    const ar = smooth(pts('value'))
              + ' L'+x(rows.length-1)+' '+(pt+H)+' L'+x(0)+' '+(pt+H)+' Z';
     g+='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">'
       +'<stop offset="0%" stop-color="'+C.accent+'" stop-opacity=".38"/>'

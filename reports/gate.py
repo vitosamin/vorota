@@ -17,6 +17,7 @@ import json
 import os
 import re
 import sqlite3
+import shutil
 import subprocess
 import sys
 import threading
@@ -28,10 +29,25 @@ DB_PATH = os.path.join(DATA, "gate.sqlite")
 CONFIG_MDB = os.path.join(DATA, "config.mdb")
 CFG = json.load(open(os.path.join(ROOT, "gate.config.json"), encoding="utf-8"))
 
-MDB = CFG["mdbtools"]
-MDB_LIB = CFG["mdb_lib"]
-SMB = CFG["smbclient"]
-SMB_LIB = CFG["smb_lib"]
+def _tool(cfg_path, name):
+    """Путь из конфига, иначе системная утилита из PATH."""
+    if cfg_path and os.path.exists(cfg_path):
+        return cfg_path
+    return shutil.which(name) or cfg_path or name
+
+
+def _tool_dir(cfg_dir, probe):
+    """Каталог с утилитами: из конфига, иначе рядом с системной утилитой."""
+    if cfg_dir and os.path.isdir(cfg_dir) and os.path.exists(os.path.join(cfg_dir, probe)):
+        return cfg_dir
+    w = shutil.which(probe)
+    return os.path.dirname(w) if w else (cfg_dir or "")
+
+
+MDB = _tool_dir(CFG.get("mdbtools"), "mdb-export")
+MDB_LIB = CFG.get("mdb_lib") or ""
+SMB = _tool(CFG.get("smbclient"), "smbclient")
+SMB_LIB = CFG.get("smb_lib") or ""
 SHARE = CFG["share"]
 SMB_USER = CFG["user"]
 SMB_PASS = CFG["password"]
@@ -45,7 +61,8 @@ _lock = threading.Lock()
 
 def _env(libpath):
     env = dict(os.environ)
-    env["LD_LIBRARY_PATH"] = libpath + ":" + env.get("LD_LIBRARY_PATH", "")
+    if libpath:
+        env["LD_LIBRARY_PATH"] = libpath + ":" + env.get("LD_LIBRARY_PATH", "")
     env["LANG"] = "C.UTF-8"
     return env
 

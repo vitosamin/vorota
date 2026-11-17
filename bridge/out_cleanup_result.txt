@@ -1,0 +1,22 @@
+start 
+C:\Users\Public\dev_state.txt
+Процесс не может получить доступ к файлу, так как этот файл занят другим процессом.
+=== left === 
+GateBridge.exe
+GateCtl.exe
+GateUnblock.exe
+PsExec64.exe
+compile_bridge3.vbs
+kill_bridge.vbs
+read_last_event.vbs
+run_bridge.vbs
+run_cleanup.vbs
+run_dry.vbs
+bridge_watchdog.bat
+cleanup.bat
+cleanup_dry.bat
+compile_bridge3.bat
+make_watchdog.bat
+gate_map.json
+gate_bridge.log
+done 

@@ -1,0 +1,20 @@
+=== ╨Ш╨в╨Ю╨У === 
+GateBridge.exe
+GateCtl.exe
+GateUnblock.exe
+PsExec64.exe
+compile_bridge3.vbs
+kill_bridge.vbs
+read_last_event.vbs
+run_bridge.vbs
+run_final_clean.vbs
+bridge_watchdog.bat
+compile_bridge3.bat
+final_clean.bat
+make_watchdog.bat
+gate_map.json
+gate_bridge.log
+=== TASKS === 
+GateBridgeStartup                        N/A                    Готово         
+GateBridgeWatchdog                       17.11.2026 14:01:00    Готово         
+SKUD                                     N/A                    Готово         

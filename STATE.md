@@ -1,6 +1,6 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 13:47 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 14:02 (Europe/Kaliningrad)
 > main · последний коммит: 0e5b05e «2.1: переключатель темы»
 > Версия 2.1 (`versionCode 12`), пакет `ru.smartsystem39.gates`
 
