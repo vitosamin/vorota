@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Тёмно-зелёный фон иконки с лёгким объёмом: светлее сверху, темнее снизу. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#23734A"
+        android:endColor="#124430"
+        android:type="linear" />
+</shape>

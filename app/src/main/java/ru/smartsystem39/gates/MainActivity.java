@@ -1,6 +1,8 @@
 package ru.smartsystem39.gates;
 
+import android.animation.Keyframe;
 import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -78,6 +80,7 @@ public class MainActivity extends Activity {
     private boolean downloadingUpdate = false;
     private boolean importingGate = false;
     private View statusDot;
+    private static final long PULSE_PERIOD = 4200;
     private ObjectAnimator pulse;
     private ValueAnimator cardPulse;
     private ImageButton btnRefresh;
@@ -1292,11 +1295,19 @@ public class MainActivity extends Activity {
     /** Огонёк в шапке дышит: видно, что приложение живо и следит за связью. */
     private void startPulse() {
         if (statusDot == null || pulse != null) return;
-        pulse = ObjectAnimator.ofFloat(statusDot, "alpha", 0.3f, 1f);
-        pulse.setDuration(900);
+        pulse = ObjectAnimator.ofPropertyValuesHolder(statusDot, pulseFrames());
+        pulse.setDuration(PULSE_PERIOD);
         pulse.setRepeatCount(ValueAnimator.INFINITE);
-        pulse.setRepeatMode(ValueAnimator.REVERSE);
         pulse.start();
+    }
+
+    /** Один такт: короткая волна и длинная пауза — дышит редко и не ярко. */
+    private static PropertyValuesHolder pulseFrames() {
+        return PropertyValuesHolder.ofKeyframe("alpha",
+                Keyframe.ofFloat(0f, 0.55f),
+                Keyframe.ofFloat(0.15f, 0.85f),
+                Keyframe.ofFloat(0.32f, 0.55f),
+                Keyframe.ofFloat(1f, 0.55f));
     }
 
     private void stopPulse() {
@@ -1309,12 +1320,11 @@ public class MainActivity extends Activity {
     /** Огоньки на плитках дышат — видно, что устройство на связи. */
     private void startCardPulse() {
         if (cardPulse != null) return;
-        cardPulse = ValueAnimator.ofFloat(0.3f, 1f);
-        cardPulse.setDuration(900);
+        cardPulse = ValueAnimator.ofPropertyValuesHolder(pulseFrames());
+        cardPulse.setDuration(PULSE_PERIOD);
         cardPulse.setRepeatCount(ValueAnimator.INFINITE);
-        cardPulse.setRepeatMode(ValueAnimator.REVERSE);
         cardPulse.addUpdateListener(animation -> {
-            float value = (float) animation.getAnimatedValue();
+            float value = (float) animation.getAnimatedValue("alpha");
             for (List<Card> list : cards.values()) {
                 for (Card card : list) {
                     if (card.live && card.dot != null) card.dot.setAlpha(value);

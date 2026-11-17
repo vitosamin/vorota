@@ -11,13 +11,13 @@
     <color name="field_stroke">#DCDFE4</color>
     <color name="nav_bg">#E9EBEF</color>
 
-    <color name="accent">#2B62D9</color>
-    <color name="accent_light">#3B78EC</color>
-    <color name="accent_deep">#2456C4</color>
-    <color name="accent_dark">#1D4ED8</color>
-    <color name="accent_fill">#1D4ED8</color>
-    <color name="accent_soft">#EAEFF9</color>
-    <color name="accent_tint">#E2E9F8</color>
+    <color name="accent">#1B5E3A</color>
+    <color name="accent_light">#23734A</color>
+    <color name="accent_deep">#17513A</color>
+    <color name="accent_dark">#124430</color>
+    <color name="accent_fill">#1B5E3A</color>
+    <color name="accent_soft">#E9EEEC</color>
+    <color name="accent_tint">#DCE7E1</color>
 
     <color name="violet">#7154CC</color>
     <color name="violet_soft">#EFECFA</color>
@@ -45,7 +45,7 @@
     <color name="text_primary">#15181C</color>
     <color name="text_secondary">#4E5560</color>
     <color name="text_muted">#6B7280</color>
-    <color name="icon_bg">#EAEFF9</color>
+    <color name="icon_bg">#E9EEEC</color>
     <color name="icon_tint">#15181C</color>
     <color name="icon_launcher">#2B62D9</color>
     <color name="icon_mark">#FFFFFF</color>

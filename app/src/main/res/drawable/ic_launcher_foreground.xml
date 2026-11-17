@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Дверь Lucide из панели sing-box: тот же значок, что в плитках приложения. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- Знак доступа: ключевина. Круг и расширяющийся стержень. -->
-    <path android:fillColor="@color/icon_mark"
-        android:pathData="M54,23 a15,15 0 1,0 0,30 a15,15 0 1,0 0,-30 z" />
-    <path android:fillColor="@color/icon_mark"
-        android:pathData="M46,50 L62,50 L66,76 a4,4 0 0,1 -4,4 L46,80 a4,4 0 0,1 -4,-4 z" />
+    <group
+        android:scaleX="2.6"
+        android:scaleY="2.6"
+        android:translateX="22.8"
+        android:translateY="22.8">
+        <path
+            android:pathData="M11 20H2 M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z M11 4H8a2 2 0 0 0-2 2v14 M14 12h.01 M22 20h-3"
+            android:fillColor="@android:color/transparent"
+            android:strokeColor="@color/icon_mark"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>
