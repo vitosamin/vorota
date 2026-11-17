@@ -27,7 +27,10 @@ Android-пульт для шлагбаума, калитки и ворот: кр
 ./build.sh
 ```
 
-APK: `dist/Vorota-1.0.apk`. Нужны JDK 17 и Android SDK из
+APK: `dist/Vorota-1.0.apk`.
+
+Готовая сборка (последний релиз):
+https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk Нужны JDK 17 и Android SDK из
 `/home/dsh/projects/tools` (пути уже прописаны в `build.sh`).
 
 ## Установка
@@ -69,6 +72,9 @@ ESPHome — `turn_on`, пауза, `turn_off`.
 поверх, подпись сохраняется.
 
 Релизы: https://github.com/vitosamin/vorota/releases
+
+Постоянная ссылка на свежий APK:
+https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
 
 ## Проверка
 

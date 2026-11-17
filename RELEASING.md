@@ -16,7 +16,10 @@
    git add -A && git commit -m "1.1"
    git tag v1.1 && git push && git push --tags
    ```
-4. Создать релиз `v1.1` и прикрепить `dist/Vorota-1.1.apk`
+4. Создать релиз `v1.1` и прикрепить **два** файла:
+   - `Vorota-1.1.apk` — версионный;
+   - `Vorota.apk` — копия для постоянной ссылки
+     `releases/latest/download/Vorota.apk`.
    (через веб-интерфейс GitHub или API).
 5. Проверить в приложении «Настройки → Обновления → Проверить обновления».
 
