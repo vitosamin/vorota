@@ -1,8 +1,8 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:55 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 15:05 (Europe/Kaliningrad)
 > main · последний коммит: 4d66133 «2.3: статус СКУД в шапке»
-> Версия 2.3 (`versionCode 14`), пакет `ru.smartsystem39.gates`
+> Версия 2.4 (`versionCode 15`), пакет `ru.smartsystem39.gates`
 
 ## Что это
 
@@ -39,8 +39,10 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
   для API приложения — в HTML страницы его больше нет.
   `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от доверенных прокси
   (`WebAuth.TrustedProxies`: 127.0.0.1 и 192.168.2.165), из XFF берётся
-  **последний** адрес. `TokenAllowed()` не пускает токен через прокси вообще —
-  снаружи только вход по паролю + 2FA (проверено: 401 снаружи, 200 в локалке).
+  **последний** адрес. Токен API: напрямую из локалки — всегда, через прокси —
+  только по HTTPS (`TokenAllowed` + `IsHttps`). Старый токен отключён.
+- Сессии: `gate_sessions.json`, переживают перезапуск моста; «Запомнить на
+  12 месяцев» (ttl 8760 ч, cookie Max-Age=31536000).
 - CSRF: скрытое поле `csrf` во всех формах + заголовок `X-CSRF`; сравнение
   Origin идёт по Host (за прокси схема http/https различается).
 - **2FA (TOTP)**: страница `/2fa` — включение/отключение, секрет base32,
