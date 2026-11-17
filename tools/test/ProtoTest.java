@@ -126,7 +126,7 @@ public class ProtoTest {
                 older.error == null && older.newer && older.apkUrl.endsWith(".apk"),
                 older.error + " tag=" + older.tag);
         String current_version = System.getenv("VOROTA_VERSION");
-        if (current_version == null || current_version.isEmpty()) current_version = "2.3";
+        if (current_version == null || current_version.isEmpty()) current_version = "2.5";
         UpdateChecker.Info current = UpdateChecker.check(current_version);
         check("no update for current " + current_version,
                 current.error == null && !current.newer,

@@ -11,6 +11,11 @@ import java.util.List;
 
 /** Настройки приложения: подключение к HA и список устройств. */
 public class Config {
+
+    /** Адрес моста по умолчанию (публичный домен). */
+    public static final String GATE_URL_DEFAULT = "https://kp.almak.ru";
+    /** Токен моста по умолчанию. */
+    public static final String GATE_TOKEN_DEFAULT = "5f3a9c7e2b8d4610a7c3e9f1b5d8246c";
     private static final String PREFS = "gates_prefs";
     private static final String K_URL = "ha_url";
     private static final String K_TOKEN = "ha_token";
@@ -48,7 +53,7 @@ public class Config {
     }
 
     public String getGateUrl() {
-        return sp.getString("gate_url", "https://kp.almak.ru");
+        return sp.getString("gate_url", GATE_URL_DEFAULT);
     }
 
     public void setGateUrl(String v) {
@@ -56,7 +61,12 @@ public class Config {
     }
 
     public String getGateToken() {
-        return sp.getString("gate_token", "5f3a9c7e2b8d4610a7c3e9f1b5d8246c");
+        String v = sp.getString("gate_token", "");
+        if (v == null || v.trim().isEmpty() || "vorota-2026".equals(v.trim())) {
+            sp.edit().putString("gate_token", GATE_TOKEN_DEFAULT).apply();
+            return GATE_TOKEN_DEFAULT;
+        }
+        return v.trim();
     }
 
     public void setGateToken(String v) {

@@ -910,8 +910,11 @@ public class MainActivity extends Activity {
         name.setEllipsize(TextUtils.TruncateAt.END);
         col.addView(name);
 
+        String typeName = Device.typeLabel(d.type);
+        if (d.name != null && (d.name.equals("Ворота") || d.name.equals("Калитка") || d.name.equals("Шлагбаум")))
+            typeName = "";
         TextView sub = new TextView(this);
-        sub.setText(Device.typeLabel(d.type) + " · " + sourceText(d));
+        sub.setText(typeName.isEmpty() ? sourceText(d) : (typeName + " · " + sourceText(d)));
         sub.setTextColor(getColor(R.color.text_muted));
         sub.setTextSize(12);
         sub.setSingleLine(true);
