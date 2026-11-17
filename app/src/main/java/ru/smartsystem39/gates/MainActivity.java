@@ -1016,42 +1016,40 @@ public class MainActivity extends Activity {
     }
 
     private void updateHeader(boolean hasHa, boolean failed) {
-        if (devices.isEmpty()) {
-            setHeader(getString(R.string.status_no_devices), R.drawable.dot_muted, getColor(R.color.text_secondary));
-            return;
-        }
-        if (hasHa) {
-            if (!cfg.hasHa()) {
-                boolean entityChosen = false;
-                for (Device d : devices) {
-                    if (Device.SRC_HA.equals(d.source) && !d.entity.isEmpty()) {
-                        entityChosen = true;
-                        break;
-                    }
-                }
-                setHeader(entityChosen ? "Укажите адрес и токен HA" : "Настройте подключение",
-                        R.drawable.dot_muted, getColor(R.color.text_secondary));
-                return;
-            }
-            if (failed) {
-                setHeader(getString(R.string.status_ha_offline), R.drawable.dot_red, getColor(R.color.danger));
-            } else {
-                setHeader(getString(R.string.status_ha_online), R.drawable.dot_green, getColor(R.color.accent));
-            }
-            return;
-        }
-        boolean anyConfigured = false;
+        int gate = 0, ha = 0, direct = 0;
         for (Device d : devices) {
-            if (d.isConfigured()) {
-                anyConfigured = true;
-                break;
-            }
+            if (d.isGate()) gate++;
+            else if (Device.SRC_HA.equals(d.source) && d.isConfigured()) ha++;
+            else if (d.isConfigured()) direct++;
         }
-        if (anyConfigured) {
-            setHeader(getString(R.string.status_direct), R.drawable.dot_blue, getColor(R.color.info));
-        } else {
+        if (gate == 0 && ha == 0 && direct == 0) {
             setHeader("Настройте устройства", R.drawable.dot_muted, getColor(R.color.text_secondary));
+            return;
         }
+        if (ha > 0 && !cfg.hasHa()) {
+            setHeader(getString(R.string.status_ha_not_set), R.drawable.dot_amber, getColor(R.color.warn));
+            return;
+        }
+        if (ha > 0) {
+            setHeader(failed ? getString(R.string.status_ha_offline) : getString(R.string.status_ha_online),
+                    failed ? R.drawable.dot_red : R.drawable.dot_green,
+                    failed ? getColor(R.color.danger) : getColor(R.color.accent));
+            return;
+        }
+        if (gate > 0) {
+            String text = (failed ? "СКУД · нет связи" : (gate + " " + doorsWord(gate) + " СКУД на связи"));
+            setHeader(text, failed ? R.drawable.dot_red : R.drawable.dot_green,
+                    failed ? getColor(R.color.danger) : getColor(R.color.accent));
+            return;
+        }
+        setHeader(getString(R.string.status_direct), R.drawable.dot_blue, getColor(R.color.info));
+    }
+
+    private String doorsWord(int n) {
+        int m10 = n % 10, m100 = n % 100;
+        if (m10 == 1 && m100 != 11) return "дверь";
+        if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "двери";
+        return "дверей";
     }
 
     private void setHeader(String text, int dotRes, int color) {

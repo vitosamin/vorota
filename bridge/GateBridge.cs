@@ -613,7 +613,7 @@ class GateBridge
 <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
 <title>Вход · Ворота</title>
 <style>
-:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
+:root{--bg:#e3e6ea;--card:#eef0f3;--line:#d6dae0;--acc:#3f8471;--txt:#2a3037;--mut:#565f6b;--muted:#828a95}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .box{width:100%;max-width:380px}
@@ -622,7 +622,7 @@ h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 6px;letter-spacin
 .sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:26px}
 form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.04)}
 label{display:block;font-size:12px;color:var(--mut);margin:0 0 6px 2px;font-weight:500}
-input{width:100%;background:#f2f4f7;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 14px;font-size:15px;margin-bottom:14px;outline:none;transition:.15s}
+input{width:100%;background:#e7eaee;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 14px;font-size:15px;margin-bottom:14px;outline:none;transition:.15s}
 input:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(63,132,113,.14)}
 button{width:100%;border:0;border-radius:11px;padding:13px;font-size:15px;font-weight:600;color:#fff;background:var(--acc);cursor:pointer;transition:.15s}
 button:hover{background:#356f5f}
@@ -656,7 +656,7 @@ button:active{transform:translateY(1px)}
 <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
 <title>Ворота</title>
 <style>
-:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
+:root{--bg:#e3e6ea;--card:#eef0f3;--line:#d6dae0;--acc:#3f8471;--txt:#2a3037;--mut:#565f6b;--muted:#828a95}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 18px 40px}
 .wrap{max-width:1080px;margin:0 auto}
@@ -679,7 +679,7 @@ button{border-radius:11px;padding:11px 14px;font-size:14px;font-weight:600;curso
 .bout:hover{background:#dce3ee}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.55;cursor:default;transform:none}
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#3a424c;color:#f8f9fb;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#3a424c;color:#eef0f3;padding:12px 20px;border-radius:11px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(16,24,40,.18)}
 #toast.show{opacity:1}
 .empty{color:var(--muted);text-align:center;padding:40px 0}
 </style></head><body>
@@ -752,12 +752,44 @@ load();setInterval(load,15000);
 </script></body></html>
 ";
 
+    const string TwoFaPage = @"<!doctype html>
+<html lang=""ru""><head><meta charset=""utf-8"">
+<meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+<title>Двухфакторный вход · Ворота</title>
+<style>
+:root{--bg:#e3e6ea;--card:#eef0f3;--line:#d6dae0;--acc:#3f8471;--txt:#2a3037;--mut:#565f6b;--muted:#828a95}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.box{width:100%;max-width:420px}
+h1{font-size:24px;font-weight:600;text-align:center;margin:0 0 6px}
+.sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:22px}
+form,div.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--mut);margin:0 0 6px 2px;font-weight:500}
+input{width:100%;background:#e7eaee;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 14px;font-size:18px;letter-spacing:.18em;text-align:center;outline:none;font-family:monospace}
+input:focus{border-color:var(--acc);background:#fff}
+button{width:100%;border:0;border-radius:11px;padding:13px;font-size:15px;font-weight:600;color:#fff;background:var(--acc);cursor:pointer;margin-top:12px}
+button.ghost{background:#f2e6e4;color:#a9483f;border:1px solid #e7cfcb}
+.err{background:#f2e6e4;border:1px solid #e7cfcb;color:#a9483f;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.msg{background:#e6eee9;border:1px solid #cfddd5;color:#2f6b5b;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.secret{font-family:monospace;font-size:19px;letter-spacing:.14em;background:#e7eaee;border:1px dashed #cfd6df;border-radius:10px;padding:12px;text-align:center;word-break:break-all;margin:10px 0}
+ol{color:var(--mut);font-size:13px;line-height:1.55;padding-left:18px;margin:10px 0 0}
+a.link{display:block;text-align:center;color:var(--mut);font-size:13px;text-decoration:none;margin-top:14px}
+a.link:hover{color:var(--txt)}
+</style></head><body>
+<div class=""box"">
+  <h1>__TITLE__</h1>
+  <div class=""sub"">__SUBTITLE__</div>
+  __BODY__
+</div>
+</body></html>
+";
+
     const string AdminPage = @"<!doctype html>
 <html lang=""ru""><head><meta charset=""utf-8"">
 <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
 <title>Пользователи · Ворота</title>
 <style>
-:root{--bg:#eef0f3;--card:#f8f9fb;--line:#e0e3e8;--acc:#3f8471;--txt:#2b323a;--mut:#5e6673;--muted:#8a919c}
+:root{--bg:#e3e6ea;--card:#eef0f3;--line:#d6dae0;--acc:#3f8471;--txt:#2a3037;--mut:#565f6b;--muted:#828a95}
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding:24px 18px 40px}
 .wrap{max-width:900px;margin:0 auto}
@@ -770,7 +802,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}
 td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:500}
 tr:last-child td{border-bottom:0}
-input,select{width:100%;background:#f2f4f7;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--txt);outline:none}
+input,select{width:100%;background:#e7eaee;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--txt);outline:none}
 input:focus,select:focus{border-color:var(--acc)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .row>div{flex:1;min-width:150px}
@@ -779,7 +811,7 @@ button.mini{background:#f2e6e4;color:#a9483f;border:1px solid #e7cfcb;padding:7p
 button.mini:hover{background:#eddad7}
 .msg{background:#e6eee9;border:1px solid #cfddd5;color:#2f6b5b;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
 .err{background:#f2e6e4;border:1px solid #e7cfcb;color:#a9483f;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px}
-pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:320px;overflow:auto;margin:0}
+pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:320px;overflow:auto;margin:0}
 </style></head><body>
 <div class=""wrap"">
   <header>
@@ -898,6 +930,66 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;bord
 
 
 
+
+    class Pending { public string Login; public DateTime Expires; }
+    static readonly Dictionary<string, Pending> pendingLogins = new Dictionary<string, Pending>();
+
+    /// <summary>Токен API разрешаем только при прямом подключении из локальной сети.
+    /// Запрос через прокси приходит с localhost — там нужен реальный IP в X-Forwarded-For.</summary>
+    static bool TokenAllowed(HttpListenerContext ctx, string ip)
+    {
+        try
+        {
+            string remote = ctx.Request.RemoteEndPoint == null ? "" : ctx.Request.RemoteEndPoint.Address.ToString();
+            bool loopback = remote == "127.0.0.1" || remote == "::1" || remote == "::ffff:127.0.0.1";
+            if (loopback)
+            {
+                // через прокси: доверяем только если он прислал настоящий IP и тот локальный
+                string fwd = ctx.Request.Headers["CF-Connecting-IP"];
+                if (string.IsNullOrEmpty(fwd)) fwd = ctx.Request.Headers["X-Forwarded-For"];
+                if (string.IsNullOrEmpty(fwd)) return false;
+                return WebAuth.IsPrivate(fwd.Split(',')[0].Trim());
+            }
+            return WebAuth.IsPrivate(remote);
+        }
+        catch { return false; }
+    }
+
+    static string PendingSid(HttpListenerContext ctx)
+    {
+        var ck = ctx.Request.Cookies["p"];
+        return ck == null ? null : ck.Value;
+    }
+
+    static string PendingLogin(HttpListenerContext ctx)
+    {
+        try
+        {
+            string sid = PendingSid(ctx);
+            if (string.IsNullOrEmpty(sid)) return null;
+            lock (pendingLogins)
+            {
+                Pending p;
+                if (!pendingLogins.TryGetValue(sid, out p)) return null;
+                if (p.Expires < DateTime.UtcNow) { pendingLogins.Remove(sid); return null; }
+                return p.Login;
+            }
+        }
+        catch { return null; }
+    }
+
+    static string TwoFaPageRender(string title, string subtitle, string body)
+    {
+        return TwoFaPage.Replace("__TITLE__", title).Replace("__SUBTITLE__", subtitle).Replace("__BODY__", body);
+    }
+
+    static void Redirect(HttpListenerContext ctx, string to)
+    {
+        ctx.Response.StatusCode = 302;
+        ctx.Response.AddHeader("Location", to);
+        ctx.Response.OutputStream.Close();
+    }
+
     static void SecurityHeaders(HttpListenerContext ctx)
     {
         try
@@ -994,8 +1086,20 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;bord
                     }
                     if (WebAuth.Check(u, pw))
                     {
-                        var ses = WebAuth.CreateSession(u, ip);
-                        string ck = "s=" + WebAuth.CreateSession(u, ip) + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
+                        if (WebAuth.Has2fa(u))
+                        {
+                            string psid = Guid.NewGuid().ToString("N");
+                            lock (pendingLogins) pendingLogins[psid] = new Pending { Login = u, Expires = DateTime.UtcNow.AddMinutes(5) };
+                            WebAuth.Audit("login-pass-ok", u, ip, "2fa");
+                            ctx.Response.AddHeader("Set-Cookie", "p=" + psid + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=300"
+                                + (WebAuth.IsHttps(ctx) ? "; Secure" : ""));
+                            ctx.Response.StatusCode = 302;
+                            ctx.Response.AddHeader("Location", "/2fa");
+                            ctx.Response.OutputStream.Close();
+                            return;
+                        }
+                        string sidNew = WebAuth.CreateSession(u, ip);
+                        string ck = "s=" + sidNew + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
                             + (WebAuth.IsHttps(ctx) ? "; Secure" : "");
                         ctx.Response.AddHeader("Set-Cookie", ck);
                         WebAuth.Audit("login-ok", u, ip, "");
@@ -1035,7 +1139,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;bord
 
             string dummy3 = null;
             var session = WebAuth.Get(ctx, out dummy3);
-            bool lanToken = q["token"] == TOKEN && WebAuth.IsPrivate(ip);
+            bool lanToken = q["token"] == TOKEN && TokenAllowed(ctx, ip);
 
             if (path == "" || path == "/index.html")
             {
@@ -1054,6 +1158,100 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#f2f4f7;bord
                 return;
             }
 
+
+            if (path == "/2fa")
+            {
+                string pend = PendingLogin(ctx);
+                if (pend != null)
+                {
+                    RespondHtml(ctx, TwoFaPageRender("Код из приложения", "Введите 6 цифр из Google Authenticator",
+                        "<form method='post' action='/2fa/verify'>" +
+                        "<label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
+                        "<button type='submit'>Подтвердить</button></form>"));
+                    return;
+                }
+                if (session == null) { Redirect(ctx, "/login"); return; }
+                string body2 = "<div class='card'>";
+                if (WebAuth.Has2fa(session.Login))
+                {
+                    body2 += "<div class='msg'>Двухфакторная защита включена</div>" +
+                        "<form method='post' action='/2fa/disable'><button class='ghost' type='submit'>Отключить 2FA</button></form>";
+                }
+                else
+                {
+                    body2 += "<form method='post' action='/2fa/enable'><button type='submit'>Включить 2FA</button></form>";
+                }
+                body2 += "</div><a class='link' href='/'>← К дверям</a>";
+                RespondHtml(ctx, TwoFaPageRender("Защита аккаунта", Escape(session.Login), body2));
+                return;
+            }
+            if (path == "/2fa/verify" && ctx.Request.HttpMethod == "POST")
+            {
+                string pend2 = PendingLogin(ctx);
+                if (pend2 == null) { Redirect(ctx, "/login"); return; }
+                string code = FormValue(ReadBody(ctx), "code");
+                if (WebAuth.TotpOk(WebAuth.TotpOf(pend2), code))
+                {
+                    string sid2 = WebAuth.CreateSession(pend2, ip);
+                    WebAuth.Audit("login-ok", pend2, ip, "2fa");
+                    string psid2 = PendingSid(ctx);
+                    if (!string.IsNullOrEmpty(psid2)) lock (pendingLogins) pendingLogins.Remove(psid2);
+                    ctx.Response.AddHeader("Set-Cookie", "s=" + sid2 + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
+                        + (WebAuth.IsHttps(ctx) ? "; Secure" : ""));
+                    Redirect(ctx, "/");
+                    return;
+                }
+                WebAuth.Fail(ip, pend2);
+                WebAuth.Audit("2fa-fail", pend2, ip, "");
+                RespondHtml(ctx, TwoFaPageRender("Код из приложения", "Введите 6 цифр из Google Authenticator",
+                    "<div class='err'>Неверный код</div><form method='post' action='/2fa/verify'>" +
+                    "<label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
+                    "<button type='submit'>Подтвердить</button></form>"));
+                return;
+            }
+            if (path == "/2fa/enable" && ctx.Request.HttpMethod == "POST")
+            {
+                if (session == null) { Redirect(ctx, "/login"); return; }
+                if (!CsrfOk(ctx, session) && ctx.Request.Headers["Origin"] == null) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                string secret = WebAuth.NewSecret();
+                WebAuth.SetPendingSecret(session.Login, secret);
+                string uri = "otpauth://totp/Vorota:" + Uri.EscapeDataString(session.Login) + "?secret=" + secret + "&issuer=Vorota";
+                string body3 = "<div class='card'>" +
+                    "<div style='font-size:13px;color:#5e6673'>Добавьте в Google Authenticator (или другое приложение) секрет:</div>" +
+                    "<div class='secret'>" + secret + "</div>" +
+                    "<div style='font-size:12px;color:#8a919c;word-break:break-all'>Или ссылка: " + Escape(uri) + "</div>" +
+                    "<ol><li>Откройте приложение-аутентификатор</li><li>«Добавить» → «Ввести ключ вручную»</li>" +
+                    "<li>Введите секрет и сохраните</li><li>Введите код ниже</li></ol></div>" +
+                    "<form method='post' action='/2fa/confirm'><label>Код из приложения</label>" +
+                    "<input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
+                    "<button type='submit'>Включить</button></form>";
+                RespondHtml(ctx, TwoFaPageRender("Включение 2FA", "Шаг 2 из 2", body3));
+                return;
+            }
+            if (path == "/2fa/confirm" && ctx.Request.HttpMethod == "POST")
+            {
+                if (session == null) { Redirect(ctx, "/login"); return; }
+                string code2 = FormValue(ReadBody(ctx), "code");
+                if (WebAuth.Enable2fa(session.Login, code2))
+                {
+                    RespondHtml(ctx, TwoFaPageRender("Готово", "Двухфакторная защита включена",
+                        "<div class='card'><div class='msg'>Теперь при входе понадобится код из приложения</div></div><a class='link' href='/'>← К дверям</a>"));
+                    return;
+                }
+                RespondHtml(ctx, TwoFaPageRender("Включение 2FA", "Шаг 2 из 2",
+                    "<div class='err'>Неверный код, попробуйте ещё раз</div><form method='post' action='/2fa/confirm'>" +
+                    "<label>Код из приложения</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
+                    "<button type='submit'>Включить</button></form>"));
+                return;
+            }
+            if (path == "/2fa/disable" && ctx.Request.HttpMethod == "POST")
+            {
+                if (session == null) { Redirect(ctx, "/login"); return; }
+                WebAuth.Disable2fa(session.Login);
+                RespondHtml(ctx, TwoFaPageRender("Готово", "Двухфакторная защита отключена",
+                    "<div class='card'><div class='msg'>2FA отключена</div></div><a class='link' href='/'>← К дверям</a>"));
+                return;
+            }
             if (path == "/admin" || path.StartsWith("/admin/"))
             {
                 if (session == null || session.Role != "admin")

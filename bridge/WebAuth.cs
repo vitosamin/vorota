@@ -16,6 +16,8 @@ static class WebAuth
         public string Role;      // admin | user
         public string Created;
         public long Iter;
+        public string Totp;      // base32-секрет, пусто = 2FA выключена
+        public string TotpPending;
     }
 
     public class Session
@@ -65,6 +67,8 @@ static class WebAuth
                             Hash = Str(obj, "\"hash\":\""),
                             Role = Str(obj, "\"role\":\""),
                             Created = Str(obj, "\"created\":\""),
+                            Totp = Str(obj, "\"totp\":\""),
+                            TotpPending = Str(obj, "\"totpPending\":\""),
                         };
                         long it;
                         u.Iter = long.TryParse(Str(obj, "\"iter\":"), out it) && it > 0 ? it : ITER;
@@ -137,7 +141,9 @@ static class WebAuth
               .Append("\",\"hash\":\"").Append(u.Hash)
               .Append("\",\"role\":\"").Append(u.Role)
               .Append("\",\"iter\":").Append(u.Iter)
-              .Append(",\"created\":\"").Append(u.Created).Append("\"}");
+              .Append(",\"created\":\"").Append(u.Created)
+              .Append("\",\"totp\":\"").Append(u.Totp ?? "")
+              .Append("\",\"totpPending\":\"").Append(u.TotpPending ?? "").Append("\"}");
         }
         sb.Append("]}");
         try
@@ -383,6 +389,158 @@ static class WebAuth
             return false;
         }
         catch { return false; }
+    }
+
+
+    // ---------- TOTP (Google Authenticator) ----------
+    const string B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+    public static string NumOf(long v) { return v.ToString(); }
+
+    static string Base32(byte[] data)
+    {
+        var sb = new StringBuilder();
+        int bits = 0, value = 0;
+        foreach (byte b in data)
+        {
+            value = (value << 8) | b;
+            bits += 8;
+            while (bits >= 5)
+            {
+                sb.Append(B32[(value >> (bits - 5)) & 31]);
+                bits -= 5;
+            }
+        }
+        if (bits > 0) sb.Append(B32[(value << (5 - bits)) & 31]);
+        return sb.ToString();
+    }
+
+    static byte[] FromBase32(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return new byte[0];
+        s = s.Trim().Replace(" ", "").ToUpperInvariant().TrimEnd('=');
+        var bytes = new List<byte>();
+        int bits = 0, value = 0;
+        foreach (char c in s)
+        {
+            int i = B32.IndexOf(c);
+            if (i < 0) continue;
+            value = (value << 5) | i;
+            bits += 5;
+            if (bits >= 8)
+            {
+                bytes.Add((byte)((value >> (bits - 8)) & 0xFF));
+                bits -= 8;
+            }
+        }
+        return bytes.ToArray();
+    }
+
+    static string CodeAt(byte[] secret, long step)
+    {
+        byte[] counter = BitConverter.GetBytes(step);
+        if (BitConverter.IsLittleEndian) Array.Reverse(counter);
+        using (var h = new HMACSHA1(secret))
+        {
+            byte[] hash = h.ComputeHash(counter);
+            int off = hash[hash.Length - 1] & 0x0F;
+            int bin = ((hash[off] & 0x7F) << 24) | ((hash[off + 1] & 0xFF) << 16)
+                    | ((hash[off + 2] & 0xFF) << 8) | (hash[off + 3] & 0xFF);
+            return (bin % 1000000).ToString("D6");
+        }
+    }
+
+    public static bool TotpOk(string secret, string code)
+    {
+        if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(code)) return false;
+        code = code.Trim().Replace(" ", "");
+        if (code.Length != 6) return false;
+        byte[] key = FromBase32(secret);
+        if (key.Length == 0) return false;
+        long step = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
+        for (long d = -1; d <= 1; d++)
+            if (FixedEquals(CodeAt(key, step + d), code)) return true;
+        return false;
+    }
+
+    public static string NewSecret()
+    {
+        var b = new byte[20];
+        using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(b);
+        return Base32(b);
+    }
+
+    public static string TotpOf(string login)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            return u == null ? null : (u.Totp ?? "");
+        }
+    }
+
+    public static bool Has2fa(string login)
+    {
+        return !string.IsNullOrEmpty(TotpOf(login));
+    }
+
+    public static void SetPendingSecret(string login, string secret)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            if (u == null) return;
+            u.TotpPending = secret ?? "";
+            Save();
+        }
+    }
+
+    public static string GetPendingSecret(string login)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            return u == null ? "" : (u.TotpPending ?? "");
+        }
+    }
+
+    public static bool Enable2fa(string login, string code)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            if (u == null || string.IsNullOrEmpty(u.TotpPending)) return false;
+            if (!TotpOk(u.TotpPending, code)) return false;
+            u.Totp = u.TotpPending;
+            u.TotpPending = "";
+            Save();
+            Audit("2fa-on", login, "-", "");
+            return true;
+        }
+    }
+
+    public static bool Disable2fa(string login)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            if (u == null) return false;
+            u.Totp = "";
+            u.TotpPending = "";
+            Save();
+            Audit("2fa-off", login, "-", "");
+            return true;
+        }
+    }
+
+    public static string Role2fa(string login)
+    {
+        lock (sync)
+        {
+            var u = users.Find(x => string.Equals(x.Login, login, StringComparison.OrdinalIgnoreCase));
+            if (u == null) return "";
+            return string.IsNullOrEmpty(u.Totp) ? "off" : "on";
+        }
     }
 
     public static void Audit(string action, string login, string ip, string detail)
