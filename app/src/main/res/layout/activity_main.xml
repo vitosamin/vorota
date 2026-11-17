@@ -42,8 +42,8 @@
 
                     <View
                         android:id="@+id/statusDot"
-                        android:layout_width="7dp"
-                        android:layout_height="7dp"
+                        android:layout_width="11dp"
+                        android:layout_height="11dp"
                         android:background="@drawable/dot_muted" />
 
                     <TextView

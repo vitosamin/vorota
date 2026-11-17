@@ -1,5 +1,7 @@
 package ru.smartsystem39.gates;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -76,6 +78,7 @@ public class MainActivity extends Activity {
     private boolean downloadingUpdate = false;
     private boolean importingGate = false;
     private View statusDot;
+    private ObjectAnimator pulse;
     private ImageButton btnRefresh;
     private EditText haUrl;
     private EditText haToken;
@@ -261,7 +264,7 @@ public class MainActivity extends Activity {
         rebuildSettings();
         updateThemeButtons();
         if (devices.isEmpty()) {
-            setHeader(getString(R.string.status_no_devices), R.drawable.dot_muted, getColor(R.color.text_secondary));
+            setHeader(getString(R.string.status_no_devices), R.drawable.dot_muted, getColor(R.color.text_secondary), true);
         } else {
             setHeader(getString(R.string.status_checking), R.drawable.dot_muted, getColor(R.color.text_secondary));
         }
@@ -416,7 +419,7 @@ public class MainActivity extends Activity {
 
         FrameLayout chip = new FrameLayout(this);
         chip.setLayoutParams(new LinearLayout.LayoutParams(dp(28), dp(28)));
-        chip.setBackground(Ui.fill(getColor(Device.typeColor(d.type)), dp(7)));
+        chip.setBackground(Ui.chip(this, getColor(Device.typeColor(d.type)), dp(7)));
 
         ImageView icon = new ImageView(this);
         icon.setLayoutParams(new FrameLayout.LayoutParams(dp(16), dp(16), Gravity.CENTER));
@@ -877,7 +880,7 @@ public class MainActivity extends Activity {
                     gateStatus.setText(getString(R.string.gate_error, error));
                     if (silent && tab == 0) {
                         setHeader(getString(R.string.gate_unreachable, error),
-                                R.drawable.dot_red, getColor(R.color.danger));
+                                R.drawable.dot_red, getColor(R.color.danger), true);
                     }
                 } else {
                     gateStatus.setTextColor(getColor(R.color.accent));
@@ -1109,11 +1112,11 @@ public class MainActivity extends Activity {
             else if (d.isConfigured()) direct++;
         }
         if (gate == 0 && ha == 0 && direct == 0) {
-            setHeader("Настройте устройства", R.drawable.dot_muted, getColor(R.color.text_secondary));
+            setHeader("Настройте устройства", R.drawable.dot_muted, getColor(R.color.text_secondary), true);
             return;
         }
         if (ha > 0 && !cfg.hasHa()) {
-            setHeader(getString(R.string.status_ha_not_set), R.drawable.dot_amber, getColor(R.color.warn));
+            setHeader(getString(R.string.status_ha_not_set), R.drawable.dot_amber, getColor(R.color.warn), true);
             return;
         }
         if (ha > 0 && gate > 0) {
@@ -1146,9 +1149,17 @@ public class MainActivity extends Activity {
     }
 
     private void setHeader(String text, int dotRes, int color) {
-        statusText.setText(text);
+        setHeader(text, dotRes, color, false);
+    }
+
+    /** showText — только для подсказок вроде «Добавьте устройство»:
+     *  состояние связи показывает пульсирующий огонёк, без подписи. */
+    private void setHeader(String text, int dotRes, int color, boolean showText) {
+        statusText.setText(showText ? text : "");
+        statusText.setVisibility(showText ? View.VISIBLE : View.GONE);
         statusText.setTextColor(color);
         statusDot.setBackgroundResource(dotRes);
+        statusDot.setContentDescription(text);
     }
 
     private void pollOnce() {
@@ -1254,6 +1265,23 @@ public class MainActivity extends Activity {
         }
     };
 
+    /** Огонёк в шапке дышит: видно, что приложение живо и следит за связью. */
+    private void startPulse() {
+        if (statusDot == null || pulse != null) return;
+        pulse = ObjectAnimator.ofFloat(statusDot, "alpha", 0.3f, 1f);
+        pulse.setDuration(900);
+        pulse.setRepeatCount(ValueAnimator.INFINITE);
+        pulse.setRepeatMode(ValueAnimator.REVERSE);
+        pulse.start();
+    }
+
+    private void stopPulse() {
+        if (pulse == null) return;
+        pulse.cancel();
+        pulse = null;
+        if (statusDot != null) statusDot.setAlpha(1f);
+    }
+
     private void startPolling() {
         if (polling) return;
         polling = true;
@@ -1269,6 +1297,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         reloadDevices();
+        startPulse();
         startPolling();
     }
 
@@ -1276,6 +1305,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         stopPolling();
+        stopPulse();
     }
 
     @Override
@@ -1290,6 +1320,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         stopPolling();
+        stopPulse();
         ui.removeCallbacksAndMessages(null);
         if (io != null) io.shutdownNow();
         if (commands != null && !commands.shutdownNow().isEmpty()) commandInFlight.set(false);

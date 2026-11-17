@@ -60,12 +60,12 @@ def field(label, value):
             f'        <div class="input mono">{value}</div>')
 
 
-def screen(title, subtitle, body, active_tab=0, theme="dark"):
+def screen(title, subtitle, body, active_tab=0, theme="dark", pulse_err=False):
     tabs = ""
     for i, (label, ic) in enumerate((("Устройства", "LayoutGrid"), ("Настройки", "Settings"))):
         cls = "tab active" if i == active_tab else "tab"
         tabs += f'      <div class="{cls}">{icon(ic, 20)}<span>{label}</span></div>\n'
-    sub = f'<div class="subtitle">{subtitle}</div>' if subtitle else ""
+    sub = f'<div class="pulse{" err" if pulse_err else ""}"></div>' if subtitle else ""
     return f'''  <div class="phone" data-theme="{theme}">
     <div class="screen">
       <div class="head">
@@ -126,10 +126,13 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .screen { height: 100%; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
 .head { padding: 20px 14px 10px; }
 .title { font-size: var(--fs-xxl); font-weight: 600; letter-spacing: -0.01em; }
-.subtitle { margin-top: 7px; font-size: var(--fs-s); color: var(--text-dim);
-            display: flex; align-items: center; gap: 7px; }
-.subtitle::before { content: ""; width: 7px; height: 7px; border-radius: 999px;
-                    background: var(--success); flex: 0 0 auto; }
+.pulse { margin-top: 10px; width: 11px; height: 11px; border-radius: 999px;
+         background: var(--success); animation: pulse 1.8s ease-in-out infinite; }
+.pulse.err { background: var(--danger); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.8); }
+}
 .list { flex: 1; overflow-y: auto; padding: 2px 14px 14px; }
 .tabbar { display: flex; background: var(--bg-side); border-top: 1px solid var(--border); }
 .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -144,13 +147,14 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .chip { width: 28px; height: 28px; border-radius: var(--radius-xs); flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center; }
 /* Плашки как у значков в настройках iOS: сплошной цвет, белый глиф */
-.tint-gate { background: #248a3d; color: #fff; }
-.tint-wide { background: #0a6cd4; color: #fff; }
-.tint-barrier { background: #c46a00; color: #fff; }
-.tint-relay { background: #9b59c4; color: #fff; }
-[data-theme="dark"] .tint-gate { background: #2e9e4f; }
-[data-theme="dark"] .tint-wide { background: #0a84ff; }
-[data-theme="dark"] .tint-relay { background: #bf5af2; }
+/* Плашки: сплошной цвет с лёгким объёмом — светлее сверху, темнее снизу */
+.tint-gate, .tint-wide { background: linear-gradient(180deg, #217347, #174f31); color: #fff; }
+.tint-barrier { background: linear-gradient(180deg, #d97a0f, #a85800); color: #fff; }
+.tint-relay { background: linear-gradient(180deg, #a967cf, #8344a8); color: #fff; }
+[data-theme="dark"] .tint-gate, [data-theme="dark"] .tint-wide {
+  background: linear-gradient(180deg, #39a96f, #27744c); }
+[data-theme="dark"] .tint-barrier { background: linear-gradient(180deg, #d97a0f, #a85800); }
+[data-theme="dark"] .tint-relay { background: linear-gradient(180deg, #c76ff0, #9b4ec4); }
 .tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
 .tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

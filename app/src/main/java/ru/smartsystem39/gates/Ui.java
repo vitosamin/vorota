@@ -100,6 +100,23 @@ public final class Ui {
         }
     }
 
+    /** Плашка значка с лёгким объёмом: сверху светлее, снизу темнее. */
+    public static Drawable chip(Context c, int base, float radius) {
+        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{scale(base, 1.22f), scale(base, 0.84f)});
+        g.setCornerRadius(radius);
+        return g;
+    }
+
+    /** Осветляет (k > 1) или затемняет (k < 1) цвет, сохраняя альфу. */
+    private static int scale(int color, float k) {
+        int a = (color >>> 24) & 0xFF;
+        int r = Math.min(255, Math.round(((color >> 16) & 0xFF) * k));
+        int g = Math.min(255, Math.round(((color >> 8) & 0xFF) * k));
+        int b = Math.min(255, Math.round((color & 0xFF) * k));
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
     /** Красит кнопку и ставит иконку слева — один вид на все действия.
      *  Размер иконки задаём сами: у векторных drawable он иначе крупнее кнопки. */
     public static void styleButton(Context c, Button b, int background, int textColor, int icon) {
