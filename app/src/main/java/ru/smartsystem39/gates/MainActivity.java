@@ -1015,7 +1015,7 @@ public class MainActivity extends Activity {
         return box;
     }
 
-    private void updateHeader(boolean hasHa, boolean failed) {
+    private void updateHeader(boolean hasHa, boolean failed, boolean gateFailed) {
         int gate = 0, ha = 0, direct = 0;
         for (Device d : devices) {
             if (d.isGate()) gate++;
@@ -1037,9 +1037,9 @@ public class MainActivity extends Activity {
             return;
         }
         if (gate > 0) {
-            String text = (failed ? "СКУД · нет связи" : (gate + " " + doorsWord(gate) + " СКУД на связи"));
-            setHeader(text, failed ? R.drawable.dot_red : R.drawable.dot_green,
-                    failed ? getColor(R.color.danger) : getColor(R.color.accent));
+            String text = (gateFailed ? "СКУД · нет связи" : (gate + " " + doorsWord(gate) + " СКУД на связи"));
+            setHeader(text, gateFailed ? R.drawable.dot_red : R.drawable.dot_green,
+                    gateFailed ? getColor(R.color.danger) : getColor(R.color.accent));
             return;
         }
         setHeader(getString(R.string.status_direct), R.drawable.dot_blue, getColor(R.color.info));
@@ -1096,8 +1096,28 @@ public class MainActivity extends Activity {
                         }
                     }
                 }
+                boolean gateFailed = false;
+                Map<String, Boolean> gateBases = new HashMap<>();
+                for (Device d : snapshot) {
+                    if (!d.isGate()) continue;
+                    String base = HaClient.normalizeBase(d.address);
+                    if (base.isEmpty()) { results.put(d.id, new Status(Status.UNKNOWN, "Не настроено")); continue; }
+                    Boolean ok = gateBases.get(base);
+                    if (ok == null) {
+                        Http.Response r = Http.get(base + "/status?token=" + Uri.encode(d.gateToken), null, false);
+                        ok = r.ok();
+                        gateBases.put(base, ok);
+                    }
+                    if (ok) {
+                        results.put(d.id, new Status(Status.READY, "Готов"));
+                    } else {
+                        gateFailed = true;
+                        results.put(d.id, new Status(Status.OFFLINE, "Нет связи"));
+                    }
+                }
                 for (Device d : snapshot) {
                     if (Device.SRC_HA.equals(d.source)) continue;
+                    if (d.isGate()) continue;
                     if (!d.isConfigured()) {
                         results.put(d.id, new Status(Status.UNKNOWN, "Не настроено"));
                     } else if (d.pulse) {
@@ -1107,6 +1127,7 @@ public class MainActivity extends Activity {
                     }
                 }
                 final boolean fFailed = failed;
+                final boolean fGateFailed = gateFailed;
                 ui.post(() -> {
                     for (Card c : cards.values()) {
                         if (!c.device.isConfigured()) continue;
@@ -1116,7 +1137,7 @@ public class MainActivity extends Activity {
                             applyStatus(c, s);
                         }
                     }
-                    updateHeader(hasHa, fFailed);
+                    updateHeader(hasHa, fFailed, fGateFailed);
                     inFlight.set(false);
                 });
             });
