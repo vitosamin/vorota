@@ -3,8 +3,13 @@
 Полноценный веб-сервис по журналу СКУД **Gate-IP**: вход по логину/паролю,
 живой поток проходов, графики, отчёты посещаемости и выгрузка для 1С.
 
-**Адрес:** http://192.168.2.72:8095/
+**Адрес:** http://192.168.2.193:8110/ — LXC 124 `debianai`, systemd `skud-gate`,
+автозапуск при загрузке контейнера.
 **Вход:** `vitosamin` / `Admin910327` (меняется в `gate.config.json` → `auth`)
+
+> Резервная копия крутится и на рабочей станции: http://192.168.2.72:8095/
+> (systemd `gate-reports`). Данные читаются с одного сервера Gate, отчёты
+> совпадают. Остановить дубль: `sudo systemctl disable --now gate-reports`.
 **Оформление:** светлая деловая тема в стиле 1С:Предприятие (плотные таблицы,
 синие акценты, без градиентов и «неона»)
 
@@ -80,26 +85,42 @@ cd /home/dsh/projects/gates/reports
 
 Порт задаётся в `gate.config.json` (`port`) или первым аргументом.
 
-### Автозапуск при загрузке машины
+### Где работает
 
-Сервис установлен как systemd-юнит `gate-reports` (`enabled`, `Restart=always`),
-работает от пользователя `dsh`:
+| Где | Адрес | Управление |
+|---|---|---|
+| **LXC 124 `debianai`** (основной) | http://192.168.2.193:8110/ | `systemctl status skud-gate` |
+| Рабочая станция (резерв) | http://192.168.2.72:8095/ | `systemctl status gate-reports` |
 
-```bash
-systemctl status gate-reports          # состояние
-sudo systemctl restart gate-reports    # перезапуск
-sudo systemctl stop gate-reports       # остановить
-tail -f /home/dsh/projects/gates/reports/gate-reports.log
-```
-
-Юнит лежит в `systemd/gate-reports.service`, ставится/переустанавливается:
+**LXC 124** (`192.168.2.193`, Debian 13, 2 ядра / 4 ГБ):
 
 ```bash
-sudo sh /home/dsh/projects/gates/reports/systemd/install.sh
+# файлы
+/srv/apps/skud-gate/          gate.py server.py web/ gate.config.json data/
+
+# управление
+systemctl status skud-gate
+systemctl restart skud-gate
+journalctl -u skud-gate -n 50
+tail -f /srv/apps/skud-gate/service.log
+
+# зависимости
+apt-get install -y mdbtools smbclient
 ```
 
-> Запуск из песочницы DSH невозможен: `sudo` для пользователя `dsh` запрещён
-> политикой. Устанавливать юнит нужно в обычном терминале на машине.
+Юнит: `/etc/systemd/system/skud-gate.service` (`enabled`, `Restart=always`,
+`StartLimitIntervalSec=0`), порт **8110**, запуск от root контейнера.
+
+Обновить код на контейнере:
+
+```bash
+scp -r gate.py server.py web root@192.168.2.193:/srv/apps/skud-gate/
+ssh root@192.168.2.193 systemctl restart skud-gate
+```
+
+> Доступ: ключ `.secrets/lxc193_ed25519`, обязательно
+> `ssh -F /dev/null -i .secrets/lxc193_ed25519 -o IdentitiesOnly=yes root@192.168.2.193`
+> (`-F /dev/null` обходит битые права на системном ssh_config).
 
 `ensure.sh` — резервный сторож на случай, если systemd недоступен: поднимает
 сервис, только если порт не занят (защита от двойного запуска через `flock`).

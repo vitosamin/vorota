@@ -1,6 +1,6 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:02 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 14:06 (Europe/Kaliningrad)
 > main · последний коммит: 0e5b05e «2.1: переключатель темы»
 > Версия 2.1 (`versionCode 12`), пакет `ru.smartsystem39.gates`
 
@@ -25,7 +25,9 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
   (`vitosamin` / `Admin910327`), сессия в cookie на 12 ч, кнопка «Выйти»;
   Basic Auth оставлен для скриптов. Автообновление 15 с.
 - Автозапуск: задачи `GateBridgeStartup` (при входе) и `GateBridgeWatchdog`
-  (каждые 5 минут поднимает мост, если порт не слушается).
+  (каждые 2 минуты: поднимает мост, если порт 8099 не слушается, и запускает
+  `GateServ.exe` / `GateTerm.exe`, если их нет). Проверено: убитый мост
+  поднимается за ~10 с.
 - Вход Windows: `AutoAdminLogon=1`, `ALM\skudnew` (пароль `Admin910327`,
   проверен). Штатная задача `SKUD` запускает `GateServ.exe` — включена.
 

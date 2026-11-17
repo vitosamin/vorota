@@ -1,0 +1,16 @@
+=== kill bridge === 
+Успешно: Процесс "GateBridge.exe", с идентификатором 6092, был завершен.
+=== port after kill === 
+(╨┐╤Г╤Б╤В╨╛ = ╨┐╨╛╤А╤В ╨╖╨░╨║╤А╤Л╤В) 
+=== run watchdog === 
+УСПЕХ. Попытка выполнить запланированную задачу "GateBridgeWatchdog".
+=== port after watchdog === 
+  TCP    0.0.0.0:8099           0.0.0.0:0              LISTENING
+  TCP    [::]:8099              [::]:0                 LISTENING
+=== process === 
+
+Имя образа                     PID Имя сессии          № сеанса       Память
+========================= ======== ================ =========== ============
+GateBridge.exe               10148 Console                    1    22 380 КБ
+=== watchdog log === 
+17.11.2026 14:00:24,88 restarting bridge 
