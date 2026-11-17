@@ -25,6 +25,6 @@ a.link:hover{color:var(--txt)}
 <div class="box">
   <h1>Код из приложения</h1>
   <div class="sub">Введите 6 цифр из Google Authenticator</div>
-  <form method='post' action='/2fa/verify'><label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus><button type='submit'>Подтвердить</button></form>
+  <form method='post' action='/2fa/verify'><label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus><label style='display:flex;align-items:center;gap:8px;font-size:13px;color:#565f6b;margin:2px 0 0 2px'><input type='checkbox' name='remember' value='1' style='width:auto;margin:0' checked> Запомнить на 12 месяцев</label><button type='submit'>Подтвердить</button></form>
 </div>
 </body></html>

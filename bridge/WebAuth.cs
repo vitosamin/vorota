@@ -27,6 +27,7 @@ static class WebAuth
         public DateTime Expires;
         public string Csrf;
         public string Ip;
+        public double TtlHours;
     }
 
     class Attempts
@@ -43,6 +44,7 @@ static class WebAuth
 
     static readonly string UsersPath = @"C:\Users\Public\gate_users.json";
     static readonly string AuditPath = @"C:\Users\Public\gate_audit.log";
+    static readonly string SessionsPath = @"C:\Users\Public\gate_sessions.json";
     static readonly object sync = new object();
     static readonly List<User> users = new List<User>();
     static readonly Dictionary<string, Session> sessions = new Dictionary<string, Session>();
@@ -83,6 +85,7 @@ static class WebAuth
                 Save();
             }
             Audit("start", "-", "-", "users=" + users.Count);
+            LoadSessions();
         }
     }
 
@@ -291,18 +294,91 @@ static class WebAuth
         lock (sync) return new List<User>(users);
     }
 
-    public static string CreateSession(string login, string ip)
+    public static List<Session> SessionsSnapshot()
+    {
+        lock (sync) return new List<Session>(sessions.Values);
+    }
+
+    public static void SaveSessions()
+    {
+        try
+        {
+            var sb = new StringBuilder("{\"sessions\":[");
+            bool first = true;
+            lock (sync)
+            {
+                List<string> dead = new List<string>();
+                foreach (var kv in sessions)
+                {
+                    if (kv.Value.Expires < DateTime.UtcNow) { dead.Add(kv.Key); continue; }
+                    if (!first) sb.Append(",");
+                    first = false;
+                    sb.Append("{\"sid\":\"").Append(kv.Key)
+                      .Append("\",\"login\":\"").Append(kv.Value.Login)
+                      .Append("\",\"role\":\"").Append(kv.Value.Role)
+                      .Append("\",\"csrf\":\"").Append(kv.Value.Csrf)
+                      .Append("\",\"ip\":\"").Append(kv.Value.Ip)
+                      .Append("\",\"expires\":\"").Append(kv.Value.Expires.ToString("o"))
+                      .Append("\",\"ttl\":").Append(kv.Value.TtlHours.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append("}");
+                }
+                foreach (string d in dead) sessions.Remove(d);
+            }
+            sb.Append("]}");
+            File.WriteAllText(SessionsPath, sb.ToString(), new UTF8Encoding(false));
+        }
+        catch { }
+    }
+
+    static double ParseD(string v)
+    {
+        double d;
+        return double.TryParse(v, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out d) ? d : SESSION_HOURS;
+    }
+
+    static void LoadSessions()
+    {
+        try
+        {
+            if (!File.Exists(SessionsPath)) return;
+            string body = File.ReadAllText(SessionsPath, Encoding.UTF8);
+            foreach (string obj in SplitObjects(body))
+            {
+                string sid = Str(obj, "\"sid\":\"");
+                string login = Str(obj, "\"login\":\"");
+                DateTime exp;
+                if (string.IsNullOrEmpty(sid) || string.IsNullOrEmpty(login)) continue;
+                if (!DateTime.TryParse(Str(obj, "\"expires\":\""), out exp)) continue;
+                if (exp < DateTime.UtcNow) continue;
+                lock (sync)
+                    sessions[sid] = new Session
+                    {
+                        Login = login,
+                        Role = Str(obj, "\"role\":\""),
+                        Csrf = Str(obj, "\"csrf\":\""),
+                        Ip = Str(obj, "\"ip\":\""),
+                        Expires = exp,
+                        TtlHours = ParseD(Str(obj, "\"ttl\":")),
+                    };
+            }
+        }
+        catch { }
+    }
+
+    public static string CreateSession(string login, string ip, double hours)
     {
         var s = new Session
         {
             Login = login,
             Role = RoleOf(login),
-            Expires = DateTime.UtcNow.AddHours(SESSION_HOURS),
+            Expires = DateTime.UtcNow.AddHours(hours),
             Csrf = Guid.NewGuid().ToString("N"),
             Ip = ip ?? "",
+            TtlHours = hours,
         };
         string sid = Guid.NewGuid().ToString("N");
         lock (sync) sessions[sid] = s;
+        SaveSessions();
         return sid;
     }
 
@@ -319,7 +395,7 @@ static class WebAuth
                 Session s;
                 if (!sessions.TryGetValue(sid, out s)) return null;
                 if (s.Expires < DateTime.UtcNow) { sessions.Remove(sid); return null; }
-                s.Expires = DateTime.UtcNow.AddHours(SESSION_HOURS);
+                s.Expires = DateTime.UtcNow.AddHours(s.TtlHours > 0 ? s.TtlHours : SESSION_HOURS);
                 return s;
             }
         }
@@ -388,7 +464,7 @@ static class WebAuth
             if (!string.IsNullOrEmpty(proto) && proto.ToLowerInvariant() == "https")
             {
                 string remote = ctx.Request.RemoteEndPoint == null ? "" : ctx.Request.RemoteEndPoint.Address.ToString();
-                if (remote == "127.0.0.1" || remote == "::1" || remote == "::ffff:127.0.0.1") return true;
+                if (IsTrustedProxy(remote)) return true;
             }
             return false;
         }

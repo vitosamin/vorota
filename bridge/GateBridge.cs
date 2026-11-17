@@ -16,7 +16,7 @@ using System.Threading;
 /// </summary>
 class GateBridge
 {
-    const string TOKEN = "vorota-2026";
+    const string TOKEN = "5f3a9c7e2b8d4610a7c3e9f1b5d8246c";
     const int PORT = 8099;
     const int ROW_BASE = 42;      // центр строки данных 1: 42 + 16*1
     const int ROW_H = 16;
@@ -644,6 +644,7 @@ button:active{transform:translateY(1px)}
     <input name=""u"" autocomplete=""username"" autofocus>
     <label>Пароль</label>
     <input name=""p"" type=""password"" autocomplete=""current-password"">
+    <label style=""display:flex;align-items:center;gap:8px;font-size:13px;color:#565f6b;margin:2px 0 12px 2px""><input type=""checkbox"" name=""remember"" value=""1"" style=""width:auto;margin:0""> Запомнить на 12 месяцев</label>
     <button type=""submit"">Войти</button>
   </form>
   <div class=""foot"">Доступ к дверям СКУД</div>
@@ -931,7 +932,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
 
 
 
-    class Pending { public string Login; public DateTime Expires; }
+    class Pending { public string Login; public DateTime Expires; public bool Remember; }
     static readonly Dictionary<string, Pending> pendingLogins = new Dictionary<string, Pending>();
 
     /// <summary>Токен API разрешаем только при прямом подключении из локальной сети.
@@ -941,9 +942,12 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
         try
         {
             string remote = ctx.Request.RemoteEndPoint == null ? "" : ctx.Request.RemoteEndPoint.Address.ToString();
-            // Токен API — только при прямом локальном подключении.
-            // Через прокси (NPM/туннель) он не работает никогда: снаружи только вход с паролем и 2FA.
-            if (WebAuth.IsTrustedProxy(remote)) return false;
+            // Прямое локальное подключение — токен разрешён.
+            if (WebAuth.IsTrustedProxy(remote))
+            {
+                // Через прокси (kp.almak.ru) — только по HTTPS и только с верным токеном.
+                return WebAuth.IsHttps(ctx);
+            }
             return WebAuth.IsPrivate(remote);
         }
         catch { return false; }
@@ -1099,12 +1103,13 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                         RespondHtml(ctx, LoginPage.Replace("__ERROR__", "<div class='err'>Слишком много попыток для этого логина. Подождите 15 минут.</div>"));
                         return;
                     }
+                    bool remember = FormValue(body, "remember") == "1";
                     if (WebAuth.Check(u, pw))
                     {
                         if (WebAuth.Has2fa(u))
                         {
                             string psid = Guid.NewGuid().ToString("N");
-                            lock (pendingLogins) pendingLogins[psid] = new Pending { Login = u, Expires = DateTime.UtcNow.AddMinutes(5) };
+                            lock (pendingLogins) pendingLogins[psid] = new Pending { Login = u, Expires = DateTime.UtcNow.AddMinutes(5), Remember = remember };
                             WebAuth.Audit("login-pass-ok", u, ip, "2fa");
                             ctx.Response.AddHeader("Set-Cookie", "p=" + psid + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=300"
                                 + (WebAuth.IsHttps(ctx) ? "; Secure" : ""));
@@ -1113,8 +1118,9 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                             ctx.Response.OutputStream.Close();
                             return;
                         }
-                        string sidNew = WebAuth.CreateSession(u, ip);
-                        string ck = "s=" + sidNew + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
+                        double ttl = remember ? 8760 : 8;   // 8760 ч = 12 месяцев
+                        string sidNew = WebAuth.CreateSession(u, ip, ttl);
+                        string ck = "s=" + sidNew + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (int)(ttl * 3600)
                             + (WebAuth.IsHttps(ctx) ? "; Secure" : "");
                         ctx.Response.AddHeader("Set-Cookie", ck);
                         WebAuth.Audit("login-ok", u, ip, "");
@@ -1179,6 +1185,18 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 string pend = PendingLogin(ctx);
                 if (pend != null)
                 {
+                    bool rem = false;
+                    string psid0 = PendingSid(ctx);
+                    lock (pendingLogins) { Pending pp; if (psid0 != null && pendingLogins.TryGetValue(psid0, out pp)) rem = pp.Remember; }
+                    string htmlCode = "<form method='post' action='/2fa/verify'>" +
+                        "<label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
+                        "<label style='display:flex;align-items:center;gap:8px;font-size:13px;color:#565f6b;margin:2px 0 0 2px'><input type='checkbox' name='remember' value='1' style='width:auto;margin:0'" + (rem ? " checked" : "") + "> Запомнить на 12 месяцев</label>" +
+                        "<button type='submit'>Подтвердить</button></form>";
+                    RespondHtml(ctx, TwoFaPageRender("Код из приложения", "Введите 6 цифр из Google Authenticator", htmlCode));
+                    return;
+                }
+                if (false)
+                {
                     RespondHtml(ctx, TwoFaPageRender("Код из приложения", "Введите 6 цифр из Google Authenticator",
                         "<form method='post' action='/2fa/verify'>" +
                         "<label>Код</label><input name='code' inputmode='numeric' maxlength='6' autocomplete='one-time-code' autofocus>" +
@@ -1204,14 +1222,21 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
             {
                 string pend2 = PendingLogin(ctx);
                 if (pend2 == null) { Redirect(ctx, "/login"); return; }
-                string code = FormValue(ReadBody(ctx), "code");
+                string body2fa = ReadBody(ctx);
+                string code = FormValue(body2fa, "code");
+                bool remember2 = FormValue(body2fa, "remember") == "1";
+                {
+                    string ps = PendingSid(ctx);
+                    lock (pendingLogins) { Pending pp; if (ps != null && pendingLogins.TryGetValue(ps, out pp) && pp.Remember) remember2 = true; }
+                }
                 if (WebAuth.TotpOk(WebAuth.TotpOf(pend2), code))
                 {
-                    string sid2 = WebAuth.CreateSession(pend2, ip);
+                    double ttl2 = remember2 ? 8760 : 8;  // 12 месяцев
+                    string sid2 = WebAuth.CreateSession(pend2, ip, ttl2);
                     WebAuth.Audit("login-ok", pend2, ip, "2fa");
                     string psid2 = PendingSid(ctx);
                     if (!string.IsNullOrEmpty(psid2)) lock (pendingLogins) pendingLogins.Remove(psid2);
-                    ctx.Response.AddHeader("Set-Cookie", "s=" + sid2 + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (8 * 3600)
+                    ctx.Response.AddHeader("Set-Cookie", "s=" + sid2 + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=" + (int)(ttl2 * 3600)
                         + (WebAuth.IsHttps(ctx) ? "; Secure" : ""));
                     Redirect(ctx, "/");
                     return;
@@ -1280,7 +1305,14 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 if (ctx.Request.HttpMethod == "POST")
                 {
                     string body = ReadBody(ctx);
-                    if (!CsrfOk(ctx, session, body)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                    if (!CsrfOk(ctx, session, body))
+                    {
+                        WebAuth.Audit("csrf-fail", session.Login, ip, path);
+                        RespondHtml(ctx, TwoFaPageRender("Форма устарела", "Обновите страницу",
+                            "<div class='card'><div class='err'>Сессия или форма устарели. Обновите страницу и попробуйте снова.</div>" +
+                            "<a class='link' href='/admin'>← Обновить</a></div>"));
+                        return;
+                    }
                     if (path == "/admin/add")
                     {
                         string err = WebAuth.AddUser(FormValue(body, "login"), FormValue(body, "pass"), FormValue(body, "role"));

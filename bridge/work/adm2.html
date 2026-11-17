@@ -35,7 +35,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   
   <div class="card">
     <h2>Добавить пользователя</h2>
-    <form method="post" action="/admin/add"><input type="hidden" name="csrf" value="0ede864036ce431594b68e8e1dd2bec3">
+    <form method="post" action="/admin/add"><input type="hidden" name="csrf" value="387cf631f0a045aeb8662af512292d58">
       <div class="row">
         <div><input name="login" placeholder="Логин" autocomplete="off"></div>
         <div><input name="pass" type="password" placeholder="Пароль (мин. 8)" autocomplete="new-password"></div>
@@ -58,7 +58,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   </div>
   <div class="card">
     <h2>Сменить пароль</h2>
-    <form method="post" action="/admin/pass"><input type="hidden" name="csrf" value="0ede864036ce431594b68e8e1dd2bec3">
+    <form method="post" action="/admin/pass"><input type="hidden" name="csrf" value="387cf631f0a045aeb8662af512292d58">
       <div class="row">
         <div><input name="login" placeholder="Логин" autocomplete="off"></div>
         <div><input name="pass" type="password" placeholder="Новый пароль (мин. 8)" autocomplete="new-password"></div>
@@ -68,27 +68,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   </div>
   <div class="card">
     <h2>Журнал действий</h2>
-    <pre>2026-11-17 14:12:00 | start | - | - | users=1
-2026-11-17 14:12:08 | login-fail | vitosamin | 192.168.2.72 | 
-2026-11-17 14:12:14 | login-ok | vitosamin | 192.168.2.72 | 
-2026-11-17 14:12:40 | start | - | - | users=1
-2026-11-17 14:12:56 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:12:56 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:12:57 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:12:57 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:12:57 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:12:57 | login-fail | testrate | 192.168.2.72 | 
-2026-11-17 14:13:02 | login-ok | vitosamin | 192.168.2.72 | 
-2026-11-17 14:13:13 | login-ok | testuser | 192.168.2.72 | 
-2026-11-17 14:13:55 | start | - | - | users=1
-2026-11-17 14:13:57 | login-fail | testrate2 | 192.168.2.72 | 
-2026-11-17 14:13:57 | login-fail | testrate2 | 192.168.2.72 | 
-2026-11-17 14:13:57 | login-fail | testrate2 | 192.168.2.72 | 
-2026-11-17 14:13:57 | login-fail | testrate2 | 192.168.2.72 | 
-2026-11-17 14:13:57 | login-fail | testrate2 | 192.168.2.72 | 
-2026-11-17 14:13:58 | login-blocked | testrate2 | 192.168.2.72 | login
-2026-11-17 14:13:58 | login-blocked | testrate2 | 192.168.2.72 | login
-2026-11-17 14:14:03 | login-ok | vitosamin | 192.168.2.72 | 
+    <pre>2026-11-17 14:14:03 | login-ok | vitosamin | 192.168.2.72 | 
 2026-11-17 14:14:09 | user-add | testuser2 | - | user
 2026-11-17 14:14:14 | login-ok | testuser2 | 192.168.2.72 | 
 2026-11-17 14:14:14 | user-del | testuser2 | - | -
@@ -111,6 +91,43 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
 2026-11-17 14:37:57 | start | - | - | users=1
 2026-11-17 14:38:16 | login-pass-ok | vitosamin | 192.168.2.165 | 2fa
 2026-11-17 14:38:16 | login-ok | vitosamin | 192.168.2.165 | 2fa
+2026-11-17 14:38:22 | user-add | testproxy | - | user
+2026-11-17 14:38:22 | user-del | testproxy | - | -
+2026-11-17 14:39:30 | login-pass-ok | vitosamin | 192.168.2.165 | 2fa
+2026-11-17 14:39:56 | start | - | - | users=1
+2026-11-17 14:40:10 | login-pass-ok | vitosamin | 192.168.2.81 | 2fa
+2026-11-17 14:40:30 | start | - | - | users=1
+2026-11-17 14:40:36 | login-pass-ok | vitosamin | 192.168.2.81 | 2fa
+2026-11-17 14:40:43 | login-ok | vitosamin | 192.168.2.81 | 2fa
+2026-11-17 14:40:43 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:40:55 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:40:55 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:41:47 | start | - | - | users=1
+2026-11-17 14:42:19 | start | - | - | users=1
+2026-11-17 14:42:43 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:42:43 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:42:43 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:42:47 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:43:01 | start | - | - | users=1
+2026-11-17 14:43:05 | start | - | - | users=1
+2026-11-17 14:43:18 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:43:18 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:43:24 | start | - | - | users=1
+2026-11-17 14:43:47 | login-fail | it3 | 192.168.2.10 | 
+2026-11-17 14:43:47 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:43:47 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:43:53 | user-add | kadry | - | user
+2026-11-17 14:44:03 | login-fail | it3 | 192.168.2.10 | 
+2026-11-17 14:44:18 | login-fail | it3 | 192.168.2.10 | 
+2026-11-17 14:44:23 | open | token | 192.168.2.91 | door=9 dir=out
+2026-11-17 14:44:47 | start | - | - | users=2
+2026-11-17 14:45:06 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:45:06 | login-pass-ok | vitosamin | 192.168.2.72 | 2fa
+2026-11-17 14:45:06 | login-ok | vitosamin | 192.168.2.72 | 2fa
+2026-11-17 14:45:06 | user-del | kadry | - | -
+2026-11-17 14:45:19 | login-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:45:19 | login-pass-ok | vitosamin | 192.168.2.10 | 2fa
+2026-11-17 14:45:19 | login-ok | vitosamin | 192.168.2.10 | 2fa
 </pre>
   </div>
 </div>

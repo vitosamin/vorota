@@ -48,7 +48,7 @@ public class Config {
     }
 
     public String getGateUrl() {
-        return sp.getString("gate_url", "http://192.168.2.160:8099");
+        return sp.getString("gate_url", "https://kp.almak.ru");
     }
 
     public void setGateUrl(String v) {
@@ -56,7 +56,7 @@ public class Config {
     }
 
     public String getGateToken() {
-        return sp.getString("gate_token", "vorota-2026");
+        return sp.getString("gate_token", "5f3a9c7e2b8d4610a7c3e9f1b5d8246c");
     }
 
     public void setGateToken(String v) {
