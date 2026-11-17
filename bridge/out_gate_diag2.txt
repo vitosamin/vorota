@@ -1,7 +1,0 @@
-﻿access=525118 grid=1245526 openBtn=1376494
-openBtn rect=864,222,979,247 center=921,234
-openBtn enabled=True class=ThunderRT6CommandButton
-foreground=525118 title=Управление точками доступа
-window under cursor=1376494 class=ThunderRT6CommandButton title=[Открыть дверь]
-after click foreground=525118 title=Управление точками доступа
-done

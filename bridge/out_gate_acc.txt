@@ -1,3 +1,0 @@
-﻿access=524754 grid=524660
-=== form OBJID_CLIENT hwnd=524754 objid=4294967292 hr=0 acc=ok
-role= name=[] value=[]

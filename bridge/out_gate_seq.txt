@@ -1,7 +1,0 @@
-﻿grid=283,198,836,556
-btn=864,222,979,247
-foreground title=[C:\Users\Public\GateBridge.exe]
-select row 9 at y=360
-click open at 921,234
-foreground now=[Выбрать C:\Users\Public\GateBridge.exe]
-done

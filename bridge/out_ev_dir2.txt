@@ -1,7 +1,0 @@
-17.11.2026 12:03:49 type=1 code=2 dev=1 rdr=1
-17.11.2026 12:03:32 type=2 code=8 dev=9 rdr=18
-17.11.2026 12:03:32 type=2 code=4 dev=9 rdr=18
-17.11.2026 12:03:26 type=2 code=8 dev=9 rdr=17
-17.11.2026 12:03:32 type=5 code=208 dev=9 rdr=18
-17.11.2026 12:03:26 type=2 code=4 dev=9 rdr=17
-17.11.2026 12:03:27 type=5 code=208 dev=9 rdr=17

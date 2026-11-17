@@ -283,13 +283,14 @@ class Handler(BaseHTTPRequestHandler):
     def current_user(self):
         user = check_token(parse_cookies(self.headers.get("Cookie")).get(COOKIE))
         if user:
-            return user
+            # пользователя могли удалить или сменить ему логин — сессия недействительна
+            return user if accounts.get(user) else None
         hdr = self.headers.get("Authorization") or ""
         if hdr.startswith("Basic "):
             try:
                 raw = base64.b64decode(hdr[6:]).decode("utf-8", "replace")
                 u, _, p = raw.partition(":")
-                if check_password(u, p):
+                if check_password(u, p) and accounts.get(u):
                     return u
             except Exception:                    # noqa: BLE001
                 pass

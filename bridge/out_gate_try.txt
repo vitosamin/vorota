@@ -1,4 +1,0 @@
-﻿access=525118 btn=1376494 method=bm
-focus=0 class= title=[]
-BM_CLICK sent
-done at 12:50:57

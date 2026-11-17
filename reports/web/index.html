@@ -1664,6 +1664,7 @@ async function loadDoors(){
   }catch(e){ DOORS=[]; }
 }
 
+let PASS_PENDING=0;
 async function loadPasses(){
   const p=new URLSearchParams();
   if($('#passFltFrom').value) p.set('from',$('#passFltFrom').value);
@@ -1672,6 +1673,7 @@ async function loadPasses(){
   try{
     const d=await api('/api/passes?'+p.toString());
     renderPasses(d.items||[]);
+    PASS_PENDING=(d.items||[]).filter(x=>x.gate_state==='sent').length;
     const gi=d.gate_info||{};
     const el=$('#passGateInfo');
     if(el){
@@ -1720,10 +1722,19 @@ function renderPasses(items){
     try{ await postJSON('/api/passes/revoke',{id:+b.dataset.id}); toast('Пропуск отозван'); loadPasses(); }
     catch(e){ toast('Не удалось: '+e.message,true); }
   });
-  wrap.querySelectorAll('.passDel').forEach(b=>b.onclick=async()=>{
-    if(!confirm('Удалить пропуск?')) return;
-    try{ await postJSON('/api/passes/delete',{id:+b.dataset.id}); toast('Пропуск удалён'); loadPasses(); }
-    catch(e){ toast('Не удалось: '+e.message,true); }
+  wrap.querySelectorAll('.passDel').forEach(b=>{
+    b.textContent='Удалить';
+    b.onclick=async()=>{
+      // подтверждение без системного окна: второй клик в течение 4 секунд
+      if(b.dataset.armed!=='1'){
+        b.dataset.armed='1'; b.textContent='Точно удалить?';
+        b.style.background='#fdeceb'; b.style.color='#b42318';
+        setTimeout(()=>{ if(b.dataset.armed==='1'){ b.dataset.armed=''; b.textContent='Удалить'; b.style.background=''; b.style.color=''; } }, 4000);
+        return;
+      }
+      try{ await postJSON('/api/passes/delete',{id:+b.dataset.id}); toast('Пропуск удалён'); loadPasses(); }
+      catch(e){ toast('Не удалось: '+e.message,true); }
+    };
   });
 }
 
@@ -1752,6 +1763,7 @@ $('#passAdd').onclick=async()=>{
     note:$('#passNote').value.trim()
   };
   if(!payload.visitor && !payload.card){ toast('Укажите ФИО или номер карты', true); return; }
+  if(!payload.doors.length){ toast('Двери не выбраны — пропуск будет только в реестре, ключ в Gate не создастся', true); }
   try{
     const d=await postJSON('/api/passes/add', payload);
     toast('Выдан пропуск '+d.pass.number+(d.pass.warning?' — '+d.pass.warning:''), !!d.pass.warning);
@@ -1828,13 +1840,13 @@ function gateCell(it){
   if(js==='sent') return '<button class="gateBtn" data-id="'+it.id+'" title="отправлено, агент обработает в течение 2 минут"><span class="badge live">отправлен в Gate…</span></button>';
   if(js==='error'||js==='queue_error') return '<button class="gateBtn" data-id="'+it.id+'" title="'+esc(it.gate_error||'')+'"><span class="badge out">ошибка записи</span></button>';
   if(!g) return '<span class="dim">—</span>';
+  if(!g.total){
+    return '<button class="gateBtn" data-id="'+it.id+'" title="в пропуске не выбраны двери — ключ в Gate не создавался">'
+      + '<span class="badge late">двери не выбраны</span></button>';
+  }
   if(!g.in_gate){
     return '<button class="gateBtn none" data-id="'+it.id+'" title="'+esc(g.note||'')+'">'
       + '<span class="badge out">нет в Gate</span></button>';
-  }
-  if(!g.total){
-    return '<button class="gateBtn" data-id="'+it.id+'" title="в пропуске не выбраны двери">'
-      + '<span class="badge na">двери не выбраны</span></button>';
   }
   const pct = Math.round(g.ok_count/g.total*100);
   const cls = g.ok_count===g.total ? '' : (g.ok_count ? 'part' : 'none');
@@ -2063,6 +2075,7 @@ function initDates(){
   loadReport();
   loadAnalytics();
   setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
+  setInterval(()=>{ if(state.tab==='pas' && PASS_PENDING>0) loadPasses(); },20000);
   setInterval(loadStatus,30000);
   checkVersion();
 })();

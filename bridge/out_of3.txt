@@ -1,4 +1,0 @@
-﻿main=7078068 accessOpen=False
-posted menu 83
-accessOpen now=True
-done

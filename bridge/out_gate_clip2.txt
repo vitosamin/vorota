@@ -1,8 +1,0 @@
-﻿start 17.11.2026 11:06:02
-access=1049372 grid=328052 gridrect=443,198,996,556
-click1=503,224 click2=503,546
---- clipboard after shift-select ---
-<empty>
---- clipboard after ctrl+a ctrl+c ---
-<empty>
-done

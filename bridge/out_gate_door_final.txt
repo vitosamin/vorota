@@ -1,8 +1,0 @@
-﻿start 11:18:28.040 steps=7 open=True
-grid=283,198,836,556
-clicked first row 11:18:29.033
-ctrl+home 11:18:29.205
-moved down 7 at 11:18:30.503
-clicked OPEN at 11:18:31.010
---- windows after ---
-done 11:18:33.518

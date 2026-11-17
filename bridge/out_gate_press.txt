@@ -1,6 +1,0 @@
-﻿access=525118 grid=1245526 openBtn=1376494
-access style=0x16C80000 enabled=True
-btn enabled=True ctrlId=11
-select row 7 at y=352 grid=283,198
-WM_COMMAND posted=True wparam=0xB
-done

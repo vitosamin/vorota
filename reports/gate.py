@@ -1501,6 +1501,11 @@ def pass_check_job(con, p):
         else:
             con.execute("UPDATE passes SET gate_state='ok', gate_error='' WHERE id=?", (p["id"],))
         con.commit()
+    if not bad:
+        try:
+            sync_config(con=con)      # сразу перечитываем картотеку Gate
+        except Exception:             # noqa: BLE001
+            pass
     return pass_get(con, p["id"])
 
 

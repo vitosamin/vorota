@@ -1,4 +1,0 @@
-start 
-alm\shapovalenko
---- 
-ps_exit=0 

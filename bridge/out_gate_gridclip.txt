@@ -1,6 +1,0 @@
-﻿start 17.11.2026 10:59:28
-grid=328052 rect=443,198,996,556
---- clipboard ---
-<empty>
---- end ---
-done

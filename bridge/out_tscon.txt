@@ -1,7 +1,0 @@
-rc=0 
- ëÖÄçë             èéãúáéÇÄíÖãú             ID  ëíÄíìë  íàè         ìëíê-Çé
- services                                    0  Ñ®·™                        
->console           skudnew                   1  Ä™‚®¢≠Æ                      
-                   shapovalenko              4  Ñ®·™                        
- 31c5ce94259d4...                        65536  è‡®•¨                       
- rdp-tcp                                 65537  è‡®•¨                       
