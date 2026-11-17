@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Доступ — макет в стиле панели sing-box</title>
+<style>
+/* Палитра и компоненты взяты из панели sing-box (internal/web/static/style.css) */
+:root {
+  --bg:#10141a; --bg-side:#151b23; --card:#1a222c; --card-hover:#212b37;
+  --border:#27323f; --border-hi:#3a4859;
+  --text:#e7ecf3; --text-dim:#94a2b6;
+  --accent:#4a9eff; --accent-hi:#5fb0ff; --accent-fill:#2b62d9; --accent-fill-hi:#3568dd;
+  --success:#4ade80; --danger:#f87171; --warn:#fbbf24; --purple:#a78bfa; --cyan:#22d3ee;
+  --accent-soft:rgba(74,158,255,0.10); --accent-soft-2:rgba(74,158,255,0.18);
+  --shadow-accent:0 2px 10px rgba(74,158,255,0.3);
+  --radius-xs:6px; --radius-s:8px; --radius-m:10px; --radius-l:12px; --radius-xl:16px;
+  --control-h:34px; --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-l:15px;
+  --fs-xl:18px; --fs-xxl:21px;
+}
+[data-theme="light"] {
+  --bg:#f1f2f4; --bg-side:#e9ebef; --card:#fbfbfc; --card-hover:#f4f5f7;
+  --border:#dcdfe4; --border-hi:#c6cbd3;
+  --text:#15181c; --text-dim:#4e5560;
+  --accent:#2b62d9; --accent-hi:#3b78ec; --accent-fill:#1d4ed8; --accent-fill-hi:#2b62d9;
+  --success:#15803d; --danger:#c0342a; --warn:#a8620b; --purple:#7154cc; --cyan:#0d6f8a;
+  --accent-soft:rgba(43,98,217,0.08); --accent-soft-2:rgba(43,98,217,0.15);
+  --shadow-accent:0 2px 10px rgba(43,98,217,0.22);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 28px 20px 48px;
+  background: #0b0e12; color: #e7ecf3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
+.note { color: #94a2b6; font-size: var(--fs-m); margin: 0 0 24px; max-width: 900px; }
+.frames { display: flex; gap: 28px; flex-wrap: wrap; }
+.caption { font-size: var(--fs-s); color: #94a2b6; margin: 10px 0 0 4px; }
+
+.phone { width: 390px; height: 780px; border-radius: 28px; overflow: hidden;
+         border: 1px solid #27323f; background: var(--bg); flex: 0 0 auto; }
+.screen { height: 100%; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
+.head { padding: 22px 18px 12px; }
+.title { font-size: var(--fs-xxl); font-weight: 600; letter-spacing: -0.01em; }
+.subtitle { margin-top: 8px; font-size: var(--fs-s); color: var(--text-dim);
+            display: flex; align-items: center; gap: 7px; }
+.subtitle::before { content: ""; width: 7px; height: 7px; border-radius: 999px;
+                    background: var(--success); flex: 0 0 auto; }
+.list { flex: 1; overflow-y: auto; padding: 4px 14px 14px; display: flex;
+        flex-direction: column; gap: 10px; }
+.tabbar { display: flex; background: var(--bg-side); border-top: 1px solid var(--border); }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+       padding: 9px 0 12px; font-size: var(--fs-xs); color: var(--text-dim); }
+.tab.active { color: var(--accent); }
+
+.card { background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius-l); padding: 14px; }
+.row { display: flex; align-items: center; gap: 11px; }
+.chip { width: 34px; height: 34px; border-radius: var(--radius-xs); flex: 0 0 auto;
+        background: var(--accent-soft); color: var(--accent);
+        display: flex; align-items: center; justify-content: center; }
+.meta { flex: 1; min-width: 0; }
+.name { font-size: var(--fs-l); font-weight: 600; }
+.sub { font-size: var(--fs-s); color: var(--text-dim); margin-top: 2px;
+       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status { font-size: var(--fs-s); font-weight: 500; flex: 0 0 auto; }
+.status.ok { color: var(--success); }
+.status.warn { color: var(--warn); }
+.status.err { color: var(--danger); }
+.status.dim { color: var(--text-dim); }
+
+.btns { display: flex; gap: 8px; margin-top: 12px; }
+.btn { flex: 1; height: var(--control-h); display: inline-flex; align-items: center;
+       justify-content: center; gap: 7px; border-radius: var(--radius-s);
+       border: 1px solid var(--border); background: rgba(128,128,128,0.08);
+       color: var(--text); font-family: inherit; font-size: var(--fs-m);
+       font-weight: 500; cursor: pointer; }
+.btn.primary { background: var(--accent-fill); border-color: var(--accent-fill);
+               color: #fff; box-shadow: var(--shadow-accent); }
+.btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
+            color: var(--warn); }
+.btn:disabled { opacity: .5; }
+
+.srow { display: flex; align-items: center; justify-content: space-between;
+        min-height: 42px; padding: 0 14px; font-size: var(--fs-l);
+        background: var(--card); border: 1px solid var(--border); }
+.srow:first-child { border-radius: var(--radius-l) var(--radius-l) 0 0; }
+.srow:last-child { border-radius: 0 0 var(--radius-l) var(--radius-l); }
+.srow + .srow { border-top: none; }
+.srow .dim { color: var(--text-dim); font-size: var(--fs-m); }
+.srow .tick { color: var(--accent); display: flex; }
+.srow .chev { color: var(--text-dim); display: flex; }
+.slabel { font-size: var(--fs-xs); color: var(--text-dim); text-transform: uppercase;
+          letter-spacing: .06em; margin: 12px 0 6px 4px; font-weight: 600; }
+.field-label { font-size: var(--fs-s); color: var(--text-dim); margin: 10px 0 5px 4px; }
+.input { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-s);
+         padding: 9px 11px; font-size: var(--fs-s); color: var(--text); }
+.input.mono { font-family: "SF Mono", ui-monospace, Consolas, monospace; }
+.box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-l);
+       padding: 4px 12px 12px; }
+
+.group { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<h1>Приложение «Доступ»</h1>
+<p class="note">Оформление взято из панели sing-box: палитра, радиусы, высота элементов и иконки
+Lucide — те же. Иконки: дверь открыта/закрыта, шлагбаум, вход, выход, стоп.
+Макет собран из настоящих SVG панели, поэтому в приложении они будут выглядеть так же.</p>
+<div class="frames">
+  <div class="phone" data-theme="light">
+    <div class="screen">
+      <div class="head">
+        <div class="title">Доступ</div>
+        <div class="subtitle">Мост СКУД доступен</div>
+      </div>
+      <div class="list">
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+          <div class="meta">
+            <div class="name">Калитка</div>
+            <div class="sub">Gate-IP · вход и выход</div>
+          </div>
+          <div class="status ok">Готов</div>
+        </div>
+        <div class="btns">
+          <button class="btn primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg><span>Вход</span></button>
+          <button class="btn "><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg><span>Выход</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
+          <div class="meta">
+            <div class="name">Шлагбаум</div>
+            <div class="sub">Home Assistant · cover.barrier</div>
+          </div>
+          <div class="status ok">Открыто</div>
+        </div>
+        <div class="btns">
+          <button class="btn "><span>Закрыть</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+          <div class="meta">
+            <div class="name">КПП производство</div>
+            <div class="sub">Gate-IP · 6 дверей</div>
+          </div>
+          <div class="status warn">Открывается…</div>
+        </div>
+        <div class="btns">
+          <button class="btn warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg><span>Стоп</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
+          <div class="meta">
+            <div class="name">Северные ворота склад №3</div>
+            <div class="sub">Gate-IP · только вход</div>
+          </div>
+          <div class="status err">Нет связи</div>
+        </div>
+        <div class="btns">
+          <button class="btn "><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg><span>Вход</span></button>
+        </div>
+      </div>
+      </div>
+      <div class="tabbar">
+      <div class="tab active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span>Устройства</span></div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Настройки</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone" data-theme="dark">
+    <div class="screen">
+      <div class="head">
+        <div class="title">Доступ</div>
+        <div class="subtitle">Мост СКУД доступен</div>
+      </div>
+      <div class="list">
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+          <div class="meta">
+            <div class="name">Калитка</div>
+            <div class="sub">Gate-IP · вход и выход</div>
+          </div>
+          <div class="status ok">Готов</div>
+        </div>
+        <div class="btns">
+          <button class="btn primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg><span>Вход</span></button>
+          <button class="btn "><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg><span>Выход</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
+          <div class="meta">
+            <div class="name">Шлагбаум</div>
+            <div class="sub">Home Assistant · cover.barrier</div>
+          </div>
+          <div class="status ok">Открыто</div>
+        </div>
+        <div class="btns">
+          <button class="btn "><span>Закрыть</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
+          <div class="meta">
+            <div class="name">КПП производство</div>
+            <div class="sub">Gate-IP · 6 дверей</div>
+          </div>
+          <div class="status warn">Открывается…</div>
+        </div>
+        <div class="btns">
+          <button class="btn warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg><span>Стоп</span></button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
+          <div class="meta">
+            <div class="name">Северные ворота склад №3</div>
+            <div class="sub">Gate-IP · только вход</div>
+          </div>
+          <div class="status err">Нет связи</div>
+        </div>
+        <div class="btns">
+          <button class="btn "><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg><span>Вход</span></button>
+        </div>
+      </div>
+      </div>
+      <div class="tabbar">
+      <div class="tab active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span>Устройства</span></div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Настройки</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone" data-theme="light">
+    <div class="screen">
+      <div class="head">
+        <div class="title">Настройки</div>
+        
+      </div>
+      <div class="list">
+      <div class="slabel">Оформление</div>
+      <div class="group">
+        <div class="srow"><span>Светлая</span></div>
+        <div class="srow"><span>Тёмная</span><span class="tick"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+        <div class="srow"><span>Системная</span></div>
+      </div>
+      <div class="slabel">Подключение</div>
+      <div class="box">
+        <div class="field-label">Адрес Home Assistant</div>
+        <div class="input mono">http://192.168.2.39:8123</div>
+        <div class="field-label">Долгоживущий токен</div>
+        <div class="input mono">••••••••••••••</div>
+      </div>
+      <div class="slabel">Gate-IP</div>
+      <div class="group">
+        <div class="srow"><span>Мост</span><span class="dim">на связи</span></div>
+        <div class="srow"><span>Загрузить двери</span><span class="chev"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div>
+      </div>
+      <div class="slabel">Устройства</div>
+      <div class="group">
+        <div class="srow"><span>Калитка</span><span class="chev"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div>
+        <div class="srow"><span>Шлагбаум</span><span class="chev"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div>
+        <div class="srow"><span>КПП производство</span><span class="chev"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span></div>
+      </div>
+      </div>
+      <div class="tabbar">
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span>Устройства</span></div>
+      <div class="tab active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Настройки</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="caption">Слева — светлая тема, в центре — тёмная (как в панели по умолчанию), справа — настройки.</p>
+</body>
+</html>

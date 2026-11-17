@@ -9,3 +9,5 @@ tools/test/json.jar
 .tools/
 bridge/*.exe
 bridge/research/
+
+__pycache__/
