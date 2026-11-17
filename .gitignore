@@ -1,0 +1,8 @@
+build/
+dist/
+release.keystore
+tools/test/classes/
+tools/test/json.jar
+*.idsig
+*.apk
+.DS_Store
