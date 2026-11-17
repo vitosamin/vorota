@@ -608,6 +608,176 @@ class GateBridge
     const string WEB_USER = "vitosamin";
     const string WEB_PASS = "Admin910327";
 
+    const string LoginPage = @"<!doctype html>
+<html lang='ru'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Вход · Ворота</title>
+<style>
+:root{--bg:#0a0e13;--card:#151b24;--line:#243040;--acc:#3ddc97;--txt:#f2f6fa;--mut:#9ba8b8}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 600px at 50% -10%,#16324a 0%,#0a0e13 60%);color:var(--txt);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.box{width:100%;max-width:380px}
+.logo{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3ddc97,#14a277);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 18px;box-shadow:0 10px 30px rgba(61,220,151,.25)}
+h1{font-size:26px;font-weight:400;text-align:center;margin:0 0 6px}
+.sub{color:var(--mut);font-size:13px;text-align:center;margin-bottom:26px}
+form{background:linear-gradient(150deg,#1a2330,#131a23);border:1px solid var(--line);border-radius:22px;padding:22px}
+label{display:block;font-size:12px;color:var(--mut);margin:0 0 6px 2px}
+input{width:100%;background:#0d141c;border:1px solid #27323f;color:var(--txt);border-radius:13px;padding:13px 14px;font-size:15px;margin-bottom:14px;outline:none}
+input:focus{border-color:#3ddc97}
+button{width:100%;border:0;border-radius:13px;padding:14px;font-size:15px;font-weight:600;color:#04231a;background:linear-gradient(90deg,#3ddc97,#14a277);cursor:pointer}
+button:active{transform:scale(.99)}
+.err{background:#3a1d22;border:1px solid #7a2b34;color:#ffb3b8;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+.foot{color:#5f6d7d;font-size:11px;text-align:center;margin-top:18px}
+</style></head><body>
+<div class='box'>
+  <div class='logo'>🚪</div>
+  <h1>Ворота</h1>
+  <div class='sub'>Вход в систему</div>
+  <form method='post' action='/login'>
+    __ERROR__
+    <label>Логин</label>
+    <input name='u' autocomplete='username' autofocus>
+    <label>Пароль</label>
+    <input name='p' type='password' autocomplete='current-password'>
+    <button type='submit'>Войти</button>
+  </form>
+  <div class='foot'>Доступ к дверям СКУД</div>
+</div>
+</body></html>
+";
+
+    const string AppPage = @"<!doctype html>
+<html lang='ru'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Ворота</title>
+<style>
+:root{--bg:#0a0e13;--card:#151b24;--line:#243040;--acc:#3ddc97;--txt:#f2f6fa;--mut:#9ba8b8}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(160deg,#101822,#070a0e);color:var(--txt);min-height:100vh;padding:28px 20px 40px}
+.wrap{max-width:1080px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}
+h1{font-size:32px;font-weight:300;margin:0}
+.who{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:12px}
+.who a{color:var(--mut);text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px}
+.who a:hover{color:var(--txt);border-color:#3ddc97}
+.sub{color:var(--mut);font-size:13px;margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:linear-gradient(150deg,#1a2330,#141a22);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;transition:.2s}
+.card:hover{border-color:#31435a;transform:translateY(-1px)}
+.top{display:flex;align-items:center;gap:12px}
+.icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2e6b4f,#14a277);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+.name{font-size:17px;font-weight:500;flex:1}
+.btns{display:flex;gap:10px}
+button{border:0;border-radius:13px;padding:12px 16px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;flex:1}
+.bin{background:linear-gradient(90deg,#3ddc97,#14a277);color:#04231a}
+.bout{background:linear-gradient(90deg,#5b8def,#3b6fd4)}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.45;cursor:default}
+button .arr{opacity:.85;margin-right:6px}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#1b2530;border:1px solid var(--line);color:var(--txt);padding:13px 20px;border-radius:14px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+#toast.show{opacity:1}
+.empty{color:var(--mut);text-align:center;padding:40px 0}
+</style></head><body>
+<div class='wrap'>
+  <header>
+    <h1>Ворота</h1>
+    <div class='who'><span>СКУД · 192.168.2.160</span><a href='/logout'>Выйти</a></div>
+  </header>
+  <div class='sub' id='sub'>Загрузка…</div>
+  <div id='list' class='grid'></div>
+</div>
+<div id='toast'></div>
+<script>
+var TOKEN='vorota-2026';
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2400);}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
+async function openDoor(id,dir,name,btn){
+  var old=btn.innerHTML;
+  btn.disabled=true;btn.textContent='Отправлено…';
+  try{
+    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+TOKEN);
+    var o=await x.json();
+    toast(o.ok?'Открыто: '+name:'Ошибка: '+(o.error||'нет ответа'));
+  }catch(e){toast('Ошибка сети');}
+  setTimeout(function(){btn.disabled=false;btn.innerHTML=old;},1500);
+}
+async function load(){
+  try{
+    var r=await fetch('/doors?token='+TOKEN);
+    var j=await r.json();
+    var list=document.getElementById('list');
+    list.innerHTML='';
+    var n=0;
+    j.doors.forEach(function(d){
+      if(!d.readers||!d.readers.length)return;
+      n++;
+      var c=el('div','card');
+      var top=el('div','top');
+      top.appendChild(el('div','icon','🚪'));
+      top.appendChild(el('div','name',d.name));
+      c.appendChild(top);
+      var b=el('div','btns');
+      d.readers.forEach(function(rd){
+        var isOut=rd.dir==='out';
+        var btn=el('button',isOut?'bout':'bin');
+        var arr=el('span','arr',isOut?'←':'→');
+        btn.appendChild(arr);
+        btn.appendChild(document.createTextNode(isOut?'Выход':'Вход'));
+        btn.onclick=function(){openDoor(d.id,rd.dir,d.name,btn);};
+        b.appendChild(btn);
+      });
+      c.appendChild(b);
+      list.appendChild(c);
+    });
+    if(!n)list.appendChild(el('div','empty','Двери не настроены на мосте'));
+    document.getElementById('sub').textContent='Дверей: '+n+' · обновлено '+new Date().toLocaleTimeString('ru-RU');
+  }catch(e){document.getElementById('sub').textContent='Нет связи с мостом';}
+}
+load();setInterval(load,15000);
+</script></body></html>
+";
+
+    static readonly Dictionary<string, DateTime> Sessions = new Dictionary<string, DateTime>();
+
+    static bool CookieOk(HttpListenerContext ctx)
+    {
+        try
+        {
+            var ck = ctx.Request.Cookies["sid"];
+            if (ck == null || string.IsNullOrEmpty(ck.Value)) return false;
+            lock (Sessions)
+            {
+                DateTime exp;
+                if (!Sessions.TryGetValue(ck.Value, out exp)) return false;
+                if (exp < DateTime.UtcNow) { Sessions.Remove(ck.Value); return false; }
+                return true;
+            }
+        }
+        catch { return false; }
+    }
+
+    static string ReadBody(HttpListenerContext ctx)
+    {
+        try
+        {
+            using (var r = new System.IO.StreamReader(ctx.Request.InputStream, Encoding.UTF8))
+                return r.ReadToEnd();
+        }
+        catch { return ""; }
+    }
+
+    static string FormValue(string body, string key)
+    {
+        foreach (string part in body.Split('&'))
+        {
+            int i = part.IndexOf('=');
+            if (i <= 0) continue;
+            if (part.Substring(0, i) == key)
+                return Uri.UnescapeDataString(part.Substring(i + 1).Replace("+", " "));
+        }
+        return "";
+    }
+
     static bool BasicAuthOk(HttpListenerContext ctx)
     {
         try
@@ -634,74 +804,7 @@ class GateBridge
         catch { }
     }
 
-    const string Page = @"<!doctype html>
-<html lang='ru'><head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>Ворота</title>
-<style>
-:root{--bg:#0a0e13;--card:#151b24;--line:#243040;--acc:#3ddc97;--txt:#f2f6fa;--mut:#9ba8b8}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(160deg,#101822,#070a0e);color:var(--txt);min-height:100vh;padding:24px 16px}
-h1{font-size:30px;font-weight:300;margin:0 0 4px}
-.sub{color:var(--mut);font-size:13px;margin-bottom:22px}
-.grid{display:grid;gap:12px;max-width:760px;margin:0 auto}
-.card{background:linear-gradient(150deg,#1a2330,#141a22);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2e6b4f,#14a277);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
-.name{flex:1 1 140px;font-size:17px;font-weight:500}
-.btns{display:flex;gap:8px;flex:0 0 auto}
-button{border:0;border-radius:13px;padding:11px 16px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;min-width:86px}
-.bin{background:linear-gradient(90deg,#3ddc97,#14a277);color:#04231a}
-.bout{background:linear-gradient(90deg,#5b8def,#3b6fd4)}
-button:active{transform:scale(.97)}
-button:disabled{opacity:.5}
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1f2937;border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
-#toast.show{opacity:1}
-</style></head><body>
-<div class='grid'>
-<h1>Ворота</h1>
-<div class='sub' id='sub'>Загрузка…</div>
-<div id='list' class='grid'></div>
-</div>
-<div id='toast'></div>
-<script>
-var TOKEN='vorota-2026';
-function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2200);}
-function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
-async function openDoor(id,dir,name,btn){
-  btn.disabled=true;
-  try{
-    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+TOKEN);
-    var o=await x.json();
-    toast(o.ok?'Открыто: '+name:'Ошибка: '+(o.error||'нет ответа'));
-  }catch(e){toast('Ошибка сети');}
-  setTimeout(function(){btn.disabled=false;},1200);
-}
-async function load(){
-  try{
-    var r=await fetch('/doors?token='+TOKEN);
-    var j=await r.json();
-    var list=document.getElementById('list');
-    list.innerHTML='';
-    j.doors.forEach(function(d){
-      if(!d.readers||!d.readers.length)return;
-      var c=el('div','card');
-      c.appendChild(el('div','icon','🚪'));
-      c.appendChild(el('div','name',d.name));
-      var b=el('div','btns');
-      d.readers.forEach(function(rd){
-        var btn=el('button',rd.dir==='out'?'bout':'bin',rd.dir==='out'?'Выход':'Вход');
-        btn.onclick=function(){openDoor(d.id,rd.dir,d.name,btn);};
-        b.appendChild(btn);
-      });
-      c.appendChild(b);
-      list.appendChild(c);
-    });
-    document.getElementById('sub').textContent='Дверей: '+j.doors.length;
-  }catch(e){document.getElementById('sub').textContent='Нет связи с мостом';}
-}
-load();setInterval(load,15000);
-</script></body></html>
-";
+
 
     static void Respond(HttpListenerContext ctx, int code, string body)
     {
@@ -723,19 +826,44 @@ load();setInterval(load,15000);
         {
             var q = ctx.Request.QueryString;
             string path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
-            if (path == "" || path == "/index.html")
+            if (path == "/login")
             {
-                if (!BasicAuthOk(ctx))
+                if (ctx.Request.HttpMethod == "POST")
                 {
-                    ctx.Response.StatusCode = 401;
-                    ctx.Response.AddHeader("WWW-Authenticate", "Basic realm=\"Vorota\"");
-                    ctx.Response.ContentType = "text/plain; charset=utf-8";
-                    byte[] msg = Encoding.UTF8.GetBytes("Требуется авторизация");
-                    ctx.Response.OutputStream.Write(msg, 0, msg.Length);
-                    ctx.Response.OutputStream.Close();
+                    string body = ReadBody(ctx);
+                    string u = FormValue(body, "u"), pw = FormValue(body, "p");
+                    if (u == WEB_USER && pw == WEB_PASS)
+                    {
+                        string sid = Guid.NewGuid().ToString("N");
+                        lock (Sessions) Sessions[sid] = DateTime.UtcNow.AddHours(12);
+                        ctx.Response.AddHeader("Set-Cookie", "sid=" + sid + "; Path=/; HttpOnly; Max-Age=43200");
+                        ctx.Response.StatusCode = 302;
+                        ctx.Response.AddHeader("Location", "/");
+                        ctx.Response.OutputStream.Close();
+                        return;
+                    }
+                    RespondHtml(ctx, LoginPage.Replace("__ERROR__", "<div class='err'>Неверный логин или пароль</div>"));
                     return;
                 }
-                RespondHtml(ctx, Page);
+                RespondHtml(ctx, LoginPage.Replace("__ERROR__", ""));
+                return;
+            }
+            if (path == "/logout")
+            {
+                var ck = ctx.Request.Cookies["sid"];
+                if (ck != null) lock (Sessions) Sessions.Remove(ck.Value);
+                ctx.Response.AddHeader("Set-Cookie", "sid=; Path=/; Max-Age=0");
+                ctx.Response.StatusCode = 302;
+                ctx.Response.AddHeader("Location", "/login");
+                ctx.Response.OutputStream.Close();
+                return;
+            }
+            if (path == "" || path == "/index.html")
+            {
+                if (CookieOk(ctx) || BasicAuthOk(ctx)) { RespondHtml(ctx, AppPage); return; }
+                ctx.Response.StatusCode = 302;
+                ctx.Response.AddHeader("Location", "/login");
+                ctx.Response.OutputStream.Close();
                 return;
             }
             if (q["token"] != TOKEN) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"token\"}"); return; }
