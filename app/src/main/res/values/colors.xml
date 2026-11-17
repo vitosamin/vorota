@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Светлая тема панели sing-box (internal/web/static/style.css, [data-theme="light"]) -->
-    <color name="bg">#E9EBED</color>
-    <color name="bg_top">#E9EBED</color>
-    <color name="bg_bottom">#E2E4E7</color>
+    <color name="bg">#DEE1E4</color>
+    <color name="bg_top">#DEE1E4</color>
+    <color name="bg_bottom">#D6D9DD</color>
     <color name="card">#F4F5F6</color>
-    <color name="card_high">#EAECEE</color>
-    <color name="card_stroke">#D7DADD</color>
-    <color name="field">#EAECEE</color>
-    <color name="field_stroke">#D7DADD</color>
-    <color name="nav_bg">#E2E4E7</color>
+    <color name="card_high">#EAEDEF</color>
+    <color name="card_stroke">#CDD1D5</color>
+    <color name="field">#E6E9EC</color>
+    <color name="field_stroke">#CFD3D7</color>
+    <color name="nav_bg">#D9DCDF</color>
 
     <color name="accent">#1B5E3A</color>
     <color name="accent_light">#23734A</color>
@@ -33,7 +33,7 @@
     <color name="info">#5A626D</color>
     <color name="info_soft">#EDEEF1</color>
 
-    <color name="btn_neutral">#E9EAEC</color>
+    <color name="btn_neutral">#E6E9EC</color>
 
     <!-- Плашки типов устройств: цвета iOS, чуть глубже ради белого значка -->
     <color name="type_gate">#1B5E3A</color>
@@ -44,7 +44,7 @@
 
     <color name="text_primary">#15181C</color>
     <color name="text_secondary">#4E5560</color>
-    <color name="text_muted">#5F6773</color>
+    <color name="text_muted">#575F6B</color>
     <color name="icon_bg">#E9EEEC</color>
     <color name="icon_tint">#15181C</color>
     <color name="icon_launcher">#1B5E3A</color>

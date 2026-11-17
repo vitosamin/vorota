@@ -97,8 +97,8 @@ CSS = """
   --fs-xl:18px; --fs-xxl:21px;
 }
 [data-theme="light"] {
-  --bg:#e9ebed; --bg-side:#e2e4e7; --card:#f4f5f6; --card-hover:#eaecee;
-  --border:#d7dadd; --border-hi:#c2c6cc;
+  --bg:#dee1e4; --bg-side:#d9dcdf; --card:#f4f5f6; --card-hover:#eaedef;
+  --border:#cdd1d5; --border-hi:#bcc1c7;
   --text:#15181c; --text-dim:#4e5560;
   --accent:#1b5e3a; --accent-hi:#23734a; --accent-fill:#1b5e3a; --accent-fill-hi:#23734a;
   --success:#15803d; --danger:#c0342a; --warn:#9a5909; --purple:#7154cc; --cyan:#5a626d;
