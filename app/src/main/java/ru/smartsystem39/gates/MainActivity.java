@@ -48,10 +48,13 @@ public class MainActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private List<Device> devices = new ArrayList<>();
-    private final Map<String, Card> cards = new HashMap<>();
+    private final Map<String, List<Card>> cards = new HashMap<>();
+    private ExecutorService commands;
+    private static final AtomicBoolean commandInFlight = new AtomicBoolean(false);
     private final Map<String, Status> lastStatus = new HashMap<>();
     private final AtomicBoolean inFlight = new AtomicBoolean(false);
     private boolean polling = false;
+    private int devicesRevision = 0;
     private boolean allExpanded = false;
     private int tab = 0;
 
@@ -120,6 +123,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         cfg = new Config(this);
         io = Executors.newSingleThreadExecutor();
+        commands = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_main);
         bind();
         setupSettings();
@@ -248,7 +252,11 @@ public class MainActivity extends Activity {
     }
 
     private void reloadDevices() {
+        devicesRevision++;
         devices = cfg.getDevices();
+        boolean hasFavorite = false;
+        for (Device device : devices) if (device.favorite) { hasFavorite = true; break; }
+        if (!hasFavorite) allExpanded = true;
         cards.clear();
         lastStatus.clear();
         rebuildMain();
@@ -268,6 +276,7 @@ public class MainActivity extends Activity {
             listMain.addView(buildEmptyView());
             return;
         }
+        listMain.addView(buildOverview());
 
         List<Device> favorites = new ArrayList<>();
         for (Device d : devices) {
@@ -281,7 +290,7 @@ public class MainActivity extends Activity {
             for (Device d : favorites) addCard(d);
         }
 
-        boolean expanded = allExpanded || favorites.isEmpty();
+        boolean expanded = allExpanded;
         listMain.addView(buildAllHeader(expanded));
         if (expanded) {
             for (Device d : devices) addCard(d);
@@ -290,10 +299,43 @@ public class MainActivity extends Activity {
 
     private void addCard(Device d) {
         Card c = buildCard(d);
-        cards.put(d.id, c);
+        if (!cards.containsKey(d.id)) cards.put(d.id, new ArrayList<>());
+        cards.get(d.id).add(c);
         listMain.addView(c.root);
         Status known = lastStatus.get(d.id);
         if (known != null) applyStatus(c, known);
+    }
+
+    private View buildOverview() {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(20), dp(18), dp(20), dp(18));
+        panel.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(22)));
+        LinearLayout.LayoutParams lp = Ui.rowLp(this);
+        lp.bottomMargin = dp(24);
+        panel.setLayoutParams(lp);
+
+        TextView label = new TextView(this);
+        label.setText("ВАШИ УСТРОЙСТВА");
+        label.setTextColor(getColor(R.color.accent_deep));
+        label.setTextSize(10);
+        label.setLetterSpacing(0.12f);
+        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        panel.addView(label);
+
+        TextView count = new TextView(this);
+        count.setText(String.valueOf(devices.size()));
+        count.setTextColor(getColor(R.color.text_primary));
+        count.setTextSize(32);
+        count.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        panel.addView(count);
+
+        TextView hint = new TextView(this);
+        hint.setText("Выберите действие на карточке устройства");
+        hint.setTextColor(getColor(R.color.text_secondary));
+        hint.setTextSize(13);
+        panel.addView(hint);
+        return panel;
     }
 
     private TextView buildSection(String text) {
@@ -362,6 +404,9 @@ public class MainActivity extends Activity {
     private void toggleFavorite(Device d) {
         d.favorite = !d.favorite;
         cfg.upsert(d);
+        boolean hasFavorite = false;
+        for (Device device : devices) if (device.favorite) { hasFavorite = true; break; }
+        if (!hasFavorite) allExpanded = true;
         toast(getString(d.favorite ? R.string.fav_added : R.string.fav_removed));
         rebuildMain();
     }
@@ -376,7 +421,7 @@ public class MainActivity extends Activity {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(dp(16), dp(14), dp(14), dp(14));
         card.setBackground(Ui.cardBackground(this));
-        card.setElevation(dp(2));
+        card.setElevation(dp(1));
         card.setLayoutParams(Ui.rowLp(this));
         c.root = card;
 
@@ -407,10 +452,21 @@ public class MainActivity extends Activity {
         tlp.rightMargin = dp(8);
         texts.setLayoutParams(tlp);
 
+        TextView category = new TextView(this);
+        category.setText(d.isGate() ? "GATE-IP" :
+                (Device.SRC_HA.equals(d.source) ? "HOME ASSISTANT" : Device.protocolLabel(d.protocol).toUpperCase(Locale.ROOT)));
+        category.setTextColor(getColor(R.color.text_muted));
+        category.setTextSize(10);
+        category.setLetterSpacing(0.08f);
+        category.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        category.setMaxLines(1);
+        category.setEllipsize(TextUtils.TruncateAt.END);
+        texts.addView(category);
+
         TextView name = new TextView(this);
         name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
         name.setTextColor(getColor(R.color.text_primary));
-        name.setTextSize(15);
+        name.setTextSize(16);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         name.setSingleLine(false);
         name.setMaxLines(2);
@@ -450,8 +506,8 @@ public class MainActivity extends Activity {
         top.addView(texts);
 
         ImageButton star = new ImageButton(this);
-        star.setLayoutParams(new LinearLayout.LayoutParams(dp(34), dp(34)));
-        star.setPadding(dp(7), dp(7), dp(7), dp(7));
+        star.setLayoutParams(new LinearLayout.LayoutParams(dp(48), dp(48)));
+        star.setPadding(dp(13), dp(13), dp(13), dp(13));
         star.setBackgroundResource(R.drawable.bg_circle_ripple);
         star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
         star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_muted));
@@ -481,13 +537,13 @@ public class MainActivity extends Activity {
             action.setImageResource(R.drawable.ic_power);
             action.setColorFilter(getColor(R.color.accent));
             action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
-            action.setContentDescription(getString(R.string.app_name) + " " + name.getText());
+            action.setContentDescription("Управление: " + name.getText());
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
             top.addView(action);
         }
 
-        card.setOnClickListener(v -> onTap(d));
+        // Команды запускаются только отдельными кнопками, не случайным касанием карточки.
         card.setOnLongClickListener(v -> {
             openEditor(d.id);
             return true;
@@ -564,8 +620,8 @@ public class MainActivity extends Activity {
     private Button dirButton(Device d, String dir, String label, float weight, boolean marginRight) {
         Button b = new Button(this);
         LinearLayout.LayoutParams lp = weight > 0
-                ? new LinearLayout.LayoutParams(0, dp(42), weight)
-                : new LinearLayout.LayoutParams(dp(88), dp(42));
+                ? new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weight)
+                : new LinearLayout.LayoutParams(dp(88), ViewGroup.LayoutParams.WRAP_CONTENT);
         if (marginRight) lp.rightMargin = dp(10);
         b.setLayoutParams(lp);
         b.setText(label);
@@ -573,9 +629,9 @@ public class MainActivity extends Activity {
         b.setTextSize(14);
         b.setSingleLine(true);
         b.setMinWidth(0);
-        b.setMinHeight(0);
+        b.setMinHeight(dp(48));
         b.setMinimumWidth(0);
-        b.setMinimumHeight(0);
+        b.setMinimumHeight(dp(48));
         b.setTextColor(getColor("out".equals(dir) ? R.color.info : R.color.accent_deep));
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setBackgroundResource("out".equals(dir) ? R.drawable.btn_out : R.drawable.btn_in);
@@ -589,15 +645,12 @@ public class MainActivity extends Activity {
 
     private void onTapDir(Device d, String dir) {
         final String base = HaClient.normalizeBase(d.address);
-        if (base.isEmpty()) { toast(getString(R.string.status_ha_not_set)); return; }
-        runIo(() -> {
-            Http.Response r = Http.get(base + "/open?id=" + d.gateId + "&dir=" + dir
+        if (base.isEmpty()) { toast("Укажите адрес моста"); return; }
+        runCommand(() -> {
+            Http.Response r = Http.get(base + "/open?id=" + Uri.encode(d.gateId) + "&dir=" + dir
                     + "&token=" + Uri.encode(d.gateToken), null, false);
-            final String err = r.ok() ? null : (r.error == null ? "HTTP " + r.code : r.error);
-            ui.post(() -> {
-                toast(err == null ? getString(R.string.cmd_sent) : err);
-                pollOnce();
-            });
+            String error = GateResponse.commandError(r);
+            return error == null ? getString(R.string.cmd_sent) : error;
         });
     }
 
@@ -611,30 +664,59 @@ public class MainActivity extends Activity {
             selectTab(1);
             return;
         }
-        final Card c = cards.get(d.id);
-        if (c != null && c.action != null) c.action.setEnabled(false);
-
         if (Device.SRC_HA.equals(d.source)) {
             final String domain = domainOf(d.entity);
-            final String service = serviceFor(domain, lastStatus.get(d.id));
-            runIo(() -> {
-                HaClient.Result<String> r = new HaClient(cfg.getHaUrl(), cfg.getHaToken(), cfg.haInsecure())
+            final Status status = lastStatus.get(d.id);
+            if (("cover".equals(domain) || "lock".equals(domain)) &&
+                    (status == null || status.kind == Status.UNKNOWN || status.kind == Status.OFFLINE ||
+                     ("lock".equals(domain) && status.isMoving()))) {
+                toast("Состояние неизвестно. Обновите связь перед управлением");
+                pollOnce();
+                return;
+            }
+            final String service = serviceFor(domain, status);
+            final String url = cfg.getHaUrl(), token = cfg.getHaToken();
+            final boolean insecure = cfg.haInsecure();
+            runCommand(() -> {
+                HaClient.Result<String> r = new HaClient(url, token, insecure)
                         .callService(domain, service, d.entity);
-                ui.post(() -> {
-                    if (c != null && c.action != null) c.action.setEnabled(true);
-                    toast(r.error == null ? getString(R.string.cmd_sent) : r.error);
-                    pollOnce();
-                });
+                return r.error == null ? getString(R.string.cmd_sent) : "Нет подтверждения команды: " + r.error;
             });
         } else {
-            runIo(() -> {
-                DirectClient.Result r = DirectClient.toggle(d, cfg.haInsecure());
+            final boolean insecure = cfg.haInsecure();
+            runCommand(() -> {
+                DirectClient.Result r = DirectClient.toggle(d, insecure);
+                return r.error == null ? getString(R.string.cmd_sent) : r.error;
+            });
+        }
+    }
+
+    // Команды не стоят в очереди за опросом или скачиванием и не накапливаются.
+    private void runCommand(java.util.concurrent.Callable<String> work) {
+        if (commands == null || commands.isShutdown()) return;
+        if (!commandInFlight.compareAndSet(false, true)) {
+            toast("Дождитесь завершения предыдущей команды");
+            return;
+        }
+        // Отбросить старый опрос: после действия состояние может измениться.
+        devicesRevision++;
+        lastStatus.clear();
+        try {
+            commands.execute(() -> {
+                String message;
+                try { message = work.call(); }
+                catch (Exception e) { message = "Результат команды неизвестен"; }
+                final String result = message;
+                commandInFlight.set(false);
                 ui.post(() -> {
-                    if (c != null && c.action != null) c.action.setEnabled(true);
-                    toast(r.error == null ? getString(R.string.cmd_sent) : r.error);
+                    if (isFinishing() || isDestroyed()) return;
+                    toast(result);
                     pollOnce();
                 });
             });
+        } catch (Exception e) {
+            commandInFlight.set(false);
+            toast("Не удалось отправить команду");
         }
     }
 
@@ -677,9 +759,8 @@ public class MainActivity extends Activity {
             case "lock":
                 if ("locked".equals(state)) return new Status(Status.CLOSED, "Закрыто");
                 if ("unlocked".equals(state)) return new Status(Status.OPEN, "Открыто");
-                if ("locking".equals(state) || "unlocking".equals(state)) {
-                    return new Status(Status.MOVING, "Закрывается…");
-                }
+                if ("locking".equals(state)) return new Status(Status.MOVING, "Закрывается…");
+                if ("unlocking".equals(state)) return new Status(Status.MOVING, "Открывается…");
                 return new Status(Status.UNKNOWN, state.isEmpty() ? "Нет данных" : state);
             case "button":
                 return new Status(Status.READY, "Кнопка");
@@ -734,12 +815,18 @@ public class MainActivity extends Activity {
         final String encToken = Uri.encode(token);
         runIo(() -> {
             Http.Response r = Http.get(base + "/doors?token=" + encToken, null, false);
-            String error = null;
-            int added = 0;
-            if (!r.ok()) {
-                error = r.error == null ? "HTTP " + r.code : r.error;
-            } else {
-                try {
+            ui.post(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                importingGate = false;
+                btnGateImport.setEnabled(true);
+                String error = null;
+                int added = 0;
+                if (!rawUrl.equals(cfg.getGateUrl()) || !token.equals(cfg.getGateToken())) {
+                    error = "настройки моста изменились, повторите загрузку";
+                } else if (!r.ok()) {
+                    error = r.error == null ? "HTTP " + r.code : r.error;
+                } else {
+                  try {
                     JSONArray arr = new JSONObject(r.body).getJSONArray("doors");
                     List<Device> devices = cfg.getDevices();
                     for (int i = 0; i < arr.length(); i++) {
@@ -779,25 +866,20 @@ public class MainActivity extends Activity {
                         added++;
                     }
                     cfg.saveDevices(devices);
-                } catch (Exception e) {
+                  } catch (Exception e) {
                     error = "некорректный ответ моста";
+                  }
                 }
-            }
-            final String ferr = error;
-            final int fadded = added;
-            ui.post(() -> {
-                importingGate = false;
-                btnGateImport.setEnabled(true);
-                if (ferr != null) {
+                if (error != null) {
                     gateStatus.setTextColor(getColor(R.color.danger));
-                    gateStatus.setText(getString(R.string.gate_error, ferr));
+                    gateStatus.setText(getString(R.string.gate_error, error));
                     if (silent && tab == 0) {
-                        setHeader(getString(R.string.gate_unreachable, ferr),
+                        setHeader(getString(R.string.gate_unreachable, error),
                                 R.drawable.dot_red, getColor(R.color.danger));
                     }
                 } else {
                     gateStatus.setTextColor(getColor(R.color.accent));
-                    gateStatus.setText(getString(R.string.gate_ok, fadded));
+                    gateStatus.setText(getString(R.string.gate_ok, added));
                     reloadDevices();
                 }
             });
@@ -850,7 +932,6 @@ public class MainActivity extends Activity {
     private void updateThemeButtons() {
         if (themeLight == null) return;
         int mode = cfg.getThemeMode();
-        int[][] map = { {1, 0}, {2, 0}, {0, 0} };
         styleThemeButton(themeLight, mode == 1);
         styleThemeButton(themeDark, mode == 2);
         styleThemeButton(themeSystem, mode == 0);
@@ -1004,7 +1085,7 @@ public class MainActivity extends Activity {
         add.setText(R.string.empty_button);
         add.setAllCaps(false);
         add.setTextSize(14);
-        add.setTextColor(getColor(R.color.bg));
+        add.setTextColor(getColor(R.color.on_accent));
         add.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         add.setBackgroundResource(R.drawable.btn_primary);
         add.setPadding(dp(22), dp(14), dp(22), dp(14));
@@ -1033,6 +1114,13 @@ public class MainActivity extends Activity {
             setHeader(getString(R.string.status_ha_not_set), R.drawable.dot_amber, getColor(R.color.warn));
             return;
         }
+        if (ha > 0 && gate > 0) {
+            boolean anyFailed = failed || gateFailed;
+            setHeader(anyFailed ? "Проблема связи с HA или мостом" : "HA и мост доступны",
+                    anyFailed ? R.drawable.dot_red : R.drawable.dot_green,
+                    getColor(anyFailed ? R.color.danger : R.color.accent));
+            return;
+        }
         if (ha > 0) {
             setHeader(failed ? getString(R.string.status_ha_offline) : getString(R.string.status_ha_online),
                     failed ? R.drawable.dot_red : R.drawable.dot_green,
@@ -1040,7 +1128,7 @@ public class MainActivity extends Activity {
             return;
         }
         if (gate > 0) {
-            String text = (gateFailed ? "СКУД · нет связи" : (gate + " " + doorsWord(gate) + " СКУД на связи"));
+            String text = gateFailed ? "Мост СКУД · нет связи" : "Мост СКУД доступен";
             setHeader(text, gateFailed ? R.drawable.dot_red : R.drawable.dot_green,
                     gateFailed ? getColor(R.color.danger) : getColor(R.color.accent));
             return;
@@ -1062,9 +1150,10 @@ public class MainActivity extends Activity {
     }
 
     private void pollOnce() {
-        if (io == null || io.isShutdown()) return;
+        if (io == null || io.isShutdown() || commandInFlight.get()) return;
         if (!inFlight.compareAndSet(false, true)) return;
         final List<Device> snapshot = new ArrayList<>(devices);
+        final int revision = devicesRevision;
         final String haUrl = cfg.getHaUrl().trim();
         final String haToken = cfg.getHaToken().trim();
         final boolean insecure = cfg.haInsecure();
@@ -1105,14 +1194,15 @@ public class MainActivity extends Activity {
                     if (!d.isGate()) continue;
                     String base = HaClient.normalizeBase(d.address);
                     if (base.isEmpty()) { results.put(d.id, new Status(Status.UNKNOWN, "Не настроено")); continue; }
-                    Boolean ok = gateBases.get(base);
+                    String cacheKey = base + "\n" + d.gateToken;
+                    Boolean ok = gateBases.get(cacheKey);
                     if (ok == null) {
                         Http.Response r = Http.get(base + "/status?token=" + Uri.encode(d.gateToken), null, false);
                         ok = r.ok();
-                        gateBases.put(base, ok);
+                        gateBases.put(cacheKey, ok);
                     }
                     if (ok) {
-                        results.put(d.id, new Status(Status.READY, "Готов"));
+                        results.put(d.id, new Status(Status.READY, "Мост доступен"));
                     } else {
                         gateFailed = true;
                         results.put(d.id, new Status(Status.OFFLINE, "Нет связи"));
@@ -1123,7 +1213,7 @@ public class MainActivity extends Activity {
                     if (d.isGate()) continue;
                     if (!d.isConfigured()) {
                         results.put(d.id, new Status(Status.UNKNOWN, "Не настроено"));
-                    } else if (d.pulse) {
+                    } else if (d.pulse && !Device.P_CUSTOM.equals(d.protocol)) {
                         results.put(d.id, new Status(Status.READY, "Готов"));
                     } else {
                         results.put(d.id, DirectClient.status(d, insecure));
@@ -1132,16 +1222,20 @@ public class MainActivity extends Activity {
                 final boolean fFailed = failed;
                 final boolean fGateFailed = gateFailed;
                 ui.post(() -> {
-                    for (Card c : cards.values()) {
-                        if (!c.device.isConfigured()) continue;
-                        Status s = results.get(c.id);
-                        if (s != null) {
-                            lastStatus.put(c.id, s);
-                            applyStatus(c, s);
+                    inFlight.set(false);
+                    if (revision != devicesRevision) {
+                        pollOnce();
+                        return;
+                    }
+                    lastStatus.putAll(results);
+                    for (Map.Entry<String, List<Card>> entry : cards.entrySet()) {
+                        Status s = results.get(entry.getKey());
+                        if (s == null) continue;
+                        for (Card c : entry.getValue()) {
+                            if (c.device.isConfigured()) applyStatus(c, s);
                         }
                     }
                     updateHeader(hasHa, fFailed, fGateFailed);
-                    inFlight.set(false);
                 });
             });
         } catch (Exception e) {
@@ -1196,6 +1290,7 @@ public class MainActivity extends Activity {
         stopPolling();
         ui.removeCallbacksAndMessages(null);
         if (io != null) io.shutdownNow();
+        if (commands != null && !commands.shutdownNow().isEmpty()) commandInFlight.set(false);
         super.onDestroy();
     }
 

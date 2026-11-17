@@ -26,6 +26,16 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:text="ПУЛЬТ УПРАВЛЕНИЯ"
+                    android:textColor="@color/accent"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.14" />
+
+                <TextView
                     android:id="@+id/headerTitle"
                     style="@style/Title"
                     android:layout_width="wrap_content"
@@ -285,7 +295,7 @@
                             android:layout_marginTop="6dp"
                             android:hint="vorota-2026"
                             android:importantForAutofill="no"
-                            android:inputType="text" />
+                            android:inputType="textPassword" />
 
                         <Button
                             android:id="@+id/btnGateImport"

@@ -133,12 +133,22 @@ public final class DirectClient {
     }
 
     private static Result customToggle(Device d, String base, boolean insecure) {
+        // В custom флаг pulse исторически не использовался. Без статуса и URL
+        // закрытия команда работает как импульс; иначе требуется известное состояние.
+        boolean hasClose = d.closeUrl != null && !d.closeUrl.trim().isEmpty();
+        boolean hasStatus = d.statusUrl != null && !d.statusUrl.trim().isEmpty();
+        if (!hasClose && !hasStatus) {
+            String url = urlJoin(base, d.openUrl);
+            return url.isEmpty() ? Result.err("Не указан URL команды") : hit(url, insecure);
+        }
         Status st = customStatus(d, base, insecure);
         String url;
-        if (st.kind == Status.ON && !d.closeUrl.isEmpty()) {
+        if (st.kind == Status.ON) {
             url = urlJoin(base, d.closeUrl);
-        } else {
+        } else if (st.kind == Status.OFF) {
             url = urlJoin(base, d.openUrl);
+        } else {
+            return Result.err("Не удалось определить состояние: " + st.text);
         }
         if (url.isEmpty()) return Result.err("Не указан URL команды");
         return hit(url, insecure);
@@ -156,7 +166,22 @@ public final class DirectClient {
         if (value == null) return new Status(Status.UNKNOWN, "Нет данных");
         String on = d.onValue == null || d.onValue.trim().isEmpty() ? "ON" : d.onValue.trim();
         if (value.trim().equalsIgnoreCase(on)) return new Status(Status.ON, "Включено");
-        return new Status(Status.OFF, "Выключено");
+        String opposite = oppositeValue(on);
+        if (opposite != null && value.trim().equalsIgnoreCase(opposite)) {
+            return new Status(Status.OFF, "Выключено");
+        }
+        return new Status(Status.UNKNOWN, "Нет данных");
+    }
+
+    // Отсутствует отдельная настройка OFF: неизвестные значения нельзя считать закрытием.
+    private static String oppositeValue(String on) {
+        String[][] pairs = {{"ON", "OFF"}, {"OPEN", "CLOSED"}, {"TRUE", "FALSE"},
+                {"1", "0"}, {"YES", "NO"}, {"ENABLED", "DISABLED"}};
+        for (String[] pair : pairs) {
+            if (pair[0].equalsIgnoreCase(on)) return pair[1];
+            if (pair[1].equalsIgnoreCase(on)) return pair[0];
+        }
+        return null;
     }
 
     private static String urlJoin(String base, String path) {
@@ -218,8 +243,9 @@ public final class DirectClient {
                 } else {
                     return null;
                 }
-                if (cur == null) return null;
+                if (cur == null || cur == JSONObject.NULL) return null;
             }
+            if (cur instanceof JSONObject || cur instanceof JSONArray) return null;
             return String.valueOf(cur);
         } catch (Exception e) {
             return null;

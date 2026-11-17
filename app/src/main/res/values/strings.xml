@@ -79,7 +79,7 @@
     <string name="gate_error">Не удалось: %1$s</string>
     <string name="section_favorites">Избранное</string>
     <string name="section_all">Все двери</string>
-    <string name="section_all_count">Все двери · %1$d</string>
+    <string name="section_all_count">Все устройства · %1$d</string>
     <string name="favorites_hint">Отметьте звёздочкой двери, которыми пользуетесь чаще всего — они появятся здесь.</string>
     <string name="fav_add">В избранное</string>
     <string name="fav_remove">Убрать из избранного</string>

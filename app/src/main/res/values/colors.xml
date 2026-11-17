@@ -1,37 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Спокойная серо-зелёная тема: без чистого белого и резкого контраста -->
-    <color name="bg">#E7E9ED</color>
-    <color name="bg_top">#F2F3F6</color>
-    <color name="bg_bottom">#DFE2E7</color>
-    <color name="card">#F1F2F5</color>
-    <color name="card_high">#F7F8FA</color>
-    <color name="card_stroke">#D8DCE2</color>
-    <color name="field">#E9EBEF</color>
-    <color name="field_stroke">#D5D9E0</color>
-    <color name="nav_bg">#F2F3F6</color>
-
-    <color name="accent">#3B7D6A</color>
-    <color name="accent_light">#4E9179</color>
-    <color name="accent_deep">#356F5F</color>
-    <color name="accent_dark">#275547</color>
-    <color name="accent_soft">#DDE8E2</color>
-    <color name="accent_tint">#D5E3DC</color>
-
-    <color name="violet">#5B5A9E</color>
-    <color name="violet_soft">#E8E8F2</color>
-
-    <color name="warn">#8D6C2E</color>
-    <color name="warn_soft">#EEE8DA</color>
-    <color name="danger">#A0524A</color>
-    <color name="danger_soft">#EFE1DE</color>
-    <color name="info">#4B6B96</color>
-    <color name="info_soft">#DFE5EF</color>
-
-    <color name="text_primary">#3A424C</color>
-    <color name="text_secondary">#626B77</color>
-    <color name="text_muted">#868E99</color>
-    <color name="icon_bg">#DDE8E2</color>
+    <color name="bg">#F3F5F9</color>
+    <color name="bg_top">#F3F5F9</color>
+    <color name="bg_bottom">#E9EDF6</color>
+    <color name="card">#FFFFFF</color>
+    <color name="card_high">#FFFFFF</color>
+    <color name="card_stroke">#DFE5F0</color>
+    <color name="field">#F1F4FA</color>
+    <color name="field_stroke">#DCE3EF</color>
+    <color name="nav_bg">#FFFFFF</color>
+    <color name="accent">#3459C9</color>
+    <color name="accent_light">#5576DF</color>
+    <color name="accent_deep">#294CB7</color>
+    <color name="accent_dark">#203B92</color>
+    <color name="accent_soft">#E9EEFF</color>
+    <color name="accent_tint">#DBE4FF</color>
+    <color name="violet">#6758BA</color>
+    <color name="violet_soft">#EFECFB</color>
+    <color name="warn">#8B5900</color>
+    <color name="warn_soft">#FFF2D6</color>
+    <color name="danger">#B33943</color>
+    <color name="danger_soft">#FDEBED</color>
+    <color name="info">#1D6683</color>
+    <color name="info_soft">#E4F4F8</color>
+    <color name="text_primary">#18243B</color>
+    <color name="text_secondary">#526178</color>
+    <color name="text_muted">#65738A</color>
+    <color name="icon_bg">#E9EEFF</color>
     <color name="icon_launcher">#17553F</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="white">#FFFFFF</color>

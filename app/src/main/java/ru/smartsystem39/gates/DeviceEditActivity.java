@@ -272,7 +272,9 @@ public class DeviceEditActivity extends Activity {
             case Device.P_ESPHOME:
                 return "ESPHome web_server: адрес, ID — имя переключателя из YAML (switch: … id: gate).";
             case Device.P_CUSTOM:
-                return "Свой HTTP: вызывается URL открытия, при известном статусе — URL закрытия. Статус необязателен.";
+                return "Свой HTTP: без URL статуса и закрытия отправляется команда открытия. "
+                        + "Если указан статус или закрытие, для переключения нужны URL и поле статуса. "
+                        + "Известные пары значений: ON/OFF, OPEN/CLOSED, TRUE/FALSE, 1/0, YES/NO, ENABLED/DISABLED.";
             default:
                 return "Tasmota: адрес контроллера, команда Power TOGGLE. Для каналов 1+ — Power1, Power2…";
         }
@@ -304,14 +306,14 @@ public class DeviceEditActivity extends Activity {
             device.address = address;
 
             if (Device.P_CUSTOM.equals(device.protocol)) {
-                device.openUrl = normalize(openUrlInput.getText().toString());
+                device.openUrl = commandUrl(openUrlInput.getText().toString());
                 if (device.openUrl.isEmpty()) {
                     toast(getString(R.string.error_open_url));
                     openUrlInput.requestFocus();
                     return;
                 }
-                device.closeUrl = normalize(closeUrlInput.getText().toString());
-                device.statusUrl = normalize(statusUrlInput.getText().toString());
+                device.closeUrl = commandUrl(closeUrlInput.getText().toString());
+                device.statusUrl = commandUrl(statusUrlInput.getText().toString());
                 device.statusField = statusFieldInput.getText().toString().trim();
                 String on = onValueInput.getText().toString().trim();
                 device.onValue = on.isEmpty() ? "ON" : on;
@@ -344,6 +346,11 @@ public class DeviceEditActivity extends Activity {
         cfg.upsert(device);
         toast(getString(R.string.saved));
         finish();
+    }
+
+    // Команды могут быть как абсолютными URL, так и путями относительно адреса.
+    static String commandUrl(String raw) {
+        return raw == null ? "" : raw.trim();
     }
 
     private String normalize(String raw) {
