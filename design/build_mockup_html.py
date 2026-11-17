@@ -85,11 +85,11 @@ def screen(title, subtitle, body, active_tab=0, theme="dark", pulse_err=False):
 CSS = """
 /* Палитра и компоненты взяты из панели sing-box (internal/web/static/style.css) */
 :root {
-  --bg:#10141a; --bg-side:#151b23; --card:#1a222c; --card-hover:#212b37;
-  --border:#27323f; --border-hi:#3a4859;
-  --text:#e7ecf3; --text-dim:#94a2b6;
+  --bg:#121316; --bg-side:#17181b; --card:#1b1d21; --card-hover:#232529;
+  --border:#2d2f34; --border-hi:#3f424a;
+  --text:#ecedef; --text-dim:#a2a6ad;
   --accent:#57b98c; --accent-hi:#6bc79c; --accent-fill:#1b5e3a; --accent-fill-hi:#23734a;
-  --success:#4ade80; --danger:#f87171; --warn:#fbbf24; --purple:#a78bfa; --cyan:#22d3ee;
+  --success:#4ade80; --danger:#f87171; --warn:#fbbf24; --purple:#a78bfa; --cyan:#b0b6be;
   --accent-soft:rgba(87,185,140,0.14); --accent-soft-2:rgba(87,185,140,0.22);
   --shadow-accent:0 2px 10px rgba(74,158,255,0.3);
   --radius-xs:6px; --radius-s:8px; --radius-m:10px; --radius-l:12px; --radius-xl:16px;
@@ -97,11 +97,11 @@ CSS = """
   --fs-xl:18px; --fs-xxl:21px;
 }
 [data-theme="light"] {
-  --bg:#f1f2f4; --bg-side:#e9ebef; --card:#fbfbfc; --card-hover:#f4f5f7;
-  --border:#dcdfe4; --border-hi:#c6cbd3;
+  --bg:#e9ebed; --bg-side:#e2e4e7; --card:#f4f5f6; --card-hover:#eaecee;
+  --border:#d7dadd; --border-hi:#c2c6cc;
   --text:#15181c; --text-dim:#4e5560;
   --accent:#1b5e3a; --accent-hi:#23734a; --accent-fill:#1b5e3a; --accent-fill-hi:#23734a;
-  --success:#15803d; --danger:#c0342a; --warn:#9a5909; --purple:#7154cc; --cyan:#0d6f8a;
+  --success:#15803d; --danger:#c0342a; --warn:#9a5909; --purple:#7154cc; --cyan:#5a626d;
   --accent-soft:rgba(27,94,58,0.08); --accent-soft-2:rgba(27,94,58,0.16);
   --shadow-accent:0 2px 10px rgba(43,98,217,0.22);
 }
@@ -118,7 +118,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .caption { font-size: var(--fs-s); color: #94a2b6; margin: 10px 0 0 4px; }
 
 .phone { width: min(390px, 100%); height: 780px; border-radius: 28px; overflow: hidden;
-         border: 1px solid #27323f; background: var(--bg); flex: 0 0 auto; }
+         border: 1px solid #2d2f34; background: var(--bg); flex: 0 0 auto; }
 @media (max-width: 460px) {
   body { padding: 18px 12px 40px; }
   .frames { gap: 18px; }

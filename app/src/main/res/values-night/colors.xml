@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Тёмная тема панели sing-box — она же по умолчанию -->
-    <color name="bg">#10141A</color>
-    <color name="bg_top">#10141A</color>
-    <color name="bg_bottom">#0D1116</color>
-    <color name="card">#1A222C</color>
-    <color name="card_high">#212B37</color>
-    <color name="card_stroke">#27323F</color>
-    <color name="field">#10141A</color>
-    <color name="field_stroke">#27323F</color>
-    <color name="nav_bg">#151B23</color>
+    <color name="bg">#121316</color>
+    <color name="bg_top">#121316</color>
+    <color name="bg_bottom">#0E0F11</color>
+    <color name="card">#1B1D21</color>
+    <color name="card_high">#232529</color>
+    <color name="card_stroke">#2D2F34</color>
+    <color name="field">#121316</color>
+    <color name="field_stroke">#2D2F34</color>
+    <color name="nav_bg">#17181B</color>
 
     <color name="accent">#57B98C</color>
     <color name="accent_light">#6BC79C</color>
@@ -30,10 +30,10 @@
     <color name="danger">#F87171</color>
     <color name="danger_soft">#3A2323</color>
     <color name="danger_line">#6B3A38</color>
-    <color name="info">#22D3EE</color>
-    <color name="info_soft">#14323A</color>
+    <color name="info">#B0B6BE</color>
+    <color name="info_soft">#24262B</color>
 
-    <color name="btn_neutral">#222933</color>
+    <color name="btn_neutral">#232529</color>
 
     <!-- В тёмной теме те же типы, но ярче — как делает iOS -->
     <color name="type_gate">#2F8A5B</color>
@@ -42,12 +42,12 @@
     <color name="type_relay">#BF5AF2</color>
     <color name="on_type">#FFFFFF</color>
 
-    <color name="text_primary">#E7ECF3</color>
-    <color name="text_secondary">#94A2B6</color>
-    <color name="text_muted">#7C8798</color>
-    <color name="icon_bg">#233739</color>
+    <color name="text_primary">#ECEDEF</color>
+    <color name="text_secondary">#A2A6AD</color>
+    <color name="text_muted">#8A8E95</color>
+    <color name="icon_bg">#232529</color>
     <color name="icon_tint">#E7ECF3</color>
-    <color name="icon_launcher">#2B62D9</color>
+    <color name="icon_launcher">#1B5E3A</color>
     <color name="icon_mark">#FFFFFF</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="white">#FFFFFF</color>
