@@ -858,7 +858,7 @@ public class MainActivity extends Activity {
 
     private void styleThemeButton(Button b, boolean active) {
         b.setBackgroundResource(active ? R.drawable.btn_primary : R.drawable.btn_secondary);
-        b.setTextColor(getColor(active ? R.color.white : R.color.text_primary));
+        b.setTextColor(getColor(active ? R.color.on_accent : R.color.text_primary));
     }
 
     private void rebuildSettings() {
