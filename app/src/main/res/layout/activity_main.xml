@@ -36,9 +36,14 @@
                     android:id="@+id/statusChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
+                    android:layout_marginTop="9dp"
+                    android:background="@drawable/bg_pill"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingRight="12dp"
+                    android:paddingBottom="5dp">
 
                     <View
                         android:id="@+id/statusDot"
@@ -369,7 +374,7 @@
                 android:id="@+id/navDevices"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_margin="4dp"
+                android:layout_margin="6dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="vertical">
@@ -395,7 +400,7 @@
                 android:id="@+id/navSettings"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_margin="4dp"
+                android:layout_margin="6dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="vertical">

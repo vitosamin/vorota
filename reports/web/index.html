@@ -67,9 +67,9 @@ section.tab.active{display:block}
 .kpi .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .kpi .val{font-size:24px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1.15}
 .kpi .sub{color:var(--dim);font-size:11px;margin-top:2px}
-.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;align-items:start}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;align-items:start}
-@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr} .mon-grid{height:auto} .mon-grid .feed{max-height:520px} .pres-card .presence-list{max-height:420px}}
 .tblwrap{overflow:auto;max-height:640px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 thead th{position:sticky;top:0;z-index:2;background:var(--head);color:#3d4652;text-align:left;
@@ -169,6 +169,34 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
   nav.tabs button{padding:7px 12px;font-size:12.5px}
   .grid2,.grid3{grid-template-columns:1fr}
 }
+
+/* «на объекте сейчас»: длинные ФИО и должности переносятся, а не обрезаются */
+.presence-list{max-height:640px}
+.presence-list .it{align-items:flex-start;padding:8px 12px}
+.presence-list .person{align-items:flex-start}
+.presence-list .it .nm{white-space:normal;overflow:hidden;text-overflow:clip;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.presence-list .it .pos{white-space:normal;overflow:hidden;text-overflow:clip;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.presence-list .it > .tag{flex:0 0 auto;padding-top:1px}
+
+/* мониторинг: обе колонки одной высоты, внутри — прокрутка */
+.mon-grid{align-items:stretch;height:clamp(560px,calc(100vh - 270px),900px)}
+.mon-grid>.card{margin-bottom:0;display:flex;flex-direction:column;min-height:0}
+.mon-grid .feed{flex:1;min-height:0;max-height:none;overflow:auto}
+.right-col{display:flex;flex-direction:column;gap:12px;min-height:0}
+.right-col>.card{margin-bottom:0}
+.chart-card{flex:0 0 auto}
+.pres-card{flex:1;display:flex;flex-direction:column;min-height:0}
+.pres-card .presence-list{flex:1;min-height:0;max-height:none;overflow:auto}
+.pres-card .hd,.chart-card .hd{flex:0 0 auto}
+
+@media(max-width:1080px){
+  .mon-grid{height:auto}
+  .mon-grid .feed{max-height:520px}
+  .pres-card .presence-list{max-height:420px}
+}
+.rdesc{color:var(--muted);font-size:12.5px;line-height:1.4;min-height:52px}
 </style>
 </head>
 <body>
@@ -193,6 +221,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     <button data-tab="mon" class="active">Мониторинг</button>
     <button data-tab="ana">Аналитика</button>
     <button data-tab="rep">Посещаемость</button>
+    <button data-tab="rpt">Отчёты</button>
     <button data-tab="exp">Выгрузка в 1С</button>
   </nav>
 
@@ -214,7 +243,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
       <div class="kpi r"><div class="lbl">Тревог и взломов</div><div class="val" id="kAlerts">—</div><div class="sub">события устройств</div></div>
     </div>
 
-    <div class="grid2">
+    <div class="grid2 mon-grid">
       <div class="card">
         <div class="hd">
           <h3>Лента проходов</h3>
@@ -223,13 +252,13 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
         </div>
         <div class="feed" id="feed"><div class="empty">Загрузка…</div></div>
       </div>
-      <div>
-        <div class="card" style="margin-bottom:18px">
+      <div class="right-col">
+        <div class="card chart-card">
           <div class="hd"><h3>Проходы по часам</h3><span class="hint" id="chartDay"></span></div>
           <div class="chart-box" id="chHour"></div>
           <div class="legend"><span><i style="background:#2f6fd0"></i>вход</span><span><i style="background:#d9534f"></i>выход</span></div>
         </div>
-        <div class="card">
+        <div class="card pres-card">
           <div class="hd"><h3>На объекте сейчас</h3><span class="hint" id="presCount">—</span></div>
           <div class="presence-list" id="presence"><div class="empty">Загрузка…</div></div>
         </div>
@@ -284,7 +313,10 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
         <div class="chart-box" id="chHeat"></div>
       </div>
 
-      <div class="card" style="grid-column:span 2">
+    </div>
+
+    <div class="grid2">
+      <div class="card">
         <div class="hd"><h3>Подразделения</h3><span class="hint">человеко-дней за период</span></div>
         <div class="chart-box" id="chGroups"></div>
       </div>
@@ -369,6 +401,26 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
       <div class="hd"><h3 id="repTitle">Отчёт посещаемости</h3><span class="hint" id="repHint"></span></div>
       <div class="tblwrap" id="repWrap"><div class="empty">Нажмите «Показать отчёт»</div></div>
     </div>
+  </section>
+
+
+  <!-- ================= ОТЧЁТЫ ================= -->
+  <section class="tab" id="tab-rpt">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">С даты</label><input type="date" id="pFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="pTo"></div>
+          <div><label class="f">Подразделение</label><select id="pGroup"><option value="">все</option></select></div>
+          <div><label class="f">Контрольная точка</label><select id="pPoint"><option value="">все точки</option></select></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="pGo">Обновить счётчики</button>
+          <span class="muted" id="pNote" style="font-size:12px;align-self:center">период не выбран</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid3" id="rptGrid"></div>
   </section>
 
   <!-- ================= ВЫГРУЗКА ================= -->
@@ -476,6 +528,11 @@ const C = {accent:'#2f6fd0', accent2:'#2559a8', green:'#2e9e5b', red:'#d9534f', 
            cyan:'#2b8fa8', line:'#c9d2dc', grid:'#e3e8ee', muted:'#8b95a1'};
 const WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
+function wOf(sel, def){
+  const el=$(sel); if(!el) return def;
+  const w=el.clientWidth||0;
+  return Math.max(320, (w? w-24 : def));
+}
 function svgWrap(w,h,inner){
   return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+inner+'</svg>';
 }
@@ -491,7 +548,7 @@ function chartBars(rows, o){
   let g='';
   for(let i=0;i<=4;i++){ const y=pt+H*i/4, v=max*(1-i/4);
     g+='<line x1="'+pl+'" y1="'+y+'" x2="'+(w-pr)+'" y2="'+y+'" stroke="'+C.grid+'"/>';
-    g+='<text x="'+(pl-7)+'" y="'+(y+3)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+Math.round(v)+'</text>'; }
+    g+='<text x="'+(pl-7)+'" y="'+(y+4)+'" fill="'+C.muted+'" font-size="11" text-anchor="end">'+Math.round(v)+'</text>'; }
   const bw=W/rows.length, bar=Math.max(3, Math.min(o.maxBar||26, bw*0.66));
   const every = Math.ceil(rows.length/(o.ticks||14));
   rows.forEach((r,i)=>{
@@ -503,9 +560,9 @@ function chartBars(rows, o){
     }else{
       const bh=Math.max(r.value?2:0,(r.value/max)*H);
       g+='<rect x="'+x+'" y="'+(pt+H-bh)+'" width="'+bar+'" height="'+bh+'" fill="'+(r.color||o.color||C.accent)+'" rx="3"/>';
-      if(o.showValue && r.value) g+='<text x="'+(x+bar/2)+'" y="'+(pt+H-bh-4)+'" fill="'+C.muted+'" font-size="9.5" text-anchor="middle">'+r.value+'</text>';
+      if(o.showValue && r.value) g+='<text x="'+(x+bar/2)+'" y="'+(pt+H-bh-5)+'" fill="'+C.muted+'" font-size="11" text-anchor="middle">'+r.value+'</text>';
     }
-    if(i%every===0) g+='<text x="'+(pl+i*bw+bw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="10" text-anchor="middle">'+esc(r.label)+'</text>';
+    if(i%every===0) g+='<text x="'+(pl+i*bw+bw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="11" text-anchor="middle">'+esc(r.label)+'</text>';
   });
   return svgWrap(w,h,g);
 }
@@ -520,7 +577,7 @@ function chartLine(rows, o){
   let g='';
   for(let i=0;i<=4;i++){ const yy=pt+H*i/4, v=max*(1-i/4);
     g+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(w-pr)+'" y2="'+yy+'" stroke="'+C.grid+'"/>';
-    g+='<text x="'+(pl-7)+'" y="'+(yy+3)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+Math.round(v)+'</text>'; }
+    g+='<text x="'+(pl-7)+'" y="'+(yy+4)+'" fill="'+C.muted+'" font-size="11" text-anchor="end">'+Math.round(v)+'</text>'; }
   const path = key => rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r[key]||0)).join(' ');
   if(o.area!==false){
     const ar = rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r.value||0)).join(' ')
@@ -535,7 +592,7 @@ function chartLine(rows, o){
   const every=Math.ceil(rows.length/12);
   rows.forEach((r,i)=>{
     g+='<circle cx="'+x(i)+'" cy="'+y(r.value||0)+'" r="3" fill="#ffffff" stroke="'+C.accent+'" stroke-width="2"/>';
-    if(i%every===0) g+='<text x="'+x(i)+'" y="'+(h-10)+'" fill="'+C.muted+'" font-size="10" text-anchor="middle">'+esc(r.label)+'</text>';
+    if(i%every===0) g+='<text x="'+x(i)+'" y="'+(h-10)+'" fill="'+C.muted+'" font-size="11" text-anchor="middle">'+esc(r.label)+'</text>';
   });
   return svgWrap(w,h,g);
 }
@@ -584,12 +641,12 @@ function chartHBars(rows, o){
 
 /* тепловая карта 7×24 */
 function chartHeat(matrix, o){
-  o=o||{}; const w=1200, h=210, pl=36, pt=8, pb=26, pr=8;
+  o=o||{}; const w=o.w||1200, h=o.h||210, pl=38, pt=8, pb=26, pr=8;
   const cw=(w-pl-pr)/24, chh=(h-pt-pb)/7;
   const max=Math.max(1,...matrix.flat());
   let g='';
   for(let d=0;d<7;d++){
-    g+='<text x="'+(pl-8)+'" y="'+(pt+d*chh+chh/2+4)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+WD[d]+'</text>';
+    g+='<text x="'+(pl-8)+'" y="'+(pt+d*chh+chh/2+5)+'" fill="'+C.muted+'" font-size="11" text-anchor="end">'+WD[d]+'</text>';
     for(let hh=0;hh<24;hh++){
       const v=matrix[d][hh], t=v/max;
       const col = v? 'rgba(47,111,208,'+(0.10+0.90*t).toFixed(2)+')' : 'rgba(201,210,220,.6)';
@@ -597,7 +654,7 @@ function chartHeat(matrix, o){
     }
   }
   for(let hh=0;hh<24;hh+=2)
-    g+='<text x="'+(pl+hh*cw+cw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="9.5" text-anchor="middle">'+hh+'</text>';
+    g+='<text x="'+(pl+hh*cw+cw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="10.5" text-anchor="middle">'+hh+'</text>';
   return svgWrap(w,h,g);
 }
 
@@ -614,6 +671,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     state.tab=b.dataset.tab;
     if(state.tab==='mon') loadMon();
     if(state.tab==='ana') loadAnalytics();
+    if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
   };
 });
 
@@ -646,7 +704,7 @@ async function loadMon(){
     $('#kOnSiteSub').textContent = isToday? 'последний проход — вход' : 'были на объекте в конце дня';
     const hours=[];
     for(let h=0;h<24;h++){const kk=String(h).padStart(2,'0');const v=(k.by_hour||{})[kk]||0;hours.push({label:h,a:v,b:0});}
-    $('#chHour').innerHTML=chartBars(hours,{h:210,pb:26});
+    $('#chHour').innerHTML=chartBars(hours,{h:165,pb:24,w:wOf('#chHour',720)});
     $('#chartDay').textContent = isToday? 'сегодня' : state.day;
     renderPresence(p.people||[]);
   }catch(e){ toast('Мониторинг: '+e.message,true); }
@@ -658,7 +716,7 @@ function renderPresence(people){
     '<div class="it" data-uid="'+p.user_ptr+'"><div class="avatar">'+esc(initials(p.fio))+'</div>'
     +'<div style="flex:1;min-width:0"><div class="person"><span class="nm">'+esc(p.fio)+'</span></div>'
     +'<div class="pos">'+esc(p.group||'')+(p.position?' · '+esc(p.position):'')+'</div></div>'
-    +'<span class="tag mono">'+esc(p.since)+'</span></div>').join('');
+    +'<span class="tag mono" title="время входа">'+esc(p.since)+'</span></div>').join('');
 }
 
 /* ---- лента: живой поток + запасной опрос ---- */
@@ -729,22 +787,123 @@ async function loadAnalytics(){
     $('#aPeople').innerHTML=NUM(d.totals.people)+pct(d.totals.people,pt.people);
     $('#aHours').innerHTML=fmtHours(d.totals.hours)+pct(d.totals.hours,pt.hours);
     $('#aLate').innerHTML=NUM(d.late.late)+pct(d.late.late,pt.late);
-    $('#chDays').innerHTML=chartLine(d.by_day.map(x=>({label:x.day.slice(5),value:x.passes,second:x.people})),{h:250});
-    $('#chHour2').innerHTML=chartBars(d.by_hour.map(x=>({label:x.hour,a:x.in,b:x.out})),{h:230,pb:28});
-    $('#chHeat').innerHTML=chartHeat(d.heatmap);
+    $('#chDays').innerHTML=chartLine(d.by_day.map(x=>({label:x.day.slice(5),value:x.passes,second:x.people})),{h:250,w:wOf('#chDays',1100)});
+    $('#chHour2').innerHTML=chartBars(d.by_hour.map(x=>({label:x.hour,a:x.in,b:x.out})),{h:230,pb:28,w:wOf('#chHour2',420)});
+    $('#chHeat').innerHTML=chartHeat(d.heatmap,{w:wOf('#chHeat',1100),h:230});
     const total=d.late.on_time+d.late.late;
     $('#chLate').innerHTML='<div style="max-width:220px;margin:2px auto">'+chartDonut(
       [{value:d.late.on_time,color:C.green},{value:d.late.late,color:C.amber}],
       {center:(total? Math.round(d.late.late/total*100):0)+'%', label:'с опозданием'})+'</div>';
     $('#lateHint').textContent='вовремя '+d.late.on_time+' · с опозданием '+d.late.late;
-    $('#chHours').innerHTML=chartBars(d.hours_dist.map(x=>({label:x.label,value:x.count,color:C.cyan})),{h:230,pb:34,showValue:true,maxBar:34});
-    $('#chGroups').innerHTML=chartHBars(d.groups.map(g=>({label:g.group,value:g.days})),{w:900});
+    $('#chHours').innerHTML=chartBars(d.hours_dist.map(x=>({label:x.label,value:x.count,color:C.cyan})),{h:230,pb:34,showValue:true,maxBar:40,w:wOf('#chHours',380)});
+    $('#chGroups').innerHTML=chartHBars(d.groups.map(g=>({label:g.group,value:g.days})),{w:wOf('#chGroups',860),rh:31});
     $('#chTopLate').innerHTML = d.top_late.length
-      ? chartHBars(d.top_late.map(t=>({label:t.fio,value:t.late_total,color:C.amber})),{w:520})
+      ? chartHBars(d.top_late.map(t=>({label:t.fio,value:t.late_total,color:C.amber})),{w:wOf('#chTopLate',560),rh:31})
       : '<div class="empty">Опозданий за период нет</div>';
   }catch(e){ toast('Аналитика: '+e.message,true); }
 }
 $('#aGo').onclick=loadAnalytics;
+
+/* ---------- вкладка «Отчёты» ---------- */
+const REPORTS=[
+  {key:'urv', title:'Учёт рабочего времени (УРВ)', view:'detail', unit:'зап.',
+   desc:'Приход, уход и часы по каждому сотруднику за каждый день. Аналог «УРВ» из Gate.'},
+  {key:'summary', title:'Свод по сотрудникам', view:'summary', unit:'чел.',
+   desc:'Дни, часы, среднее в день, проходы и опоздания за период.'},
+  {key:'late', title:'Опоздания', view:'late', unit:'чел.',
+   desc:'Кто и на сколько опаздывал: дни, сумма минут, среднее, худший день.'},
+  {key:'absent', title:'Не приходили', view:'absent', unit:'чел.',
+   desc:'Сотрудники без единого прохода за выбранный период.'},
+  {key:'users', title:'Отчёт о пользователях', custom:'users', unit:'чел.',
+   desc:'Справочник: табельный, ФИО, подразделение, должность, последний проход. Аналог «Отчёт о пользователях».'},
+  {key:'events', title:'Отчёт о событиях', custom:'events', unit:'соб.',
+   desc:'Все события СКУД: проходы, двери, взломы, тревоги, связь. Аналог «Все события за день».'},
+  {key:'1c', title:'Выгрузка для 1С', custom:'1c', unit:'зап.',
+   desc:'CSV в Windows-1251, разделитель «;», запятая в дробях. Аналог «УРВ для импорта в 1С».'},
+];
+let rptBuilt=false;
+
+function rptQS(){
+  const p=new URLSearchParams();
+  p.set('from',$('#pFrom').value||shiftISO(6));
+  p.set('to',$('#pTo').value||todayISO());
+  if($('#pGroup').value)p.set('group',$('#pGroup').value);
+  if($('#pPoint').value)p.set('point',$('#pPoint').value);
+  return p;
+}
+function rptUrl(r, kind){
+  const p=rptQS();
+  if(r.custom==='users'){
+    const u=new URLSearchParams();
+    if($('#pGroup').value)u.set('group',$('#pGroup').value);
+    if(kind==='print') return '/print?view=users&'+u.toString();
+    return kind==='xls' ? '/export/users.xls?'+u : '/export/users.csv?'+u;
+  }
+  if(r.custom==='events'){
+    const u=new URLSearchParams(p);
+    if(kind==='print'){ u.set('view','events'); return '/print?'+u.toString(); }
+    u.set('enc','cp1251'); u.set('sep','semicolon');
+    return '/export/events.csv?'+u;
+  }
+  if(r.custom==='1c'){
+    const u=new URLSearchParams(p);
+    u.set('view','detail'); u.set('enc','cp1251'); u.set('sep','semicolon');
+    u.set('dec',','); u.set('header','1');
+    return '/export/1c.csv?'+u;
+  }
+  p.set('view',r.view);
+  if(kind==='xls') return '/export/report.xls?'+p;
+  if(kind==='print') return '/print?'+p;
+  const u=new URLSearchParams(p);
+  u.set('enc','cp1251'); u.set('sep','semicolon'); u.set('dec',',');
+  return '/export/1c.csv?'+u;
+}
+function renderReports(){
+  $('#rptGrid').innerHTML=REPORTS.map(r=>
+    '<div class="card">'
+    +'<div class="hd"><h3>'+esc(r.title)+'</h3><span class="hint" id="cnt-'+r.key+'">—</span></div>'
+    +'<div class="bd">'
+    +'<div class="rdesc">'+esc(r.desc)+'</div>'
+    +'<div class="row-actions" style="margin-top:10px">'
+    +'<button class="primary" data-r="'+r.key+'" data-k="csv">⤓ CSV</button>'
+    +(r.custom==='events'?'':'<button data-r="'+r.key+'" data-k="xls">⤓ Excel</button>')
+    +'<button data-r="'+r.key+'" data-k="print">🖨 Печать</button>'
+    +'</div></div></div>').join('');
+  document.querySelectorAll('#rptGrid button[data-r]').forEach(b=>{
+    b.onclick=()=>{
+      const r=REPORTS.find(x=>x.key===b.dataset.r);
+      if(!r) return;
+      const url=rptUrl(r,b.dataset.k);
+      if(b.dataset.k==='print') window.open(url,'_blank');
+      else download(url,'otchet_'+r.key+(b.dataset.k==='xls'?'.xls':'.csv'));
+    };
+  });
+}
+async function loadReportCounts(){
+  const p=rptQS();
+  $('#pNote').textContent='считаю…';
+  try{
+    const d=await api('/api/reports/preview?'+p.toString());
+    const set=(k,v,u)=>{const el=$('#cnt-'+k); if(el) el.textContent=NUM(v)+' '+u;};
+    set('urv',d.urv,'зап.'); set('summary',d.summary,'чел.'); set('late',d.late,'чел.');
+    set('absent',d.absent,'чел.'); set('users',d.users,'чел.'); set('events',d.events,'соб.');
+    set('1c',d.urv,'зап.');
+    $('#pNote').textContent='период: '+d.from+' — '+d.to;
+  }catch(e){ $('#pNote').textContent='ошибка: '+e.message; }
+}
+$('#pGo').onclick=loadReportCounts;
+
+
+let _rsz=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(_rsz);
+  _rsz=setTimeout(()=>{
+    if(state.tab==='ana') loadAnalytics();
+    else if(state.tab==='mon') loadMon();
+    const mb=$('#mBody');
+    if($('#modal').classList.contains('open') && mb.dataset.uid) openPerson(mb.dataset.uid, mb.dataset.from, mb.dataset.to);
+  },350);
+});
 
 /* ---------- журнал событий СКУД: грузится только при раскрытии ---------- */
 const EV_TYPES={1:'Пользователи',2:'Устройства',3:'Связь',4:'Запуск/останов',5:'Операторы',6:'Удаление'};
@@ -812,8 +971,8 @@ async function loadEventSummary(){
       '<option value="'+esc(m.message)+'">'+esc(m.message)+' ('+NUM(m.count)+')</option>').join('');
     msg.value=curMsg;
     if(msg.value!==curMsg) msg.value='';
-    $('#evDayChart').innerHTML=chartBars(s.by_day.map(x=>({label:x.day.slice(5),value:x.count})),{h:190,maxBar:34});
-    $('#evTypeChart').innerHTML=chartHBars(s.types.map(t=>({label:t.title,value:t.count})),{w:520,rh:24});
+    $('#evDayChart').innerHTML=chartBars(s.by_day.map(x=>({label:x.day.slice(5),value:x.count})),{h:190,maxBar:34,w:wOf('#evDayChart',600)});
+    $('#evTypeChart').innerHTML=chartHBars(s.types.map(t=>({label:t.title,value:t.count})),{w:wOf('#evTypeChart',420),rh:28});
   }catch(e){ /* тихо */ }
 }
 function renderEventRows(items, reset){
@@ -968,6 +1127,7 @@ async function openPerson(uid, from, to){
   const f=from||$('#rFrom').value||shiftISO(29);
   const t=to||$('#rTo').value||todayISO();
   $('#modal').classList.add('open');
+  $('#mBody').dataset.uid=uid; $('#mBody').dataset.from=f; $('#mBody').dataset.to=t;
   $('#mBody').innerHTML='<div class="empty"><span class="spin"></span> Загрузка…</div>';
   try{
     const d=await api('/api/person?user_ptr='+encodeURIComponent(uid)+'&from='+f+'&to='+t);
@@ -986,7 +1146,7 @@ function renderPerson(d){
     +'<span class="chip">дней с опозданием: <b>'+NUM(sm.late_days||0)+'</b></span>'
     +'<span class="chip">минут опозданий: <b>'+NUM(sm.late_total||0)+'</b></span></div>';
   const chart = rows.length
-    ? '<div class="chart-box" style="padding:4px 0 8px">'+chartBars(rows.map(r=>({label:r.day.slice(5),value:r.hours||0})),{h:170,maxBar:30})+'</div>'
+    ? '<div class="chart-box" style="padding:4px 0 8px">'+chartBars(rows.map(r=>({label:r.day.slice(5),value:r.hours||0})),{h:170,maxBar:30,w:wOf('#mBody',800)})+'</div>'
     : '';
   const table = rows.length
     ? '<div class="tblwrap" style="max-height:300px"><table><thead><tr><th>Дата</th><th class="num">Приход</th><th class="num">Уход</th><th class="num">Часов</th><th class="num">Проходов</th><th class="num">Опоздание</th></tr></thead><tbody>'
@@ -1044,14 +1204,14 @@ async function loadRefs(){
     const [g,pts]=await Promise.all([api('/api/groups'),api('/api/points')]);
     const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
     const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
-    ['#rGroup','#eGroup','#aGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
-    ['#rPoint','#ePoint','#aPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
+    ['#rGroup','#eGroup','#aGroup','#pGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+    ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
   }catch(e){}
 }
 function initDates(){
   const t=todayISO(), week=shiftISO(6);
-  ['#rFrom','#eFrom','#aFrom'].forEach(s=>$(s).value=week);
-  ['#rTo','#eTo','#aTo'].forEach(s=>$(s).value=t);
+  ['#rFrom','#eFrom','#aFrom','#pFrom'].forEach(s=>$(s).value=week);
+  ['#rTo','#eTo','#aTo','#pTo'].forEach(s=>$(s).value=t);
   $('#mDay').value=t;
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};

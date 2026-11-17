@@ -94,6 +94,7 @@ public class MainActivity extends Activity {
         LinearLayout root;
         TextView name;
         TextView status;
+        LinearLayout pill;
         View dot;
         ImageButton action;
         ImageView icon;
@@ -215,6 +216,8 @@ public class MainActivity extends Activity {
         navDevicesText.setTextColor(main ? accent : secondary);
         navSettingsIcon.setColorFilter(main ? secondary : accent);
         navSettingsText.setTextColor(main ? secondary : accent);
+        navDevices.setBackgroundResource(main ? R.drawable.bg_nav_pill : 0);
+        navSettings.setBackgroundResource(main ? 0 : R.drawable.bg_nav_pill);
 
         if (!main) {
             rebuildSettings();
@@ -358,13 +361,13 @@ public class MainActivity extends Activity {
         FrameLayout iconBox = new FrameLayout(this);
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(46), dp(46));
         iconBox.setLayoutParams(ilp);
-        iconBox.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(16)));
+        iconBox.setBackgroundResource(R.drawable.bg_icon_circle);
 
         ImageView icon = new ImageView(this);
         FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER);
         icon.setLayoutParams(flp);
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.accent));
+        icon.setColorFilter(getColor(R.color.bg));
         c.icon = icon;
         iconBox.addView(icon);
         card.addView(iconBox);
@@ -391,10 +394,13 @@ public class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(9), dp(4), dp(10), dp(4));
+        row.setBackground(Ui.fill(getColor(R.color.field), dp(999)));
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rlp.topMargin = dp(5);
+        rlp.topMargin = dp(6);
         row.setLayoutParams(rlp);
+        c.pill = row;
 
         View dot = new View(this);
         dot.setLayoutParams(new LinearLayout.LayoutParams(dp(7), dp(7)));
@@ -499,6 +505,16 @@ public class MainActivity extends Activity {
         }
         c.status.setTextColor(color);
         c.dot.setBackgroundResource(dot);
+        int tint;
+        switch (s.kind) {
+            case Status.OPEN:
+            case Status.ON: tint = R.color.accent_soft; break;
+            case Status.MOVING: tint = R.color.warn_soft; break;
+            case Status.READY: tint = R.color.info_soft; break;
+            case Status.OFFLINE: tint = R.color.danger_soft; break;
+            default: tint = R.color.field; break;
+        }
+        if (c.pill != null) c.pill.setBackground(Ui.fill(getColor(tint), dp(999)));
         if (c.action == null) return;
         if (s.isMoving()) {
             c.action.setImageResource(R.drawable.ic_stop);
@@ -514,16 +530,19 @@ public class MainActivity extends Activity {
 
     private Button dirButton(Device d, String dir, String label) {
         Button b = new Button(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(72), dp(38));
-        lp.bottomMargin = dp(4);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(78), dp(38));
+        lp.bottomMargin = dp(6);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
         b.setTextSize(12);
-        b.setTextColor(getColor(R.color.bg));
+        b.setTextColor(getColor(R.color.white));
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        b.setBackgroundResource(R.drawable.btn_primary);
-        b.setPadding(0, 0, 0, 0);
+        b.setBackgroundResource("out".equals(dir) ? R.drawable.btn_out : R.drawable.btn_in);
+        b.setCompoundDrawablesWithIntrinsicBounds(
+                "out".equals(dir) ? R.drawable.ic_arrow_out : R.drawable.ic_arrow_in, 0, 0, 0);
+        b.setCompoundDrawablePadding(dp(4));
+        b.setPadding(dp(8), 0, dp(8), 0);
         b.setOnClickListener(v -> onTapDir(d, dir));
         return b;
     }
@@ -808,7 +827,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(32), dp(32));
         icon.setLayoutParams(ilp);
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.accent));
+        icon.setColorFilter(getColor(R.color.bg));
         row.addView(icon);
 
         LinearLayout col = new LinearLayout(this);
@@ -884,17 +903,21 @@ public class MainActivity extends Activity {
         box.setLayoutParams(new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        FrameLayout circle = new FrameLayout(this);
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(dp(96), dp(96));
+        circle.setLayoutParams(clp);
+        circle.setBackground(Ui.fill(getColor(R.color.accent_soft), dp(999)));
         ImageView icon = new ImageView(this);
-        icon.setLayoutParams(new LinearLayout.LayoutParams(dp(64), dp(64)));
+        icon.setLayoutParams(new FrameLayout.LayoutParams(dp(44), dp(44), Gravity.CENTER));
         icon.setImageResource(R.drawable.ic_gate);
-        icon.setColorFilter(getColor(R.color.text_muted));
-        icon.setAlpha(0.7f);
-        box.addView(icon);
+        icon.setColorFilter(getColor(R.color.accent));
+        circle.addView(icon);
+        box.addView(circle);
 
         TextView title = new TextView(this);
         title.setText(R.string.empty_title);
         title.setTextColor(getColor(R.color.text_primary));
-        title.setTextSize(17);
+        title.setTextSize(18);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);

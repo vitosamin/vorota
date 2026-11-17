@@ -158,6 +158,18 @@ COLS_SUM = [
     ("late_total", "ОпозданиеМинВсего"),
 ]
 
+COLS_USERS = [
+    ("number", "ТабельныйНомер"), ("fio", "ФИО"), ("group", "Подразделение"),
+    ("position", "Должность"), ("status", "Статус"),
+    ("last_day", "ПоследнийПроходДата"), ("last_used", "ПоследнийПроходВремя"),
+    ("last_unit", "Точка"),
+]
+
+COLS_EVENTS = [
+    ("day", "Дата"), ("time", "Время"), ("type_title", "Тип"), ("unit", "Точка"),
+    ("message", "Событие"), ("name", "Сотрудник"), ("alarm_flag", "Тревога"),
+]
+
 COLS_LATE = [
     ("number", "ТабельныйНомер"),
     ("fio", "ФИО"),
@@ -344,6 +356,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_late(q)
             if path == "/api/person":
                 return self.api_person(q)
+            if path == "/api/users":
+                return self.api_users(q)
+            if path == "/api/reports/preview":
+                return self.api_reports_preview(q)
+            if path == "/export/users.csv":
+                return self.export_users(q, "csv")
+            if path == "/export/users.xls":
+                return self.export_users(q, "xls")
+            if path == "/export/events.csv":
+                return self.export_events(q)
             if path == "/api/sync":
                 return self.send_json(do_sync(days=q.get("days")))
             if path == "/export/1c.csv":
@@ -486,6 +508,61 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "not found"}, code=404)
         return self.send_json(data)
 
+    def api_users(self, q):
+        con = gate.connect()
+        items = gate.users_report(con, group=q.get("group"), search=q.get("search"),
+                                  include_deleted=q.get("deleted") == "1")
+        con.close()
+        return self.send_json({"count": len(items), "items": items})
+
+    def api_reports_preview(self, q):
+        frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
+        to = q.get("to") or dt.date.today().isoformat()
+        con = gate.connect()
+        rows = gate.attendance(con, frm, to, group=q.get("group"), point=q.get("point"))
+        summary = gate.attendance_summary(rows)
+        late = sum(1 for a in summary if a["late_total"])
+        absent = len(gate.absent(con, frm, to, group=q.get("group")))
+        users = len(gate.users_report(con, group=q.get("group")))
+        events = con.execute("SELECT COUNT(*) c FROM events WHERE day BETWEEN ? AND ?",
+                             (frm, to)).fetchone()["c"]
+        con.close()
+        return self.send_json({"from": frm, "to": to, "urv": len(rows), "summary": len(summary),
+                               "late": late, "absent": absent, "users": users, "events": events})
+
+    def export_users(self, q, fmt):
+        con = gate.connect()
+        rows = gate.users_report(con, group=q.get("group"), search=q.get("search"),
+                                 include_deleted=q.get("deleted") == "1")
+        con.close()
+        cols = COLS_USERS
+        if fmt == "xls":
+            data = rows_to_xls(rows, cols, "Отчёт о пользователях СКУД Gate")
+            return self.send_bytes(data, "application/vnd.ms-excel; charset=utf-8",
+                                   filename="Пользователи_СКУД.xls", ascii_name="users_skud.xls")
+        data = rows_to_delimited(rows, cols, sep=";", enc="cp1251", dec=",")
+        return self.send_bytes(data, "text/csv; charset=cp1251",
+                               filename="Пользователи_СКУД.csv", ascii_name="users_skud.csv")
+
+    def export_events(self, q):
+        frm = q.get("from") or dt.date.today().isoformat()
+        to = q.get("to") or frm
+        enc = q.get("enc", "cp1251")
+        sep = {"tab": "\t", "comma": ",", "semicolon": ";"}.get(q.get("sep", "semicolon"), ";")
+        con = gate.connect()
+        data, n = gate.events_csv(con, frm, to,
+                                  etype=q.get("type") or None,
+                                  search=(q.get("search") or "").strip() or None,
+                                  message=(q.get("message") or "").strip() or None,
+                                  alarms_only=q.get("alarms") == "1",
+                                  sep=sep, enc=enc)
+        con.close()
+        if n == 0:
+            data = ("Событий за период %s — %s нет\r\n" % (frm, to)).encode(enc, "replace")
+        return self.send_bytes(data, "text/csv; charset=%s" % enc,
+                               filename="События_СКУД_%s_%s.csv" % (frm, to),
+                               ascii_name="events_%s_%s.csv" % (frm, to))
+
     def api_events_summary(self, q):
         frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
         to = q.get("to") or dt.date.today().isoformat()
@@ -608,10 +685,68 @@ class Handler(BaseHTTPRequestHandler):
                                ascii_name="poseshchaemost_%s_%s.xls" % (frm, to))
 
     def export_print(self, q):
-        rows, cols, frm, to = self._export_rows(q)
-        title = "Отчёт посещаемости СКУД Gate"
-        period = frm if frm == to else "%s — %s" % (frm, to)
-        th = "".join("<th>%s</th>" % t for _, t in cols)
+        view = q.get("view") or "detail"
+        frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
+        to = q.get("to") or dt.date.today().isoformat()
+        con = gate.connect()
+
+        if view == "users":
+            rows = gate.users_report(con, group=q.get("group"), search=q.get("search"))
+            cols, title = COLS_USERS, "Отчёт о пользователях"
+            subtitle = "Справочник сотрудников и гостевых карт СКУД"
+            stats = [("Сотрудников", len(rows)),
+                     ("Работает", sum(1 for r in rows if r["status"] == "Работает")),
+                     ("Гости / удалены", sum(1 for r in rows if r["status"] != "Работает"))]
+            orient = "portrait"
+        elif view == "events":
+            items = gate.events_list(con, frm, to, etype=q.get("type") or None,
+                                     search=(q.get("search") or "").strip() or None,
+                                     message=(q.get("message") or "").strip() or None,
+                                     alarms_only=q.get("alarms") == "1", limit=2000)
+            rows = [dict(it, alarm_flag=("да" if it["alarm"] else "")) for it in items["items"]]
+            cols, title = COLS_EVENTS, "Отчёт о событиях СКУД"
+            subtitle = "Все события: проходы, двери, тревоги, связь, действия операторов"
+            stats = [("Событий", items["total"]),
+                     ("Тревог", sum(1 for r in rows if r["alarm_flag"])),
+                     ("Показано", len(rows))]
+            orient = "landscape"
+        else:
+            rows, cols, frm, to = self._export_rows(q)
+            if view == "summary":
+                title = "Свод посещаемости по сотрудникам"
+                subtitle = "Дни, часы и опоздания за период"
+                stats = [("Сотрудников", len(rows)),
+                         ("Человеко-дней", sum(r["days"] for r in rows)),
+                         ("Часов всего", round(sum(r["hours"] or 0 for r in rows), 2)),
+                         ("Дней с опозданием", sum(r["late_days"] for r in rows))]
+                orient = "portrait"
+            elif view == "late":
+                title = "Опоздания"
+                subtitle = "Приход позже начала смены"
+                stats = [("Сотрудников", len(rows)),
+                         ("Дней с опозданием", sum(r["late_days"] for r in rows)),
+                         ("Минут всего", sum(r["late_total"] for r in rows)),
+                         ("Максимум за раз", max([r["max_late"] for r in rows] or [0]))]
+                orient = "portrait"
+            elif view == "absent":
+                title = "Сотрудники без проходов"
+                subtitle = "Не проходили через СКУД за выбранный период"
+                stats = [("Сотрудников", len(rows)), ("Дней в периоде", rows[0]["days"] if rows else 0)]
+                orient = "portrait"
+            else:
+                title = "Учёт рабочего времени"
+                subtitle = "Приход, уход и часы по каждому сотруднику"
+                stats = [("Записей", len(rows)),
+                         ("Сотрудников", len({r["user_ptr"] for r in rows})),
+                         ("Часов всего", round(sum(r["hours"] or 0 for r in rows), 2)),
+                         ("Дней с опозданием", sum(1 for r in rows if r["late"]))]
+                orient = "landscape"
+        con.close()
+
+        def esc(v):
+            return (str(v if v is not None else "")
+                    .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+        head = "".join("<th>%s</th>" % esc(t) for _, t in cols)
         trs = []
         for r in rows:
             tds = []
@@ -619,12 +754,22 @@ class Handler(BaseHTTPRequestHandler):
                 v = r.get(key, "")
                 if key in ("hours", "avg_hours") and isinstance(v, float):
                     v = ("%.2f" % v).replace(".", ",")
-                cls = ' class="num"' if key in ("enter", "exit", "hours", "passes", "late",
-                                                "early", "day", "days", "avg_hours") else ""
-                tds.append("<td%s>%s</td>" % (cls, v))
+                cls = ' class="num"' if key in ("enter", "exit", "hours", "passes", "late", "early",
+                                                "day", "days", "avg_hours", "late_days", "late_total",
+                                                "avg_late", "max_late", "time", "alarm_flag") else ""
+                if key == "alarm_flag" and v:
+                    tds.append('<td class="num alarm">да</td>')
+                else:
+                    tds.append("<td%s>%s</td>" % (cls, esc(v)))
             trs.append("<tr>%s</tr>" % "".join(tds))
-        html = PRINT_TEMPLATE.format(title=title, period=period, head=th, rows="\n".join(trs),
-                                     n=len(rows), stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
+        stats_html = "".join('<div class="stat"><span>%s</span><b>%s</b></div>' % (esc(l), esc(v))
+                             for l, v in stats)
+        period = frm if frm == to else "%s — %s" % (frm, to)
+        html = PRINT_TEMPLATE.format(
+            title=esc(title), subtitle=esc(subtitle), period=esc(period), head=head,
+            rows="\n".join(trs), stats=stats_html, n=len(rows),
+            stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"),
+            orient=orient, src=esc(gate.CFG.get("share", "")))
         return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
 
     # -- POST ------------------------------------------------------------
@@ -653,21 +798,45 @@ class Handler(BaseHTTPRequestHandler):
 PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <title>{title} · {period}</title>
 <style>
- body{{font:13px/1.45 "Segoe UI",system-ui,Arial,sans-serif;color:#111;margin:24px}}
- h1{{font-size:19px;margin:0 0 4px}} .sub{{color:#555;margin-bottom:14px}}
- table{{border-collapse:collapse;width:100%}}
- th{{background:#eef2f7;border:1px solid #c3ccd6;padding:6px 8px;text-align:left;font-size:12px}}
- td{{border:1px solid #d7dee6;padding:5px 8px;font-size:12px}}
- td.num{{text-align:center}} tr:nth-child(even) td{{background:#fafcfe}}
- .foot{{margin-top:12px;color:#666;font-size:11px}}
- @media print{{ body{{margin:8mm}} h1{{font-size:16px}} }}
+ @page{{size:A4 {orient};margin:10mm 8mm}}
+ body{{font:11px/1.35 "Segoe UI",Arial,sans-serif;color:#111;margin:0;padding:0}}
+ .toolbar{{position:fixed;top:10px;right:12px;z-index:10}}
+ .toolbar button{{font:13px "Segoe UI",Arial;padding:7px 16px;border:1px solid #2f6fd0;border-radius:3px;
+   background:#2f6fd0;color:#fff;cursor:pointer}}
+ @media print{{.toolbar{{display:none}}}}
+ .doc-head{{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+   border-bottom:2px solid #2f6fd0;padding-bottom:6px;margin-bottom:9px}}
+ .doc-head h1{{font-size:15px;margin:0 0 2px;font-weight:600}}
+ .doc-head .sub{{color:#555;font-size:10.5px}}
+ .doc-head .r{{text-align:right;font-size:10px;color:#444;line-height:1.5;white-space:nowrap}}
+ .doc-head .r b{{color:#111}}
+ .stats{{display:flex;gap:8px;margin:0 0 9px;flex-wrap:wrap}}
+ .stat{{border:1px solid #cfd8e3;border-radius:3px;padding:3px 10px;min-width:96px}}
+ .stat span{{display:block;color:#667;font-size:9px;text-transform:uppercase;letter-spacing:.4px}}
+ .stat b{{display:block;font-size:14px;font-weight:600;line-height:1.2}}
+ table{{width:100%;border-collapse:collapse;font-size:10px}}
+ thead{{display:table-header-group}}
+ th{{background:#eef2f6;border:1px solid #b9c4d0;padding:4px 6px;text-align:left;
+   font-size:9.5px;font-weight:600;color:#333}}
+ td{{border:1px solid #d7dee6;padding:3px 6px;vertical-align:top}}
+ tbody tr:nth-child(even) td{{background:#f7f9fb}}
+ td.num{{text-align:center;white-space:nowrap}}
+ td.alarm{{color:#b42318;font-weight:700}}
+ tr{{page-break-inside:avoid}}
+ .foot{{margin-top:8px;padding-top:5px;border-top:1px solid #d7dee6;color:#777;font-size:9px;
+   display:flex;justify-content:space-between}}
 </style></head><body>
-<h1>{title}</h1>
-<div class="sub">Период: <b>{period}</b> · записей: <b>{n}</b> · сформировано {stamp}</div>
+<div class="toolbar"><button onclick="window.print()">Печать</button></div>
+<div class="doc-head">
+  <div class="l"><h1>{title}</h1><div class="sub">{subtitle}</div></div>
+  <div class="r">Период: <b>{period}</b><br>Записей: <b>{n}</b><br>Сформировано: {stamp}<br>СКУД Gate-IP</div>
+</div>
+<div class="stats">{stats}</div>
 <table><thead><tr>{head}</tr></thead><tbody>
 {rows}
 </tbody></table>
-<div class="foot">Источник: СКУД Gate-IP, сервер 192.168.2.160 · отчёт «Ворота»</div>
+<div class="foot"><span>Источник: {src} · отчёты «Ворота»</span><span>Сформировано {stamp}</span></div>
+<script>window.addEventListener('load',function(){{setTimeout(function(){{window.print();}},400);}});</script>
 </body></html>"""
 
 

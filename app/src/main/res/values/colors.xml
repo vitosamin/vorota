@@ -1,25 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg">#0A0F15</color>
-    <color name="bg_top">#101722</color>
+    <color name="bg">#0A0E13</color>
+    <color name="bg_top">#101822</color>
     <color name="bg_bottom">#070A0E</color>
-    <color name="card">#121A23</color>
-    <color name="card_stroke">#1E2A37</color>
-    <color name="field">#0D141B</color>
-    <color name="field_stroke">#22303F</color>
-    <color name="nav_bg">#0B1017</color>
-    <color name="accent">#34D399</color>
-    <color name="accent_dark">#0B3B2E</color>
-    <color name="accent_soft">#2634D399</color>
-    <color name="warn">#F59E0B</color>
-    <color name="warn_soft">#33F59E0B</color>
-    <color name="danger">#F87171</color>
-    <color name="danger_soft">#33F87171</color>
-    <color name="info">#60A5FA</color>
-    <color name="text_primary">#F1F5F9</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="text_muted">#64748B</color>
-    <color name="icon_bg">#0B3B2E</color>
+    <color name="card">#141A22</color>
+    <color name="card_high">#1A2330</color>
+    <color name="card_stroke">#232E3B</color>
+    <color name="field">#111820</color>
+    <color name="field_stroke">#27323F</color>
+    <color name="nav_bg">#0C1218</color>
+
+    <color name="accent">#3DDC97</color>
+    <color name="accent_light">#7BEBC0</color>
+    <color name="accent_deep">#14A277</color>
+    <color name="accent_dark">#0E3B2C</color>
+    <color name="accent_soft">#1F3DDC97</color>
+    <color name="accent_tint">#2633C98A</color>
+
+    <color name="violet">#8B7BFF</color>
+    <color name="violet_soft">#268B7BFF</color>
+
+    <color name="warn">#FFB020</color>
+    <color name="warn_soft">#26FFB020</color>
+    <color name="danger">#FF6B6B</color>
+    <color name="danger_soft">#26FF6B6B</color>
+    <color name="info">#57A6FF</color>
+    <color name="info_soft">#2657A6FF</color>
+
+    <color name="text_primary">#F2F6FA</color>
+    <color name="text_secondary">#9BA8B8</color>
+    <color name="text_muted">#6B7A8D</color>
+    <color name="icon_bg">#123027</color>
     <color name="white">#FFFFFF</color>
     <color name="transparent">#00000000</color>
+    <color name="scrim">#99000000</color>
 </resources>

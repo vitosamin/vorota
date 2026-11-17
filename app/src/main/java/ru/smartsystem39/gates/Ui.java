@@ -50,10 +50,9 @@ public final class Ui {
     }
 
     public static Drawable cardBackground(Context c) {
-        int radius = dp(c, 20);
-        return ripple(0x22FFFFFF,
-                stroke(color(c, R.color.card), color(c, R.color.card_stroke), radius, dp(c, 1)),
-                radius);
+        int radius = dp(c, 22);
+        Drawable content = c.getResources().getDrawable(R.drawable.bg_card, c.getTheme());
+        return ripple(0x22FFFFFF, content, radius);
     }
 
     public static TextView chip(Context c, String label) {

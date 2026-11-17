@@ -871,6 +871,88 @@ def person_history(con, user_ptr, from_day, to_day):
     return {"user": u, "from": from_day, "to": to_day, "rows": rows, "summary": summary}
 
 
+
+def users_report(con, group=None, search=None, include_deleted=False):
+    """Отчёт о пользователях: табельный, ФИО, подразделение, должность, последний проход."""
+    last = {}
+    for r in con.execute(
+            "SELECT user_ptr, MAX(ts) t FROM events WHERE event_type=? AND event_code=?"
+            " AND user_ptr>0 GROUP BY user_ptr", (PASS_TYPE, PASS_CODE)):
+        last[r["user_ptr"]] = r["t"]
+    last_unit = {}
+    for r in con.execute(
+            "SELECT user_ptr, unit, MAX(ts) t FROM events WHERE event_type=? AND event_code=?"
+            " AND user_ptr>0 GROUP BY user_ptr", (PASS_TYPE, PASS_CODE)):
+        last_unit[r["user_ptr"]] = r["unit"]
+    out = []
+    for pid, u in _user_names(con).items():
+        if u["deleted"] and not include_deleted:
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        if search:
+            needle = search.lower()
+            if needle not in u["fio"].lower() and needle not in u["number"].lower():
+                continue
+        lt = last.get(pid, "")
+        out.append({
+            "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+            "group": u["group"], "position": u["position"],
+            "status": "Гость" if u["visitor"] else ("Удалён" if u["deleted"] else "Работает"),
+            "last_used": (lt[11:19] if lt else ""), "last_day": (lt[:10] if lt else ""),
+            "last_unit": last_unit.get(pid, ""),
+        })
+    out.sort(key=lambda x: (x["group"], x["fio"]))
+    return out
+
+
+EVENTS_COLS_CSV = [
+    ("day", "Дата"), ("time", "Время"), ("type_title", "Тип"), ("unit", "Точка"),
+    ("message", "Событие"), ("name", "Сотрудник"), ("alarm", "Тревога"),
+]
+
+
+def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
+               alarms_only=False, sep=";", enc="cp1251"):
+    """Весь журнал событий за период в CSV (потоком, без загрузки всех строк в память)."""
+    where = ["day BETWEEN ? AND ?"]
+    params = [from_day, to_day]
+    if etype:
+        where.append("event_type = ?")
+        params.append(int(etype))
+    if message:
+        where.append("message = ?")
+        params.append(message)
+    if alarms_only:
+        where.append("alarm_status = 1")
+    if search:
+        where.append("(instr_ru(message, ?) OR instr_ru(unit, ?) OR instr_ru(name, ?))")
+        params += [search, search, search]
+    w = " AND ".join(where)
+    buf = io.StringIO()
+    writer = csv.writer(buf, delimiter=sep, quoting=csv.QUOTE_MINIMAL, lineterminator="\r\n")
+    writer.writerow([t for _, t in EVENTS_COLS_CSV])
+    cur = con.execute(
+        "SELECT day, ts, event_type, unit, message, name, alarm_status FROM events"
+        " WHERE " + w + " ORDER BY day, idx", params)
+    n = 0
+    while True:
+        chunk = cur.fetchmany(2000)
+        if not chunk:
+            break
+        for r in chunk:
+            writer.writerow([
+                r["day"], r["ts"][11:19], EVENT_TYPES.get(r["event_type"], "—"),
+                r["unit"] or "", r["message"] or "", (r["name"] or "").strip(),
+                "да" if r["alarm_status"] else "",
+            ])
+            n += 1
+    data = buf.getvalue().encode(enc, "replace")
+    if enc.lower().replace("-", "") == "utf8":
+        data = b"\xef\xbb\xbf" + data
+    return data, n
+
+
 def points_list(con):
     """Контрольные точки (двери), встречающиеся в журнале."""
     rows = con.execute("SELECT unit, COUNT(*) c FROM events"
