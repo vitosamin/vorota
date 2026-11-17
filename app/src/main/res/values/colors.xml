@@ -33,6 +33,7 @@
     <color name="text_muted">#5C6B80</color>
     <color name="icon_bg">#EDF1F8</color>
     <color name="icon_launcher">#0B7A56</color>
+    <color name="icon_mark">#FFFFFF</color>
     <color name="on_accent">#FFFFFF</color>
     <color name="white">#FFFFFF</color>
     <color name="transparent">#00000000</color>

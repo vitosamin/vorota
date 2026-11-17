@@ -413,12 +413,24 @@ public class MainActivity extends Activity {
         name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
         name.setTextColor(getColor(R.color.text_primary));
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setSingleLine(true);
+        name.setSingleLine(false);
+        name.setMaxLines(2);
         name.setEllipsize(TextUtils.TruncateAt.END);
-        // Длинные названия уменьшаются сами, а не наезжают на статус.
-        name.setAutoSizeTextTypeUniformWithConfiguration(17, 20, 1, TypedValue.COMPLEX_UNIT_SP);
+        // Имя занимает всю ширину плитки; длинное переносится на вторую строку и
+        // при необходимости уменьшается, а не обрезается на первом слове.
+        name.setAutoSizeTextTypeUniformWithConfiguration(15, 20, 1, TypedValue.COMPLEX_UNIT_SP);
         c.name = name;
         texts.addView(name);
+        top.addView(texts);
+
+        // Источник и статус — отдельная строка: имя получает всю ширину.
+        LinearLayout meta = new LinearLayout(this);
+        meta.setOrientation(LinearLayout.HORIZONTAL);
+        meta.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mlp.topMargin = dp(10);
+        meta.setLayoutParams(mlp);
 
         TextView source = new TextView(this);
         source.setText(sourceLabel(d));
@@ -429,12 +441,9 @@ public class MainActivity extends Activity {
         source.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         source.setSingleLine(true);
         source.setEllipsize(TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        slp.topMargin = dp(3);
-        source.setLayoutParams(slp);
-        texts.addView(source);
-        top.addView(texts);
+        source.setLayoutParams(new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        meta.addView(source);
 
         LinearLayout pill = new LinearLayout(this);
         pill.setOrientation(LinearLayout.HORIZONTAL);
@@ -461,7 +470,8 @@ public class MainActivity extends Activity {
         status.setSingleLine(true);
         c.status = status;
         pill.addView(status);
-        top.addView(pill);
+        meta.addView(pill);
+        card.addView(meta);
 
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);

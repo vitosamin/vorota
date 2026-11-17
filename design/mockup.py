@@ -130,17 +130,60 @@ def button(d, box, label, size, fg, bg, outline=None, glyph=None, glyph_color=No
         icon(d, cx - tw / 2 - 14, cy, 15, glyph, glyph_color or fg)
 
 
+def wrap(d, s, size, max_w, bold=True, max_lines=2):
+    """Разбивает строку по словам на несколько строк, последнюю обрезает многоточием."""
+    f = font(size, bold)
+    words = s.split()
+    lines = []
+    current = ""
+    for word in words:
+        candidate = word if not current else current + " " + word
+        if d.textlength(candidate, font=f) / S <= max_w or not current:
+            current = candidate
+        else:
+            lines.append(current)
+            current = word
+            if len(lines) == max_lines - 1:
+                break
+    if current:
+        lines.append(current)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+    used = " ".join(lines)
+    if used != s:
+        while lines and d.textlength(lines[-1] + "…", font=f) / S > max_w:
+            lines[-1] = lines[-1][:-1]
+        if lines:
+            lines[-1] += "…"
+    return lines
+
+
 def tile(d, P, x, y, w, name, source, status, status_fg, status_bg,
-         kind="gate", buttons=(), h=148):
+         kind="gate", buttons=(), h=168):
     rr(d, (x, y, x + w, y + h), 22, fill=P["surface"], outline=P["stroke"])
     rr(d, (x + 16, y + 16, x + 16 + 46, y + 16 + 46), 14, fill=P["surface_hi"])
     icon(d, x + 39, y + 39, 26, kind, P["mint"])
+
+    # Имя занимает всю ширину до края плитки: статус переехал на строку ниже.
+    name_w = w - 76 - 16
+    name_size = 20
+    for candidate in (20, 19, 18, 17):
+        if len(wrap(d, name, candidate, name_w, True)) == 1:
+            name_size = candidate
+            break
+    else:
+        name_size = 17
+    lines = wrap(d, name, name_size, name_w, True)
+    line_h = name_size + 5
+    for i, line in enumerate(lines):
+        text(d, (x + 76, y + 18 + i * line_h), line, name_size, P["text"], bold=True)
+
+    # Строка источника и статуса идёт ниже иконки, иначе текст заходит под неё.
+    meta_y = y + 72
     pill_w = d.textlength(status, font=font(11, True)) / S + 22
-    name_text, name_size = fit(d, name, 20, w - 76 - pill_w - 16, True)
-    text(d, (x + 76, y + 22 + (20 - name_size)), name_text, name_size, P["text"], bold=True)
-    src_text, src_size = fit(d, source, 10, w - 92, True)
-    text(d, (x + 76, y + 50), src_text, src_size, P["text2"], bold=True, spacing=1.2)
-    pill(d, x + w - 16, y + 18, status, 11, status_fg, status_bg)
+    src_text, src_size = fit(d, source, 10, w - 32 - pill_w - 12, True)
+    text(d, (x + 16, meta_y + 6), src_text, src_size, P["text2"], bold=True, spacing=1.2)
+    pill(d, x + w - 16, meta_y, status, 11, status_fg, status_bg)
     by = y + h - 62
     if len(buttons) == 2:
         bw = (w - 32 - 10) / 2
@@ -166,7 +209,7 @@ def nav(d, P, y, active=0):
 def screen_main(P, variant="dark"):
     img = Image.new("RGB", (W * S, H * S), P["bg"])
     d = ImageDraw.Draw(img)
-    text(d, (20, 38), "Ворота", 32, P["text"], bold=True)
+    text(d, (20, 38), "Доступ", 32, P["text"], bold=True)
     circle(d, 356, 56, 19, fill=P["surface"], outline=P["stroke"])
     icon(d, 356, 56, 19, "refresh", P["text2"])
     circle(d, 26, 108, 4.5, fill=P["mint"])
@@ -183,14 +226,14 @@ def screen_main(P, variant="dark"):
          kind="gate",
          buttons=[("Вход", P["mint_ink"], P["mint"], None, "door", None),
                   ("Выход", P["blue"], blue_soft, None, "door", None)])
-    tile(d, P, 20, 294, 360, "Шлагбаум", "HOME ASSISTANT · COVER.BARRIER", "Открыто", P["mint"], mint_soft,
+    tile(d, P, 20, 314, 360, "Шлагбаум", "HOME ASSISTANT · COVER.BARRIER", "Открыто", P["mint"], mint_soft,
          kind="barrier",
          buttons=[("Закрыть", P["text"], P["surface_hi"], P["stroke"], None, None)])
-    tile(d, P, 20, 456, 360, "КПП производство", "GATE-IP · 6 ДВЕРЕЙ", "Открывается…", P["amber"], amber_soft,
+    tile(d, P, 20, 496, 360, "КПП производство", "GATE-IP · 6 ДВЕРЕЙ", "Открывается…", P["amber"], amber_soft,
          kind="gate",
          buttons=[("Вход", P["mint_ink"], P["mint"], None, "door", None),
                   ("Выход", P["blue"], blue_soft, None, "door", None)])
-    tile(d, P, 20, 618, 360, "Ворота", "GATE-IP · ВХОД И ВЫХОД", "Нет связи", P["red"], red_soft,
+    tile(d, P, 20, 678, 360, "Ворота", "GATE-IP · ВХОД И ВЫХОД", "Нет связи", P["red"], red_soft,
          kind="gate",
          buttons=[("Вход", P["text2"], P["surface_hi"], P["stroke"], "door", None),
                   ("Выход", P["text2"], P["surface_hi"], P["stroke"], "door", None)])

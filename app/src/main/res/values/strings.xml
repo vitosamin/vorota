@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ворота</string>
-    <string name="title_main">Ворота</string>
+    <string name="app_name">Доступ</string>
+    <string name="title_main">Доступ</string>
     <string name="title_settings">Настройки</string>
     <string name="tab_devices">Устройства</string>
     <string name="tab_settings">Настройки</string>
