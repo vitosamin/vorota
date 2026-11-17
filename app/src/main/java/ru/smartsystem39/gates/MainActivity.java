@@ -825,6 +825,7 @@ public class MainActivity extends Activity {
         runIo(() -> {
             final UpdateChecker.Info info = UpdateChecker.check(version);
             ui.post(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 checkingUpdates = false;
                 btnCheckUpdates.setEnabled(true);
                 if (info.error != null) {
@@ -853,6 +854,7 @@ public class MainActivity extends Activity {
     }
 
     private void showUpdateDialog(final UpdateChecker.Info info) {
+        if (isFinishing() || isDestroyed()) return;
         String notes = info.notes == null ? "" : info.notes.trim();
         if (notes.length() > 600) notes = notes.substring(0, 600) + "…";
         if (notes.isEmpty()) notes = getString(R.string.update_available, info.tag);
@@ -865,7 +867,7 @@ public class MainActivity extends Activity {
     }
 
     private void downloadAndInstall(final String url) {
-        if (downloadingUpdate) return;
+        if (downloadingUpdate || isFinishing() || isDestroyed()) return;
         downloadingUpdate = true;
         final ProgressDialog progress = ProgressDialog.show(this, "",
                 getString(R.string.update_downloading), true, false);
@@ -874,7 +876,8 @@ public class MainActivity extends Activity {
             final String error = UpdateChecker.download(url, apk);
             ui.post(() -> {
                 downloadingUpdate = false;
-                progress.dismiss();
+                try { progress.dismiss(); } catch (Exception ignored) {}
+                if (isFinishing() || isDestroyed()) return;
                 if (error != null) {
                     updateStatus.setTextColor(getColor(R.color.danger));
                     updateStatus.setText(getString(R.string.update_error, error));
