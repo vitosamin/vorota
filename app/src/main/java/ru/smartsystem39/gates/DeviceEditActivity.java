@@ -252,16 +252,20 @@ public class DeviceEditActivity extends Activity {
         cardHa.setVisibility(ha ? View.VISIBLE : View.GONE);
         cardHttp.setVisibility(ha ? View.GONE : View.VISIBLE);
 
-        boolean custom = Device.P_CUSTOM.equals(device.protocol);
+        // Дверь Gate-IP открывается через мост: свои URL ей не нужны, и спрашивать их нельзя.
+        boolean gate = device.isGate();
+        boolean custom = Device.P_CUSTOM.equals(device.protocol) && !gate;
         customBox.setVisibility(custom ? View.VISIBLE : View.GONE);
-        pulseCheck.setVisibility(custom ? View.GONE : View.VISIBLE);
+        pulseCheck.setVisibility(custom || gate ? View.GONE : View.VISIBLE);
 
         boolean relay = Device.P_TASMOTA.equals(device.protocol)
                 || Device.P_SHELLY1.equals(device.protocol)
                 || Device.P_SHELLY2.equals(device.protocol);
         channelBox.setVisibility(relay ? View.VISIBLE : View.GONE);
         objectIdBox.setVisibility(Device.P_ESPHOME.equals(device.protocol) ? View.VISIBLE : View.GONE);
-        protoHint.setText(hintFor(device.protocol));
+        protoHint.setText(gate
+                ? "Дверь Gate-IP: открывается через мост. Адрес и токен берутся из настроек, отдельные URL не нужны."
+                : hintFor(device.protocol));
     }
 
     private String hintFor(String protocol) {
@@ -301,6 +305,10 @@ public class DeviceEditActivity extends Activity {
             device.entity = selectedEntity;
         } else {
             String address = normalize(addressInput.getText().toString());
+            if (address.isEmpty() && device.isGate()) {
+                // У двери моста адрес — это адрес моста из настроек.
+                address = normalize(cfg.getGateUrl());
+            }
             if (address.isEmpty()) {
                 toast(getString(R.string.error_address));
                 addressInput.requestFocus();
@@ -308,7 +316,13 @@ public class DeviceEditActivity extends Activity {
             }
             device.address = address;
 
-            if (Device.P_CUSTOM.equals(device.protocol)) {
+            if (device.isGate()) {
+                // У двери Gate-IP команда идёт через мост, а не по своему URL.
+                device.openUrl = "";
+                device.closeUrl = "";
+                device.statusUrl = "";
+                device.statusField = "";
+            } else if (Device.P_CUSTOM.equals(device.protocol)) {
                 device.openUrl = commandUrl(openUrlInput.getText().toString());
                 if (device.openUrl.isEmpty()) {
                     toast(getString(R.string.error_open_url));
