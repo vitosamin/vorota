@@ -1,0 +1,7 @@
+EventActions rows=11
+RdrPtr=1 | EventCode=2 | UseMsg=Ложь | RunCmd=Ложь | CmdString= | UseInContr=Истина | OutNum=0 | OutAction=0 | OutTime=0 | RecordState=0 | ShowVideoSrv=Ложь | ShowVideoTrm=Ложь | MsgFlags=0 | Phone= | MsgTemplateId=0 | Mail= | MailSubject= | RemoteOpenDoor=Ложь | RemoteDoorPtr=0 | 
+RdrPtr=1 | EventCode=8 | UseMsg=Ложь | RunCmd=Ложь | CmdString= | UseInContr=Истина | OutNum=2 | OutAction=0 | OutTime=0 | RecordState=0 | ShowVideoSrv=Ложь | ShowVideoTrm=Ложь | MsgFlags=0 | Phone= | MsgTemplateId=0 | Mail= | MailSubject= | RemoteOpenDoor=Ложь | RemoteDoorPtr=0 | 
+RdrPtr=1 | EventCode=9 | UseMsg=Ложь | RunCmd=Ложь | CmdString= | UseInContr=Ложь | OutNum=2 | OutAction=0 | OutTime=0 | RecordState=0 | ShowVideoSrv=Ложь | ShowVideoTrm=Ложь | MsgFlags=0 | Phone= | MsgTemplateId=0 | Mail= | MailSubject= | RemoteOpenDoor=Ложь | RemoteDoorPtr= | 
+RdrPtr=1 | EventCode=13 | UseMsg=Ложь | RunCmd=Ложь | CmdString= | UseInContr=Ложь | OutNum=2 | OutAction=16 | OutTime=0 | RecordState=0 | ShowVideoSrv=Ложь | ShowVideoTrm=Ложь | MsgFlags=0 | Phone= | MsgTemplateId=0 | Mail= | MailSubject= | RemoteOpenDoor=Ложь | RemoteDoorPtr= | 
+RdrPtr=2 | EventCode=2 | UseMsg=Ложь | RunCmd=Ложь | CmdString= | UseInContr=Истина | OutNum=0 | OutAction=0 | OutTime=0 | RecordState=0 | ShowVideoSrv=Ложь | ShowVideoTrm=Ложь | MsgFlags=0 | Phone= | MsgTemplateId=0 | Mail= | MailSubject= | RemoteOpenDoor=Ложь | RemoteDoorPtr=0 | 
+=== OperEventTypes ===

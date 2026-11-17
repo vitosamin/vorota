@@ -1,6 +1,6 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 16:00 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 19:55 (Europe/Kaliningrad)
 > main · последний коммит: 4d66133 «2.3: статус СКУД в шапке»
 > Версия 2.5 (`versionCode 16`), пакет `ru.smartsystem39.gates`
 
@@ -115,6 +115,56 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
   `FA 7F 00 01 <dev> 55 55 07 01 F5`.
 - Быстрый путь (обход Gate) возможен, но нужен эксперимент на одном контроллере
   и понимание, что соединение занято GateServ (порт один на контроллер).
+
+## Разбор GateServ (17.11, вечер) — итог
+
+**Задержка ~2–4 с структурная, в защищённом GateServ. Патчить не стали.**
+
+- `GateServ.exe` — VB6-приложение, защищено оболочкой **HASP/Sentinel**
+  (секции `.AKS1/.AKS2/.AKS3` = Aladdin Knowledge Systems), код на диске
+  зашифрован (энтропия 8.0) → статический разбор невозможен.
+- `GateServG32.dll`, `GateServG.exe` — тоже зашифрованы (`.grd*`).
+  Управляемые (.NET) только `GatePorts.dll`, `GatePortLib.dll`,
+  `GateMessager.dll` — там только параметры портов, не очередь команд.
+- В реестре (HKLM и HKCU) настроек Gate нет. Документации на сервере нет.
+- Перебраны **все** поля `*Period*/*Interval*/*Timeout*` в `config.mdb`:
+  `Ini.ControlPeriod`, `Devices.PollingPeriod`, `Devices.SetClockPeriod`,
+  `Ports.PollingInterval/ReplyTimeout`, `Readers.ConfirmTimeout` — **ни одно
+  не управляет очередью команд**.
+- Дамп памяти работающего GateServ (только чтение, 164 МБ) дал: VB6-таймер
+  **`PollingTimer`**, SQL очереди
+  `SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=9 ORDER BY Cmd.Ptr`,
+  в настройках сервера только «период обновления данных пользователей» и
+  «период резервного копирования».
+
+### Точная раскладка задержки (монитор очереди + сниффер)
+
+| Этап | Время |
+|---|---|
+| нажатие → клик моста | 0.4 с |
+| клик → строка в `CommandQuetch` | 0.5–1.0 с (пишет GateTerm) |
+| строка → кадр команды контроллеру | 1.0–2.0 с (`PollingTimer` GateServ) |
+| контроллер подтвердил | сразу |
+
+Измеренная жизнь строки очереди: **1.66 с**. Формат строки:
+`Code=10, Addr=<Address устройства>, PortPtr=<порт>, OperatorID/OperatorName,
+Param1=Param2=0, Branch=0, NewAddr=0`.
+
+### Рассмотренные варианты
+
+1. **Патч GateServ** — отклонён: HASP проверяет целостность, риск сломать СКУД.
+2. **Прямая запись в `CommandQuetch`** (убрала бы клик и обработку в GateTerm,
+   ~1–1.5 с) — пользователь запретил трогать базу. Реализовано не было.
+3. **Аппаратное реле параллельно кнопке двери** — самый быстрый вариант
+   (~0.2 с), не касается СКУД; нужно железо и доступ к контроллеру.
+4. Оставить как есть (~2–4 с).
+
+### Что осталось на сервере из диагностики (по просьбе — не удалял)
+
+`GateMem.exe/.cs`, `GateQMon.exe/.cs`, `GateDbPulse.exe/.cs`,
+`GateSniff2.exe/.cs`, `mem.txt`, `qmon.txt`, `pulse.txt`, `sniff*.txt`,
+`compile_*.bat/.vbs`, `run_*.vbs` в `C:\Users\Public`. Все процессы
+завершены, лишних служб и задач нет.
 
 ## Грабли
 

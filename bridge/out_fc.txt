@@ -1,0 +1,8 @@
+=== процессы === 
+GateBridge.exe                4516 Console                    1    30�744 ��
+GateServ.exe                  9900 Console                    1   167�736 ��
+GateTerm.exe                  3724 Console                    1    30�544 ��
+=== задачи Gate* === 
+GateBridgeStartup                        N/A                    ��⮢�         
+GateBridgeWatchdog                       17.11.2026 19:53:00    ��⮢�         
+=== временные службы === 

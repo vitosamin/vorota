@@ -1,0 +1,3164 @@
+PID=9900 start=18:17:30
+прочитано МБ=164 регионов просканировано МБ=164
+=== ASCII-строки (2199) ===
+1	mdlOutputs
+2	PollingTimer
+2	mnuSelectServerType
+1	UpdateResults
+2	lblUserDataRefreshPeriod
+2	edUserDataRefreshPeriod
+2	lblBackupPeriod
+2	edBackupPeriod
+3	Insert
+1	InsertByVal
+5	CancelWaitableTimer
+10	CreateTimerQueueTimer
+2	- Ignore. You will have a brief time period to save work-in-progress and close the application. Remaining grace periods: %s)
+2	Sentinel update incompatible with this hardware
+2	Update counter mismatch(
+2	Update data consistency check failed-
+2	Update not supported by this Sentinel key
+2	Invalid Update object
+2	Unable to return acknowledgement requested by Update:
+2	Unknown recipient. Update cannot be applied to this computer+
+2	Update installation not permitted
+2	Trying to install a V2C file with an update counter that is out of sync with update counter in the Sentinel protection key.*
+2	Another Update must be installed first
+2	Update already installed;
+1	BackgroundCheckDbg - No update from debugger detection process!
+15	OutputDebugStringA
+2	HL_SELECT
+3	hasp_update
+1	hasp_update_session
+12	select
+2	<update_counter>%u</update_counter>
+2	i_update
+4	The update '%s' was too new. Install the pending updates first
+2	%llu_update%d.%s
+2	rate_token_period_ms
+1	UPDATE_SESSION
+1	update_session
+5	update
+2	Failed to apply a v2c update due to HL key type mismatch
+8	updatecounter
+8	aks_updatecounter
+1	update_session_req
+1	update_session_reply
+4	SNTL_ADMIN_UPDATE_ERROR
+2	Update %u
+2	Update 
+2	Update%20
+2	  <error>HASP_UPDATE_BLOCKED</error>
+2	<nobr>Time Period
+14	<haspformat format="fastupdateinfo"/>
+9	<haspformat format="updateinfo"/>
+2	updateinfo
+2	fastupdateinfo
+2	filter_update
+2	last_update_error
+2	last_updated_container
+1	ondemandload_period_mins
+2	server_select
+2	serversearchinterval
+2	serverselect
+2	Error writing (updated)license file.
+2	Invalid updated data (RTB).
+2	Update data (RTB) has expired.
+2	Update data serial no. does not match.
+4	SELECT_DOWN
+2	Ungueltige Update-Daten (RTB).
+2	Datum fuer Update-Daten abgelaufen.
+2	Seriennr. der Update-Daten passt nicht.
+2	Update v2c is empty
+2	Firmware update failed for Sentinel HL key %llu (error 0x%x)
+2	Sentinel HL %llu failed to update file (error 0x%x)
+2	WALLE driver failed to execute UPDATE_FILE command (error 0x%x)
+2	Sentinel HL %llu failed to execute UPDATE_FILE command (error 0x%x)
+5	Firmware update is too old
+7	Firmware update magic is wrong
+2	Firmware update checksum is broken
+2	Firmware update product flag is wrong
+4	Failed to wait for update thread (syserr %d/%s)
+1	Server '%s' was too slow to update (in connect tcp) (syserr %u/%s), after %lld [ms] from connect(), and %lld [ms] from search startup
+1	Failed to wait for update worker thread (syserr %d/%s)
+1	Failed to create update thread (syserr %d/%s)
+2	ESELECTTIMEDOUT
+1	SNTL_ADMIN_IDENTITY_NOTHING_TO_UPDATE
+2	HASP_INV_UPDATE_OBJ
+2	HASP_INV_UPDATE_DATA
+2	HASP_INV_UPDATE_NOTSUPP
+2	HASP_INV_UPDATE_CNTR
+2	HASP_UPDATE_BLOCKED
+2	HASP_UPDATE_TOO_OLD
+2	HASP_UPDATE_TOO_NEW
+2	HASP_UPDATE_ALREADY_ADDED
+2	HASP_UPDATE_OUT_OF_SYNC
+1	API_UPDATE_SESSION
+3	C:\GATE\Server\gate.mdw
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=21O
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=26O
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=11O
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=15O
+1	ableer\Gate.mdw
+1	eritableer\Gate.mdw
+1	DateUpdateet
+1	er\Gate.mdw
+4	XCPTimerClass
+2	ThunderRT6Timer
+1	ANIMATION_TIMER_HWND
+1	VB.Timer
+1	\SystemRoot\system32\mcupdate_AuthenticAMD.dll
+3	rtcGetTimer
+3	XTimerWWW
+3	u'Interval
+3	?PeriodWW
+4	Failed to wait for update thread
+1	Failed to create update thread
+1	Server '%s:%d' was too slow to update (in connect tcp) (syserr %u/%s), after %lld [ms] from connect(), and %lld [ms] from search startup
+1	Failed to wait for update worker thread
+12	CommandQuetch
+1	DateUpdatent
+1	Updaten2
+1	UPDATE ServerClock SET ServerClock.ServerTime = Time();
+1	get_PortAutoRestorePeriod
+1	set_PortAutoRestorePeriod
+1	defPortAutoRestorePeriod
+1	portAutoRestorePeriod
+1	checkStatePeriod
+1	get_PortKeepAlivePeriod
+1	set_PortKeepAlivePeriod
+1	defPortKeepAlivePeriod
+1	portKeepAlivePeriod
+1	keepAlivePeriod
+1	portTrialPeriod
+1	TimerCallback
+1	trialTimer
+5	Select
+8	DateUpdate
+1	ListNoSelectedUsers
+1	OutputTypes
+1	OperEventTypes
+1	ListSelectedUsersByName
+8	Updated
+4	SetClockPeriod
+4	PollingPeriod
+4	PeriodUpdated
+1	PollingInterval
+2	OutputTypes***********
+5	Outputs
+1	OperEvents
+1	ListSelectedUsers
+1	ListNoSelectedUsersByName
+2	ListSelectedGroups
+2	ListNoSelectedGroups
+2	UpdatedFlats
+2	UpdatedButtons
+34	WaitForThreadpoolTimerCallbacks
+43	OutputDebugStringW
+35	CloseThreadpoolTimer
+35	SetThreadpoolTimer
+35	CreateThreadpoolTimer
+2	Retrieve the standard input, output or error streamWWW=
+15	SetTimer
+15	KillTimer
+18	SelectObject
+1	ATE\Server\Gate.mdw
+3	CT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;v
+1	CT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;i
+2	CT false AS fBud, d.* FROM Devices AS d WHERE d.PeriodUpdated;v
+2	CT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 AND Cmd.Addr=8 ORDER BY Cmd.Ptrd
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=11 AND Cmd.Addr=3 ORDER BY Cmd.Ptr
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=6 AND Cmd.Addr=6 ORDER BY Cmd.Ptrd
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=11 ORDER BY Cmd.PtrH
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=5 ORDER BY Cmd.Ptr
+4	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=9 ORDER BY Cmd.Ptr
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=6 ORDER BY Cmd.Ptr
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 ORDER BY Cmd.PtrrH
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 ORDER BY Cmd.Ptr
+3	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=15 ORDER BY Cmd.PtrH
+3	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=8 ORDER BY Cmd.Ptr
+1	UpdateHaspWW
+2	UpdateWW
+1	haspStatusInvalidUpdateObjectWWW
+1	haspStatusInvalidUpdateDataW
+1	vhaspStatusUpdateNotSupported
+1	haspStatusInvalidUpdateCounterWW
+1	haspStatusUpdateNoACKWWW
+1	haspStatusUpdateBlockedW
+1	haspStatusUpdateTooOldWW
+1	haspStatusUpdateTooNewWW
+1	HaspStatusUpdatedAlreadyAddedWWW
+1	UpdateInfoWW4
+1	Updates a HASP key.WWW
+1	Invalid update object.$
+1	Update data consistency check failed.W!
+1	Update not supported by this key.W
+1	Update counter mismatch.WW
+1	Update requested ack., but no area to return it.WW-
+1	Update installation not allowed.WW
+1	HASP update incompatible with this hardware; HASP key is locked to other hardware.*
+1	Update was already installed.W'
+1	Another update must be installed first.WWW-
+1	Unknown Recipient; update can only be applied to the Recipient specified in hasp_detach(), and not to this computerWWW
+1	.Specified v2c update already installed in the LLM&
+1	Returns the update info as an XML string.W4
+7	SELECT u.*, iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName FROM Groups AS g RIGHT JOIN Users AS u ON g.GroupPtr=u.GroupPtr;
+1	remove_NodeInserted
+1	add_NodeInserted
+1	add_NodeInserting
+1	CanInsertAfter
+1	CanInsertBefore
+2	SelectSingleNode
+1	set_CloseOutput
+2	SelectNodes
+1	SelectChildren
+1	InsertData
+1	get_OutputMethod
+1	XmlOutputMethod
+1	outputDocType
+1	InsertSiblingBefore
+1	InsertElementBefore
+1	remove_NodeInserting
+1	InsertSiblingAfter
+1	InsertElementAfter
+1	get_Selector
+1	set_Selector
+1	QnXsdSelector
+1	InitSelector
+1	get_OutputSettings
+1	SelectAncestors
+1	SelectDescendants
+4	OnInsert
+1	get_CloseOutput
+3	InsertRange
+1	outputfile
+1	outputFileName
+1	needUpdate
+1	updatePosition
+4	outputBuffer
+1	ReaderOutput
+3	output
+2	get_OutputAssembly
+2	set_OutputAssembly
+1	QueryOutputWriterV1
+1	GetInsertEventArgsForLoad
+1	Xdom_Node_Insert_Child
+1	set_OutputMethod
+1	outputMethod
+1	schemaToUpdate
+1	onNodeInsertedDelegate
+1	onNodeInsertingDelegate
+5	SystemRuntimeRemoting
+1	BuildSelector_XPath
+1	Xdom_Node_Insert_Path
+1	Xdom_Node_Insert_Contain
+1	Xdom_Node_Insert_Location
+1	InsertParentIntoElementIdAttrMap
+1	UpdateFromTextReader
+1	SetNextOutputBuffer
+1	QueryOutputWriter
+1	XPathSelectionIterator
+1	Sch_IdConstraintNoSelector
+1	Sch_DupSelector
+1	axisSelector
+1	selector
+1	Sch_SelectorAttr
+1	Sch_SelectorBeforeFields
+1	UpdateSForSSimpleTypes
+1	SelectorAttributes
+1	outputSettings
+1	SelectorActiveAxis
+1	OutputRestAmps
+1	InsertNodeAt
+1	Xdom_Node_Insert_TypeConflict
+1	Xdom_AttrCol_Insert
+1	closeOutput
+1	Xdom_Node_Insert_Context
+1	CacheOutputQuery
+1	selector System.Xml.Schema.XmlSchemaXPath
+7	lSystem.Resources.ResourceReader, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089#System.Resources.RuntimeResourceSet
+1	8Selector cannot appear twice in one identity constraint.
+1	0The XPath for selector or field cannot be empty.
+1	0'{0}' is an invalid XPath for selector or field.
+1	Selector must be present.
+1	g'{0}' is an invalid XPath for selector. Selector cannot have an XPath selection with an attribute node.
+1	%Cannot define fields before selector.
+1	^The 'Attribute' node cannot be inserted because it is already an attribute of another element.
+1	GCannot insert a node or any ancestor of that node as a child of itself.
+1	=The node to be inserted is from a different document context.
+1	1Cannot insert the node in the specified location.
+1	tThe specified node cannot be inserted as the valid child of this node, because the specified node is the wrong type.
+1	Input or output values of an rpc\literal method cannot have maxOccurs > 1. Provide a wrapper element for '{0}' by using XmlArray or XmlArrayItem instead of XmlElement attribute.
+1	qInput or output values of an rpc\literal method cannot have an XmlNamespaceDeclarations attribute (member '{0}').
+3	<!ENTITY % inline.forms "input | select | textarea | label | button">
+6	  onselect    %Script;       #IMPLIED
+3	<!ELEMENT select (optgroup|option)+>
+3	<!ATTLIST select
+3	  selected    (selected)     #IMPLIED
+1	m_keySelector
+1	<>3__selector
+1	OrderedGroupByElementSelectorQueryOperatorEnumerator`4
+1	<SelectManyIterator>d__19`2
+1	SelectManyQueryOperatorEnumerator`1
+1	IndexedSelectManyQueryOperatorEnumerator
+1	IndexedSelectQueryOperatorResults
+1	EventLogPropertySelector
+1	SelectQueryOperatorEnumerator`1
+1	SelectManyQueryOperator`3
+1	OutputOrdinalIndexState
+1	WhereSelectListIterator`2
+1	IndexedSelectQueryOperator`2
+1	<Select>d__3`2
+1	IndexedSelectQueryOperatorEnumerator
+1	WhereSelectEnumerableIterator`2
+1	<SelectManyIterator>d__21`3
+1	<SelectManyIterator>d__23`3
+1	UpdateDelegates
+1	<SelectIterator>d__5`2
+1	<ApplyResultSelector>d__13`1
+1	WhereSelectArrayIterator`2
+1	<SelectManyIterator>d__17`2
+1	ApplyResultSelector
+1	_CachedUpdate
+1	AddOrInsert
+1	System.Collections.Generic.IList<TElement>.Insert
+1	<>3__collectionSelector
+1	<>3__resultSelector
+1	m_resultSelector
+1	<CombineSelectors>b__0
+1	selector2
+1	selector1
+2	m_selector
+1	SelectMany
+1	System.Linq.IOrderedEnumerable<TInputOutput>.CreateOrderedEnumerable
+1	SelectManyIterator
+1	m_elementSelector
+1	CombineSelectors
+2	TOutput
+1	TInputOutput
+2	AverageTimer32
+1	MultiTimerBase
+1	get_Update
+1	MultiTimerPercentageActive
+1	MultiTimerPercentageNotActive
+2	get_OutputBlockSize
+1	InvalidTimePeriodNesting
+3	EvtUpdateBookmark
+1	get_UpdateLabel
+1	GetUpdateExpression
+1	PrecisionObjectSpecificTimer
+1	PrecisionSystemTimer
+1	key2Selector
+1	<>3__innerKeySelector
+1	<>3__outerKeySelector
+1	MultiTimerPercentageActive100Ns
+1	MultiTimerPercentageNotActive100Ns
+1	PrecisionTimer100Ns
+1	CancellationCheckIntervalInMilliseconds
+1	UpdateRules
+1	<>3__select
+1	<CreateCustomUpdateDelegate>b__20_0
+1	<MakeResultSelectorFunction>b__5_0
+1	<System.Linq.IOrderedEnumerable<TInputOutput>.CreateOrderedEnumerable>b__0
+1	<CreateCustomUpdateDelegate>b__20_1
+1	updateAccumulatorFunc
+1	get_OutputOrdered
+1	m_outputOrdered
+1	UpdateReadMode
+1	m_updatesDone
+1	MakeUpdateDelegate
+1	CreateCustomUpdateDelegate
+1	GetUpdateDelegate
+2	WaitOrTimerCallback
+1	m_updatesSeen
+1	MakeResultSelectorFunction
+1	m_selectOp
+1	get_InvalidOutputDir
+1	System.Collections.Generic.IEnumerable<TOutput>.GetEnumerator
+1	m_outputEnumerator
+1	m_selectManyOperator
+1	m_indexedRightChildSelector
+1	m_rightChildSelector
+1	m_singleResultSelector
+1	m_groupResultSelector
+1	hashKeySelector
+1	m_leftKeySelector
+1	m_rightKeySelector
+1	propertySelector
+2	RuntimeReflectionExtensions
+2	get_TraceOutputOptions
+2	outputOffset
+1	m_outputRecipient
+1	System.Collections.Generic.IEnumerator<TOutput>.Current
+1	System.Collections.Generic.IEnumerator<TInputOutput>.Current
+1	m_outputLoopCount
+1	outputCount
+1	cbOutput
+1	pbOutput
+1	m_ignoreOutput
+1	m_currentRightSourceAsOutput
+1	GetOutput
+1	m_outputArray
+1	UpdateAndExecuteVoid10
+1	UpdateAndExecute10
+1	UpdateAndExecute0
+1	UpdateAndExecuteVoid1
+1	UpdateAndExecute1
+1	UpdateAndExecuteVoid2
+1	UpdateAndExecute2
+1	UpdateAndExecuteVoid3
+1	UpdateAndExecute3
+1	UpdateAndExecuteVoid4
+1	UpdateAndExecute4
+1	UpdateAndExecuteVoid5
+1	UpdateAndExecute5
+1	UpdateAndExecuteVoid6
+1	UpdateAndExecute6
+1	UpdateAndExecuteVoid7
+1	UpdateAndExecute7
+1	UpdateAndExecuteVoid8
+1	UpdateAndExecute8
+1	UpdateAndExecuteVoid9
+1	UpdateAndExecute9
+1	ERROR_EVT_MAX_INSERTS_REACHED
+3	STD_OUTPUT_HANDLE
+1	POLL_INTERVAL
+3	FORMAT_MESSAGE_IGNORE_INSERTS
+1	ERROR_EVT_UNRESOLVED_VALUE_INSERT
+1	ERROR_EVT_UNRESOLVED_PARAMETER_INSERT
+1	updateMode
+1	System.Linq.Parallel.IMergeHelper<TOutput>.Execute
+1	System.Linq.Parallel.IMergeHelper<TInputOutput>.Execute
+1	Sha1HashOutputSize
+1	Sha512HashOutputSize
+1	Sha256HashOutputSize
+1	UpdateEmitAsTypeFlag
+1	UpdateEmitAsTailCallFlag
+1	UpdateEmitExpressionStartFlag
+1	_updateLabel
+1	InsertPosition
+1	System.Linq.Parallel.IMergeHelper<TOutput>.GetEnumerator
+1	System.Linq.Parallel.IMergeHelper<TInputOutput>.GetEnumerator
+1	SelectIterator
+1	get_KeySelector
+1	UpdateClass
+1	UpdateCacheValueInfoForHit
+1	System.Collections.Generic.IEnumerator<TOutput>.get_Current
+1	System.Collections.Generic.IEnumerator<TInputOutput>.get_Current
+2	System.Collections.Generic.IList<T>.Insert
+3	System.Collections.IList.Insert
+1	(pregenerated CallSite<T>.Update delegate
+1	8System.Dynamic.Utils.CollectionExtensions+<Select>d__3`2
+1	-System.Linq.Enumerable+<SelectIterator>d__5`2
+1	2System.Linq.Enumerable+<SelectManyIterator>d__17`2
+1	2System.Linq.Enumerable+<SelectManyIterator>d__19`2
+1	2System.Linq.Enumerable+<SelectManyIterator>d__21`3
+1	2System.Linq.Enumerable+<SelectManyIterator>d__23`3
+1	1System.Linq.Lookup`2+<ApplyResultSelector>d__13`1
+2	The elements of the AdjustmentRule array must not contain ambiguous time periods that extend beyond the DateStart or DateEnd properties of the element.
+2	The elements of the AdjustmentRule array must not contain invalid time periods that extend beyond the DateStart or DateEnd properties of the element. 
+2	The elements of the AdjustmentRule array must not contain Daylight Saving Time periods that overlap adjacent elements in such a way as to cause invalid or ambiguous time periods.
+2	The elements of the AdjustmentRule array must not contain Daylight Saving Time periods that overlap the DateStart or DateEnd properties in such a way as to cause invalid or ambiguous time periods.
+2	The supplied DateTime represents an invalid time.  For example, when the clock is adjusted forward, any time in the period that is skipped is invalid.
+1	Invalid output directory.
+2	OutputDebugString
+4	WSAEventSelect
+1	get_StandardOutput
+1	InternalInsertNodeBefore
+1	InternalInsertNodeToEmptyList
+1	set_RedirectStandardOutput
+2	UpdateTimeOut
+1	UpdateStatusAfterSocketError
+1	BeginOutputReadLine
+1	add_SelectionChanged
+1	remove_SelectionChanged
+1	remove_TimerElapsed
+1	ISelectionService
+1	get_SelectionCount
+1	get_PrimarySelection
+1	add_SelectionChanging
+2	InsertItem
+1	get_RequestTimer
+1	System.Timers
+1	TimerElapsedEventHandler
+1	TimerElapsedEventArgs
+1	UpdateStringCollection
+1	TimerThreadState
+1	InfiniteTimer
+1	PFN_CMSG_STREAM_OUTPUT
+1	SafeTimerHandle
+1	TimersDescriptionAttribute
+1	get_DefaultTimerQueue
+1	AuthenticationSchemeSelector
+1	outputStreamReadMode
+1	m_TimerState
+1	CertificateSelect
+1	AuthenticationSelectorInfo
+1	TimerNode
+1	EnsureCloseOutputOperation
+1	InfiniteTimerQueue
+1	MetadataUpdateStream
+1	ExtendedProtectionSelector
+1	SelectionTypes
+1	LocalCertificateSelectionCallback
+1	cmdidOutputWindow
+1	StopTimerThread
+1	GlobalProxySelection
+1	LocalCertSelectionCallback
+1	m_CloseOutputOutstandingOperationHelper
+1	SelectMode
+1	remove_SelectionChanging
+1	add_OutputDataReceived
+1	remove_OutputDataReceived
+1	SetAsyncEventSelect
+1	XPUpdate
+1	needRegistryUpdate
+1	_PinnableOutputBuffer
+1	userCertSelectionCallbackWrapper
+1	redirectStandardOutput
+1	UpdateCrc32
+1	CountPerTimeInterval32
+1	CountPerTimeInterval64
+1	SPI_GETSELECTIONFADE
+1	SPI_SETSELECTIONFADE
+1	CertVALIDITYPERIODNESTING
+1	PERF_TIMER_TICK
+1	WM_CREATETIMER
+1	WM_KILLTIMER
+1	PERF_100NSEC_TIMER
+1	PERF_AVERAGE_TIMER
+1	PERF_OBJ_TIME_TIMER
+1	PERF_100NSEC_MULTI_TIMER
+1	PERF_COUNTER_MULTI_TIMER
+1	PERF_PRECISION_SYSTEM_TIMER
+1	WM_TIMER
+1	PERF_COUNTER_TIMER
+1	PERF_PRECISION_100NS_TIMER
+1	QS_TIMER
+1	PERF_OBJECT_TIMER
+1	PERF_PRECISION_OBJECT_TIMER
+1	PERF_TIMER_100NS
+1	PERF_100NSEC_TIMER_INV
+1	PERF_100NSEC_MULTI_TIMER_INV
+1	PERF_COUNTER_MULTI_TIMER_INV
+1	PERF_COUNTER_TIMER_INV
+1	CloseOutputAsync
+1	get_TimerId
+1	UpdateWithBytesRead
+1	SelectRead
+1	CancelOutputRead
+1	get_OutputPacketsDiscarded
+1	add_TimerElapsed
+1	GetComponentSelected
+1	TransportSelected
+1	OnUpdateCache
+1	DoNotUpdateCache
+1	CounterMultiTimerInverse
+1	CounterTimerInverse
+1	CounterMultiTimer100NsInverse
+1	get_AuthenticationSchemeSelectorDelegate
+1	set_AuthenticationSchemeSelectorDelegate
+1	get_ExtendedProtectionSelectorDelegate
+1	set_ExtendedProtectionSelectorDelegate
+1	SelectWrite
+1	get_OutputPacketsWithNoRoute
+1	outputReg
+1	get_StandardOutputEncoding
+1	set_StandardOutputEncoding
+1	get_OutputQueueLength
+1	get_Interval
+1	set_Interval
+1	get_KeepAliveInterval
+1	set_KeepAliveInterval
+1	get_DefaultKeepAliveInterval
+1	defaultKeepAliveInterval
+1	keepAliveInterval
+1	get_AutoConfigUrlRetryInterval
+1	set_AutoConfigUrlRetryInterval
+1	cmdidSelectAll
+1	get_OutputStream
+1	UpdateResponseInformation
+1	ToolWindowSelection
+1	System.Timers.Timer.bmp
+1	OutputMemberAccessModifier
+1	ErrorCreateTimer
+1	CounterMultiTimer
+1	ErrorKillTimer
+1	CounterTimer
+1	ResetTimer
+1	StartTimer
+1	SelectError
+1	cmdidInsertSeparator
+1	CounterMultiTimer100Ns
+1	get_OutputPacketRoutingDiscards
+1	set_TraceOutputOptions
+1	ReplaceOrUpdateCacheHeaders
+1	GetSelectedComponents
+1	SetSelectedComponents
+1	get_OutputPacketRequests
+2	InsertAt
+1	get_Select
+1	set_Select
+1	UnsetAsyncEventSelect
+1	ReadIntervalTimeout
+1	get_Output
+1	get_RedirectStandardOutput
+1	hStdOutput
+1	get_AvailableOutput
+1	System.CodeDom.Compiler.ICodeGenerator.GetTypeOutput
+1	get_ShouldCloseOutput
+1	SetShouldCloseOutput
+1	System.IO.Compression.IDeflater.GetDeflateOutput
+1	UpdateConnectContext
+1	UpdateAcceptContext
+1	cmdidInsertNewMenu
+1	lpTimerProc
+1	randomTimerId
+1	timerId
+1	OnTimerElapsed
+1	InsertionBalance
+1	outputFile
+1	outputName
+1	selectionType
+6	CryptMsgUpdate
+2	AddOrUpdate
+1	certSelectionDelegate
+1	selectorDelegate
+1	get_ConnectionLeaseTimerQueue
+1	get_ContinueTimerQueue
+2	get_OutputEncoding
+1	get_TimeRemaining
+1	_userCertificateSelectionCallback
+1	certSelectionCallback
+1	MyTimerCallback
+1	m_CloseOutputTask
+1	WebSocketGetDefaultKeepAliveInterval
+2	autoConfigUrlRetryInterval
+1	interval
+1	selectedSubProtocol
+1	outputStream
+1	UpdateVersion
+1	pcSelection
+1	pprgpSelection
+1	OutputDirection
+2	timer
+1	OutputOperator
+1	OutputTypeAttributes
+1	insertionStrings
+4	CertSelectCertificateChains
+1	selectedExtensions
+1	set_CacheDontUpdateHeaders
+1	OutputTypeParameters
+1	needCancelSelect
+1	net_sockets_empty_select
+2	TimerAutoReset
+1	rtcOutputSocketResult
+1	updateCount
+1	selectedExtensionCount
+1	selectedCert
+2	ProcessRedirectStandardOutput
+1	pfnStreamOutput
+1	inputOutput
+1	pSelectionContext
+1	<CloseOutputAsyncCore>d__51
+1	net_log_cache_cannot_update_cache_if_304
+1	net_log_cache_suppressing_headers_update_on_304
+1	<ownsCloseOutputCancellationTokenSource>5__6
+1	CERT_SELECT_CRITERIA
+1	cmdidCmdWinUpdateAC
+1	CERT_NEXT_UPDATE_LOCATION_PROP_ID
+1	CERT_SELECT_BY_ENHKEY_USAGE
+1	CERT_SELECT_BY_KEY_USAGE
+2	CERT_STORE_UPDATE_KEYID_FLAG
+1	CERT_E_VALIDITYPERIODNESTING
+1	CRYPT_UPDATE_KEY
+1	SafeCertSelectCritera
+2	outputData
+1	UpdateAfterRead
+1	pendingOutputRead
+1	outputPacketsDiscarded
+2	TimerEnabled
+1	net_log_cache_update_failed
+1	Extension_Names_Cannot_Be_Empty_Or_Non_Period_Based
+1	onIntervalElapsed
+2	TimerIntervalElapsed
+1	OnCloseOutputCompleted
+1	StandardOutputEncodingNotAllowed
+1	net_log_cache_no_update_based_on_method
+1	cmdidInsertHTMLWizard
+1	OutputStartingBrace
+1	SelectAuthenticationManagerInstance
+1	net_log_proxy_update_due_to_ip_config_change
+1	outputRegSimple
+1	UpdateLifetime
+1	outputRegWithFileAndLine
+1	ProcessCompilerOutputLine
+1	OutputType
+1	CloseOutputAsyncCore
+1	UpdateCacheEntryOnStore
+1	_PinnableOutputBufferInUse
+1	CheckCacheUpdateOnResponse
+1	CheckUpdateOnResponse
+1	net_log_cache_not_updated_because_no_response
+1	UpdateServerCertificate
+1	m_SelectedClientCertificate
+1	UpdateClientCertificate
+1	UpdateCacheEntryOnRevalidate
+1	needConnectoidUpdate
+1	LookupCachedAndUpdate
+1	CheckUpdate
+2	TryUpdate
+1	net_log_proxy_system_setting_update
+1	m_CertSelectionDelegate
+1	m_SelectorDelegate
+1	m_ExtendedProtectionSelectorDelegate
+1	UpdateReceiveState
+1	UpdateAfterWrite
+1	net_log_sspi_selected_cipher_suite
+1	net_log_cache_suppress_update_because_synched_last_minute
+1	outputPacketsWithNoRoute
+1	m_TimerQueue
+1	get_TimerQueue
+1	m_ConnectionLeaseTimerQueue
+1	m_ContinueTimerQueue
+1	s_ContinueTimerQueue
+1	s_DefaultTimerQueue
+1	timerQueue
+1	standardOutputEncoding
+1	InsertString
+1	TryUpdateContentLength
+1	TryUpdateResponseUri
+1	s_KeepAliveTimerElapsedCallback
+1	m_TimerCallback
+1	timerCallback
+1	m_ExpiringTimerLock
+1	UpdateDataChunk
+1	TimerInvalidInterval
+1	m_KeepAliveInterval
+1	m_TcpKeepAliveInterval
+1	s_TcpKeepAliveInterval
+2	TimerInterval
+1	m_OutputStream
+1	m_CloseOutputOperation
+1	cmdidSaveSelection
+1	cmdidFindInSelection
+1	net_SelectModeNotSupportedException
+1	UpdateInfo
+1	expectedOutputStreamSizeModulo
+1	net_log_cache_cannot_update_cache_with_head_resp
+1	UpdateBuffer
+1	OutputVTableModifier
+1	OutputFieldScopeModifier
+1	OutputMemberScopeModifier
+1	OutputIdentifier
+1	_Timer
+1	m_RecycleTimer
+1	CancelIdleTimer
+2	UpdateTimer
+1	OnCreateTimer
+1	StartAsync100ContinueTimer
+1	m_ContinueTimer
+1	m_KeepAliveTimer
+1	StartKeepAliveTimer
+1	m_ExpiringTimer
+1	CancelTimer
+1	OnKillTimer
+1	retryWinHttpGetProxyForUrlTimer
+1	CreateConnectionGroupTimer
+1	m_ErrorTimer
+1	OutputReadNotifyUser
+1	CodeGenOutputWriter
+1	OutputTypeNamePair
+1	RetryIntervalValidator
+1	SelectFileDescriptor
+1	InternalOutputTabs
+1	cmdidSelectAllFields
+1	outputPacketRoutingDiscards
+1	OutputAttributes
+1	InsertStrings
+1	OutputAttributeDeclarations
+1	MergeUpdateCollections
+1	m_DontUpdateHeaders
+1	get_CacheDontUpdateHeaders
+1	net_log_cache_update_cached_headers
+1	net_log_cache_dont_update_cached_headers
+1	m_Timers
+1	OutputParameters
+1	UpdatePerfCounters
+1	OutputTypeParameterConstraints
+1	_propOutputOpts
+1	packetOutputRequests
+1	GetUpdateStatus
+1	net_log_cache_not_updated_based_on_ftp_response_status
+1	net_log_cache_max_stale_and_update_status
+1	net_log_cache_not_updated_based_on_cache_protocol_status
+2	TimerSynchronizingObject
+1	cmdidInsertObject
+1	net_sockets_toolarge_select
+1	net_sockets_select
+1	UpdateAcceptSocket
+1	InsertAtInt
+1	OutputAttributeArgument
+1	OnTimerElapsedEvent
+1	UpdateServicePoint
+1	cmdidInsertBreakpoint
+1	net_log_cache_update_not_supported_for_ftp_restart
+1	net_log_selected_cert
+1	DebugUpdateRequest
+1	OutputExpressionList
+1	UpdateRegExList
+1	GetCompressedOutput
+2	ProcessStandardOutput
+1	standardOutput
+1	GetBaseTypeOutput
+1	m_ShouldCloseOutput
+1	ReadDeflateOutput
+1	ReadInflateOutput
+1	cmdidAddToOutput
+1	WriteDeflaterOutput
+1	GetTypeArgumentsOutput
+1	cmdidFindSelectedNext
+1	msotcidNewObjInsertWellMenu
+1	msotcidProjWinInsertMenu
+1	cmdidFindSelectedPrev
+1	UpdateCurrentIndex
+1	GetTypeOutputWithoutArrayPostFix
+1	OutputArrayPostfix
+1	net_log_cache_not_updated_based_on_policy
+1	cmdidUpdateQuery
+1	cmdidInsertValuesQuery
+1	cmdidSelectQuery
+1	FinallyUpdateCacheEntry
+1	UnsafeUpdateFromRegistry
+1	This method has been deprecated. Please use the proxy selected for you by default. http://go.microsoft.com/fwlink/?linkid=14202
+1	?System.Net.WebSockets.WebSocketBase+<CloseOutputAsyncCore>d__51
+1	nThis value has been deprecated. Use SelectionTypes.Auto instead.  http://go.microsoft.com/fwlink/?linkid=14202
+1	qThis value has been deprecated. Use SelectionTypes.Primary instead.  http://go.microsoft.com/fwlink/?linkid=14202
+2	Interval
+1	traceOutputOptions
+1	The output writer for code generation and the writer supplied don't match and cannot be used. This is generally caused by a bad implementation of a CodeGenerator derived class.
+1	The Counter layout for the Category specified is invalid, a counter of the type:  AverageCount64, AverageTimer32, CounterMultiTimer, CounterMultiTimerInverse, CounterMultiTimer100Ns, CounterMultiTimer100NsInverse, RawFraction, or SampleFraction has to be immediately followed by any of the base counter types: AverageBase, CounterMultiBase, RawBase or SampleBase.
+1	Cannot create timer.
+1	Cannot end timer.
+1	AAn exception occurred writing trace output to log file '{0}'. {1}
+1	mAn extension name in the CodeDom configuration section must be a non-empty string which starts with a period.
+1	Unknown input/output failure.
+1	bThe key reference with respect to which the insertion operation was to be performed was not found.
+1	CUser event handler to call for async IO with StandardOutput stream.
+1	]Whether the process's error output is written to the Process instance's StandardError member.
+1	VWhether the process output is written to the Process instance's StandardOutput member.
+1	&Standard output stream of the process.
+1	PCannot update Performance Counter, this object has been initialized as ReadOnly.
+1	LStandardOutputEncoding is only supported when standard output is redirected.
+1	AIndicates whether the timer will be restarted when it is enabled.
+1	LIndicates whether the timer is enabled to fire events at a defined interval.
+1	0The number of milliseconds between timer events.
+1	%Occurs when the Interval has elapsed.
+1	O'{0}' is not a valid value for 'Interval'. 'Interval' must be greater than {1}.
+1	WThe object used to marshal the event handler calls issued when an interval has elapsed.
+1	5The '{0}' select mode is not supported by this class.
+1	The received message type '{2}' is invalid after calling {0}. {0} should only be used if no more data is expected from the remote endpoint. Use '{1}' instead to keep being able to receive data but close the output channel.
+1	The received  message type is invalid after calling {0}. {0} should only be used if no more data is expected from the remote endpoint. Use '{1}' instead to keep being able to receive data but close the output channel.
+1	The WebSocket is in an invalid state for this operation. The '{0}' method has already been called before on this instance. Use '{1}' instead to keep being able to receive data but close the output channel.
+1	XHTTP.SYS doesn't support extended protection. Please install the latest HTTP.SYS update.
+1	NCannot update cache if Response status == 304 and a cache entry was not found.
+1	ICannot update cache with HEAD response if the cache entry does not exist.
+1	Do not update Cached Headers.
+1	){0}, MaxStale = {1}, Update Status = {2}.
+1	7Cache is not updated based on the request Method = {0}.
+1	K{0}, Cache is not updated based on the current cache protocol status = {1}.
+1	TCache is not updated based on the FTP response status. Expected = {0}, actual = {1}.
+1	+Cache is not updated based on Policy = {0}.
+1	NCache is not updated because there is no response associated with the request.
+1	QSuppressing cache update since the entry was synchronized within the last minute.
+1	HSuppressing cache headers update on 304, new headers don't add anything.
+1	Update Cached Headers.
+1	/{0}, Key = {1}, Update operation failed -> {2}.
+1	PCache update is not supported for restarted FTP responses. Restart offset = {0}.
+1	SSending 500 response, AuthenticationSchemeSelectorDelegate threw an exception: {0}.
+1	qScriptEngine was notified of a potential change in the system's proxy settings and will update WebProxy settings.
+1	`ScriptEngine was notified of a change in the IP configuration and will update WebProxy settings.
+1	Selected certificate: {0}.
+1	~The Security Service Providers don't support extended protection. Please install the latest Security Service Providers update.
+1	Update flow graph
+1	Processor does not have a high-frequency timer.
+4	CACHE_E_NOCACHE_UPDATED
+4	CACHE_S_SOMECACHES_NOTUPDATED
+8	GetConsoleOutputCP
+1	_outputEncoding
+2	DisableFusionUpdatesFromADManager
+2	PerformWaitOrTimerCallback
+1	OnInsertComplete
+1	OutputTypeBuilder
+1	UpdateKwdTriggers
+1	_waitOrTimerCallback
+1	LoopTimer
+1	ToBase64_CalculateAndValidateOutputLength
+1	get_NetFxTimer
+1	TimerHolder
+2	UpdateContextProperty
+1	TimerQueueTimer
+1	DateTimeRawInfo
+2	_ThreadPoolWaitOrTimerCallback
+1	RemotingSurrogateSelector
+1	AppDomainTimerSafeHandle
+1	WindowsRuntimeResourceManagerBase
+1	m_associatedTimerQueue
+1	SelectClaimsPrincipal
+1	ISurrogateSelector
+1	DateTimeResult
+1	m_currentAppDomainTimerDuration
+1	s_WindowsRuntimeResourceManager
+1	ArgumentOutOfRange_ListInsert
+1	InsertionSort
+2	UpdateLoaderOptimization
+1	RuntimeResourceSet
+1	UpdateThreadWI
+1	UpdateData
+1	UpdateContextPropertyIfNeeded
+1	UpdateBooleanContextPropertyIfNeeded
+1	UpdateByteArrayContextPropertyIfNeeded
+1	WriteMultiMerge
+1	AtomicStateUpdate
+1	WaitOrTimerCallback_Context_f
+2	FmtClassUpdateNativeInternal
+1	timeOutInterval
+1	InternalUpdateVersion
+1	UpdateEtwSession
+1	WriteMultiMergeInner
+1	ActivatorFactorySelector
+1	UpdateDescriptor
+1	get_IsOutputRedirected
+1	SelectMethod
+1	OemPeriod
+1	InsertAce
+1	t_timersToQueueToFire
+1	set_OutputEncoding
+1	GetRuntimeResourceString
+1	get_UseNetCoreTimer
+1	DeleteTimer
+1	UpdateFilter
+1	get_SurrogateSelector
+1	set_SurrogateSelector
+1	get_ClaimsPrincipalSelector
+1	set_ClaimsPrincipalSelector
+1	ChainSelector
+1	GetNextSelector
+1	get_PrimaryIdentitySelector
+1	set_PrimaryIdentitySelector
+1	InsertLineBreaks
+1	System.Runtime.InteropServices.WindowsRuntime.IBindableVector.InsertAt
+1	SelectNewObject
+1	LaunchMediaSelect
+1	MoveTimerToCorrectList
+1	OpenStandardOutput
+1	SelectProperty
+5	SetConsoleOutputCP
+1	updateChannelData
+1	UpdatedField
+1	m_period
+1	get_ConsoleOutputHandle
+1	m_OutputModule
+1	flagsToUpdate
+5	FillConsoleOutputAttribute
+1	s_timerCallback
+1	updateBitsMask
+1	millisecondsTimeOutInterval
+1	SwitchUseNetCoreTimer
+1	_useNetCoreTimer
+2	ChangeAppDomainTimer
+2	CreateAppDomainTimer
+2	DeleteAppDomainTimer
+1	m_timer
+2	FillConsoleOutputCharacter
+1	surrogateSelector
+1	valueSelector
+1	s_activatorFactorySelector
+1	updateCompilerFlags
+1	insertLineBreaks
+1	updateIfExists
+1	insert
+2	ReadConsoleOutput
+2	WriteConsoleOutput
+1	hConsoleOutput
+1	_output
+1	updateValueFactory
+1	<SelectProperty>b__3_0
+1	<OutputWaitEtwEvents>b__0
+1	<OutputAsyncCausalityEvents>b__0
+1	<OutputCorrelationEtwEvent>b__0
+1	Update2
+1	<currentOutputIndex>5__4
+1	UpdateDomainPLS
+2	UpdateAppDomainPLS
+1	PROCESSOR_COUNT_REFRESH_INTERVAL_MS
+1	s_BaseNotifyPeriodMS
+1	s_NotifyPeriodIncrementMS
+1	TimerCallbackLogic
+1	m_isAppDomainTimerScheduled
+1	UpdateRefused
+1	IgnorablePeriod
+1	InsertAtCurrentHashNode
+1	InternalUpdateRange
+1	_consoleOutputHandle
+1	UpdateQuotaFromInfoFile
+1	UpdateTripleListAndCreateNewTriple
+1	AtomicLoopStateUpdate
+1	UpdateValue
+1	GetPointerValue
+1	UpdateStackSize
+1	m_outputBlockSize
+1	InsertHash
+2	AppDomainTimerCallback
+1	m_timerCallback
+2	FmtClassUpdateCLRInternal
+1	CleanUpCountInterval
+1	PeriodicTerm
+1	UpdateDescendentDependencyChain
+1	UpdateZoneAndOrigin
+1	FireQueuedTimerCompletion
+1	s_fireQueuedTimerCompletion
+1	QueueTimerCompletion
+1	TimerSetup
+1	UpdateStringBuilder
+1	_OutputBuffer
+1	get_NetCoreTimer
+1	leaseTimer
+1	InitializeWithTimer
+1	LinkTimer
+1	UnlinkTimer
+1	m_appDomainTimer
+1	InsertAtHelper
+1	s_principalSelector
+1	m_nextSelector
+1	s_identitySelector
+1	UpdateWithNewSecurityDescriptor
+1	ShortTimersThresholdMilliseconds
+1	UpdateNames
+1	CreateTimerQueues
+1	UpdateControlFlags
+1	m_currentAppDomainTimerStartTicks
+1	SumLongSequenceOfPeriodicTerms
+1	UpdatePermissions
+1	UpdateIOPadBuffers
+1	m_longTimers
+1	m_shortTimers
+1	FireNextTimers
+1	m_timers
+1	OutputWaitEtwEvents
+1	OutputAsyncCausalityEvents
+1	UpdateExceptionObservedStatus
+1	WaitOrTimerCallback_Context_t
+1	UpdateGrant
+1	UpdateCurrent
+1	OutputCorrelationEtwEvent
+1	UncExtendedPrefixToInsert
+1	UNCLongPathPrefixToInsert
+1	UpdateAssert
+1	UpdateArrayList
+1	WaitOrTimerCallback_Context
+1	_OutputBufferIndex
+1	EnsureAppDomainTimerFiresBy
+1	UpdateComTypesInAssembly
+1	UpdateStateAtomically
+1	SelectPrimaryIdentity
+1	VInsertion index was out of range. Must be non-negative and less than or equal to size.
+1	 Period must be less than 2^32-2.
+1	+Time-out interval must be less than 2^32-2.
+1	_The output byte buffer is too small to contain the encoded data, encoding '{0}' fallback '{1}'.
+1	eThe output char buffer is too small to contain the decoded characters, encoding '{0}' fallback '{1}'.
+1	LPlease select a specific culture, such as zh-CN, zh-HK, zh-TW, zh-MO, zh-SG.
+1	COutput feedback mode (OFB) is not supported by this implementation.
+1	@Period character ('.') is illegal in an ETW provider name ({0}).
+1	Hashtable insert failed. Load factor too high. The most common cause is multiple threads writing to the Hashtable simultaneously.
+1	#The valueSelector argument is null.
+1	+Output streams do not support TypeBuilders.
+1	5Selector is already on the list of checked selectors.
+1	'Adding selector will introduce a cycle.
+1	Selector contained a cycle.
+3	Input/output error
+2	_get_printf_count_output
+2	_set_printf_count_output
+1	TimerQueue
+3	Update
+1	Selectors
+2	Timer
+9	CreateWaitableTimerExW
+4	SetWaitableTimerEx
+1	Output->MaximumLength >= BytesNeeded
+1	OutputBlob->MaximumLength == 0
+1	OutputBlob->Length == 0
+1	Not-null check failed: OutputBlob
+1	OutputBlob->Buffer == 0
+1	MicrodomImplementation::CMicrodom_IRtlMicrodomTearoff::CTempOutputStream::CreateInterface
+1	TempOutputNodeSet.Allocate(InputNodeSet.Length)
+1	OutputNodeSet.Allocate(InputNodeSet.Length)
+1	qpOutputBufferedStream.Allocate()
+1	Not-null check failed: pOutputStream
+1	CMicrodomBuilder::InsertDefaultAttributes
+1	m_AttdefListTable.FindOrInsertIfNotPresent( ulElementName, NewAttdefList, &pAttdefList)
+1	CHashAlgorithm::Update
+1	DB_IPCE_UPDATE_MODULE_SYMS
+1	DB_IPCE_ENC_UPDATE_FUNCTION
+1	DB_IPCE_METADATA_UPDATE
+1	DB_IPCE_RESOLVE_UPDATE_METADATA_1_RESULT
+1	DB_IPCE_RESOLVE_UPDATE_METADATA_2_RESULT
+1	DB_IPCE_RESOLVE_UPDATE_METADATA_1
+1	DB_IPCE_RESOLVE_UPDATE_METADATA_2
+1	Not-null check failed: pOutputOctetStream
+1	Not-null check failed: pOutputNodeSet
+1	qperf_100nsec_timer
+1	qperf_100nsec_multi_timer_inv
+1	qperf_counter_timer_inv
+1	qperf_obj_time_timer
+1	qperf_counter_multi_timer_inv
+1	qperf_counter_multi_timer
+1	qperf_precision_object_timer
+1	qperf_100nsec_timer_inv
+1	qtimer
+1	qupdate
+1	qperf_precision_100ns_timer
+1	qperf_counter_timer
+1	qperf_precision_system_timer
+1	qperf_average_timer
+1	qperf_100nsec_multi_timer
+1	Windows::Rtl::IsValid(Output)
+1	Output.MaximumLength >= cToAllocate * sizeof(Output.Buffer[0])
+1	perf_counter_timer
+1	perf_counter_timer_inv
+1	perf_average_timer
+1	perf_counter_multi_timer
+1	perf_counter_multi_timer_inv
+1	perf_100nsec_multi_timer
+1	perf_obj_time_timer
+1	perf_100nsec_timer
+1	perf_100nsec_timer_inv
+1	perf_100nsec_multi_timer_inv
+1	perf_precision_system_timer
+1	perf_precision_100ns_timer
+1	perf_precision_object_timer
+1	insert cache data
+1	insert_cache_external
+1	insert_cache_shared
+1	insert_cache_dispatch
+1	insert_cache_resolve
+1	insert_cache_hit
+1	insert_cache_miss
+1	insert_cache_collide
+1	insert_cache_write
+1	EACM::AEAC: updated token 0x%x; type 0x%x; rid 0x%x
+1	qInput file size/Output file size ratio:
+1	Output file size:           %8d
+4	RuntimeReleaseHandle
+3	UpdateError
+1	RuntimeReleaseHandle_RetAddr
+1	UpdateError_RetAddr
+1	UpdateAction!
+1	C:\GATE\SERVER\CONFIG.MDB
+1	InsertDefaultContext
+1	AsyncRetryInterval
+1	PreparedInsert
+1	PreparedUpdate
+1	%02d) Select into '%S'
+1	%02d) Insert into '%S'
+1	%02d) Update
+1	INTERVAL %c'%lu' YEAR(%u)
+1	INTERVAL %c'%lu' MONTH(%u)
+1	INTERVAL %c'%lu' DAY(%u)
+1	INTERVAL %c'%lu' HOUR(%u)
+1	INTERVAL %c'%lu' MINUTE(%u)
+1	INTERVAL %c'%lu%s' SECOND(%u,%u)
+1	INTERVAL %c'%lu-%02lu' YEAR(%u) TO MONTH
+1	INTERVAL %c'%lu %02lu' DAY(%u) TO HOUR
+1	INTERVAL %c'%lu %02lu:%02lu' DAY(%u) TO MINUTE
+1	INTERVAL %c'%lu %02lu:%02lu:%02lu%s' DAY(%u) TO SECOND(%u)
+1	INTERVAL %c'%lu:%02lu' HOUR(%u) TO MINUTE
+1	INTERVAL %c'%lu:%02lu:%02lu%s' HOUR(%u) TO SECOND(%u)
+1	INTERVAL %c'%lu:%02lu%s' MINUTE(%u) TO SECOND(%u)
+1	'INTERVAL %c''%lu'' YEAR(%u)'
+1	'INTERVAL %c''%lu'' MONTH(%u)'
+1	'INTERVAL %c''%lu'' DAY(%u)'
+1	'INTERVAL %c''%lu'' HOUR(%u)'
+1	'INTERVAL %c''%lu'' MINUTE(%u)'
+1	'INTERVAL %c''%lu%s'' SECOND(%u,%u)'
+1	'INTERVAL %c''%lu-%02lu'' YEAR(%u) TO MONTH'
+1	'INTERVAL %c''%lu %02lu'' DAY(%u) TO HOUR'
+1	'INTERVAL %c''%lu %02lu:%02lu'' DAY(%u) TO MINUTE'
+1	'INTERVAL %c''%lu %02lu:%02lu:%02lu%s'' DAY(%u) TO SECOND(%u)'
+1	'INTERVAL %c''%lu:%02lu'' HOUR(%u) TO MINUTE'
+1	'INTERVAL %c''%lu:%02lu:%02lu%s'' HOUR(%u) TO SECOND(%u)'
+1	'INTERVAL %c''%lu:%02lu%s'' MINUTE(%u) TO SECOND(%u)'
+1	UpdateCriteriaEnumWW
+1	dbCriteriaDeleteInsertWW
+1	|dbCriteriaUpdate
+1	'dbRelationUpdateCascadeW
+1	dbQSelectWWW
+1	0V9dbQUpdateWWW
+1	dbSecInsertDataWx
+1	~dbParamOutputWWW4
+1	0bTdbParamInputOutputWW4
+1	UpdateTypeEnumWW
+1	dbUpdateBatchWWW
+1	qdbUpdateRegularW
+1	fdbUpdateCurrentRecordWWW
+1	vLastUpdatedW<
+1	-_30_CancelUpdate
+1	YW_30_UpdateWW
+1	R|UpdateOptionsWWW
+1	5CancelUpdate
+1	UpdateTypeWW
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,struct _ASSEMBLY *,struct _ASSEMBLY *,class CAssemblyTableHelper,7,0>::Insert
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,struct _ASSEMBLY *,struct _ASSEMBLY *,class CAssemblyTableHelper,7,0>::CBucketChain::Insert
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CXMLNamespaceManager::CNamespacePrefix *,class CXMLNamespaceManager::CNamespacePrefix *,class CStringPtrTableHelper<class CXMLNamespaceManager::CNamespacePrefix,class CUnicodeCharTraits,0>,7,0>::InsertOrUpdateIf
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CXMLNamespaceManager::CNamespacePrefix *,class CXMLNamespaceManager::CNamespacePrefix *,class CStringPtrTableHelper<class CXMLNamespaceManager::CNamespacePrefix,class CUnicodeCharTraits,0>,7,0>::CBucketChain::InsertOrUpdateIf
+1	SxsInsertAssemblyIdentityAttribute
+1	CXMLNamespaceManager::InsertOrUpdateIfCallback
+1	CHashTableIter<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CXMLNamespaceManager::CNamespacePrefix *,class CXMLNamespaceManager::CNamespacePrefix *,class CStringPtrTableHelper<class CXMLNamespaceManager::CNamespacePrefix,class CUnicodeCharTraits,0>,7,0>::Update
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CXMLNamespaceManager::CNamespacePrefix *,class CXMLNamespaceManager::CNamespacePrefix *,class CStringPtrTableHelper<class CXMLNamespaceManager::CNamespacePrefix,class CUnicodeCharTraits,0>,7,0>::CBucket::Update
+1	SxspUpdateAssemblyIdentityHash
+1	CHashTable<struct _GUID const &,struct _GUID,class CGSGenCtx::Entry *,class CGSGenCtx::Entry *,class CGSGenCtx::EntryGuidTableHelper,7,0>::Insert
+1	CHashTable<struct _GUID const &,struct _GUID,class CGSGenCtx::Entry *,class CGSGenCtx::Entry *,class CGSGenCtx::EntryGuidTableHelper,7,0>::CBucketChain::Insert
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CPolicyStatement *,class CPolicyStatement *,class CCaseInsensitiveUnicodeStringPtrTableHelper<class CPolicyStatement>,7,0>::Insert
+1	CHashTable<class CCountedStringHolder<class CUnicodeCharTraits> const &,class CGenericStringBuffer<260,class CUnicodeCharTraits>,class CPolicyStatement *,class CPolicyStatement *,class CCaseInsensitiveUnicodeStringPtrTableHelper<class CPolicyStatement>,7,0>::CBucketChain::Insert
+1	MultiSelect
+1	Selected
+1	UpdateControls
+1	UpdateRecord
+1	InsertObjDlg
+1	UpdateOptions
+1	HideSelection
+1	SelectionChanged
+2	SelectedControls
+2	OleUIInsertObjectA
+6	UpdateWindow
+4	GetUpdateRect
+3	GetUpdateRgn
+2	InsertMenuA
+4	LockWindowUpdate
+5	ExtSelectClipRgn
+8	SelectPalette
+7	SelectClipRgn
+1	LMultiSelectConstants
+1	vbAsyncReadForceUpdateWW
+1	vbMultiSelectNoneWWWx
+1	xvbMultiSelectSimpleWx
+1	vbMultiSelectExtendedWWW
+1	vbDataActionUpdateWW@
+1	vbKeySelectW
+1	JvbKeyInsertW
+1	Constants for the MultiSelect property of a ListBox.WW#
+1	A collection object that can contain all the currently selected controls on an object.Q
+1	AsyncRead will only update the locally cached copy if the server version is newer.N
+1	ComboBox control style that allows typing in a text box or selection from a drop-down list.WWWj
+1	ComboBox control style that allows typing in a text box or selection from a list, which doesn't drop down.D
+1	Only allows selection from the drop-down list in a ComboBox control.WWC
+1	Doesn't allow multiple selections in the list of a ListBox control.WWW
+1	Allows clicking the mouse or pressing the SPACEBAR to select or deselect an item in a ListBox control. (Arrow keys move the focus.)WWW
+1	Allows multiple-item selection in a ListBox control list. (CTRL+Click selects/deselects individual items. Click on the first item in a group and SHIFT+Click on the last item selects all items in the group.)
+1	Update operation -- not update record (Validate event).WWW
+1	Failure to update data in destination control.
+1	Control is updated each time linked data changes in a DDE conversation.WWW?
+1	Control is updated only when the LinkRequest method is invoked.WWW3
+1	Select key.WWW
+1	Insert key.WWW
+1	Background color of items selected in a control.WW*
+1	Text color of items selected in a control. 
+1	No operation - output remains unchanged (DrawMode).WWW
+1	Object is updated each time the linked data changes.WW>
+1	Object is updated whenever the user saves the linked document.E
+1	Object is updated only when the Action property is set to 6 (Update).W*
+1	Monochrome printer output.
+1	Color printer output.W
+1	Wait for manual insertion of each sheet of paper.W'
+1	Use envelopes from the envelope feeder, but wait for manual insertion.1
+1	Entries contain selectable checkboxes.=
+1	FindLocationUpdates
+1	GetStreamUpdate
+1	GetDeclarationUpdate
+1	get_UpdateConfigHost
+1	GetDefinitionUpdate
+1	GetUpdate
+1	GetConfigDefinitionUpdates
+1	FindSectionUpdates
+1	set_AddUpdate
+1	forceUpdateAll
+1	get_UpdatedXml
+1	_updatedXml
+1	configSourceUpdates
+1	requireUpdates
+1	locationUpdates
+1	declarationUpdates
+1	_sectionUpdates
+1	configDefinitionUpdates
+1	definitionUpdates
+1	get_RecordItselfRequiresUpdates
+1	updatedStartElement
+1	get_LocationUpdatesList
+1	SAVING_RETRY_INTERVAL
+1	Flag_AddUpdate
+1	get_AddUpdate
+1	WriteSectionUpdate
+1	GetSectionGroupUpdate
+1	_sectionGroupUpdate
+1	GetUpdatedSectionDeclarationXml
+1	GetUpdatedSectionGroupDeclarationXml
+1	UpdatePropertyCollection
+1	UpdatePosition
+1	GetSectionUpdatesForGroup
+1	UpdateRecords
+1	CompleteUpdates
+1	GetConfigDeclarationUpdates
+1	get_SectionUpdates
+1	InitStreamInfoUpdates
+1	_streamInfoUpdates
+1	UpdateIndent
+1	UpdateStartElement
+1	_locationUpdatesList
+1	~Section or group name '{0}' is already defined. Updates to this may only occur at the configuration level where it is defined.
+25	NtUpdateWnfStateData
+1	__FIAsyncOperation_1_Windows__CStorage__CStreams__CIOutputStream
+1	__FIAsyncOperationCompletedHandler_1_Windows__CStorage__CStreams__CIOutputStream
+1	__x_Windows_CStorage_CStreams_CIOutputStream
+6	RtlInsertElementGenericTableAvl
+1	IExportMessageTimer
+1	Timer Handles shouldn't be initialized
+1	Expected initialized timer handles
+7	SetWaitableTimer
+1	FileOpenFileSaveFileUpdate
+1	CommitInputHistoryRequestInputHistoryRequestModStateChangeInputSettingsUpdatedIngestSpellingDictionaryEditSettingsUpdatedInputScopeUpdated
+1	UnknownSelectionMoveSelectionPressSelectionReleaseSelectionClearViewChangeCloudLoadingCloudDuplicatedSelectByIndexSelectionMoveByLineSelectionMoveByPageSelectionMoveFirstSelectionMoveLastPrivacySettingEmptyHideEmptyAllHideAllUpdatePositionSetInputLocaleSelectionMoveByGroupSelectionMoveByLineOrChangeViewItemDeleteItemPinItemUploadItemPasteItemSearchNavigationMoveSelectionMoveByPageAndChangeViewNotifyEndTextCompositionDone
+1	FocusLostFocusGainedTapSelectContextUpdatedStringKeyRestartKeyDeactivatedEndOfBufferCommandCompletedCompositionTerminatedVisibleTextChangedSessionErrorErrorCleared
+1	InvalidOpSelectMoveIPToStartMoveIPToEnd
+1	InvalidOpUnselectSelectDeleteCorrectSpellingDigitsVerboseOneWordLowerCaseUpperCaseCapitalizeHyphenateUnhyphenateMoveIPToStartMoveIPToEnd
+1	ItemSelectedViewChangedCandidateReadyCandidateShownRequestItemsItemFocusedItemUnfocusedItemPinToListItemUnpinFromListItemRemoveFromListToggleSymbolViewCloudConsentShowLiveStickerShowSymbolsShowKaomojiCloseSymbolViewOpenSymbolViewInvokeTipWindowActionPinLiveStickerUnPinLiveStickerCandidateHiddenWebSearchControlDefersToShellRequestEndTextComposition
+1	FocusLossFocusGainTextChangeSelectionChangeUndoStartNavigateFocusKeyEventConsumedKeyEventSkippedNavigateFocusDepartFocusCompositionTerminatedConversionModeChanged
+1	SelectionBegin
+1	SelectionEnd
+1	OnInsertBool
+1	OnInsertInt32
+1	OnInsertUInt32
+1	OnInsertString
+1	SetEditControlSelection
+1	InsertChar
+1	InsertText
+1	SetSelection
+1	EditControlSelectionChanged
+1	OnEditControlOrSelectionPositionChanged
+1	InputHostUpdateDelegatedTextInputHost
+1	OnShellRequestedPositionAndSizeUpdate
+1	OnShellPreferenceUpdate
+1	OnInputAppPropertyUpdate
+1	UpdateFocus
+1	UpdateHint
+1	ActivateOnSelection
+1	OnEditClientSelectionChanged
+1	OnEmojiSelected
+1	UpdateComposition
+1	UpdateEditControlInfo
+1	UpdateConversionMode
+1	UpdateTextHistory
+1	UpdateImeServerProfiles
+1	UpdateSystemLanguageBarStatus
+1	RequestInputHistoryUpdate
+1	OnAccentPickerSelection
+1	get_SelectionPosition
+1	SelectionPosition
+1	GetSelection
+1	GetSelectionResult
+1	UpdateMethodResult
+1	NotifySelectionChange
+1	UpdateEngagementTelemetryFlags
+1	get_SelectedRadioButton
+1	SelectedRadioButton
+1	SetSelectionMode
+1	OnUpdateTextStatus
+1	UpdateText
+1	_cached_SelectionPosition
+1	_cached_SelectedRadioButton
+1	FileSelectionMode
+1	NativeTimer
+1	UpdateLoadingScreenProperties
+1	IMessageTimer
+1	MessageTimer
+1	IMessageTimer$X__CallbackAdapter
+1	UpdateForegroundTextInputHost returned HRESULT but failfast was avoided
+1	Dropping SelectionChange notification because edit control is resyncing
+1	TextInputClient::SelectionChanged
+1	Drop invalid selection change
+1	SelectionChange notification saved
+2	Not expecting an existing timer
+1	TextInputFramework!TextInputServer::UpdateCurrentInputFocus
+3	TextInputFramework!TextInputServer::UpdateCurrentTextInputHost
+2	TextInputFramework!TextInputServer::UpdateForegroundTextInputHost
+1	"UpdateForegroundTextInputHost returned HRESULT but failfast was avoided"
+1	TextInputFramework!TextInputServer::UpdateForegroundProcess
+2	bTrackSelectionPosition
+2	TextInputFramework!TextInputServer::SetSelection
+8	iSelectionBegin
+8	iSelectionEnd
+3	TextInputFramework!TextInputServer::InsertText
+3	TextInputFramework!TextInputServer::InsertChar
+1	TextInputFramework!TextInputServer::OnEditControlOrSelectionPositionChanged
+1	SelectionBoundsLeft
+1	SelectionBoundsTop
+1	SelectionBoundsRight
+1	SelectionBoundsBottom
+3	spReg.m_Selection.Begin
+3	spReg.m_Selection.End
+2	nSelectionBegin
+2	nSelectionEnd
+1	TextInputFramework!CTextInputClientFreeThread::SelectionChanged
+1	TextInputFramework!TextInputClient::PopulateEditControl - GetSelectionAsync Continuation failure
+2	selection.Begin
+2	selection.End
+1	TextInputFramework!TextInputClient::SendPendingSelectionChange
+1	rangeSelection.Begin
+1	rangeSelection.End
+1	"Cache tracker updated"
+1	TextInputFramework!TextInputClient::NotifySelectionChanged
+7	TextInputFramework!TextInputClient::SelectionChanged
+1	"SelectionChange notification saved"
+1	"Drop invalid selection change"
+1	"Dropping SelectionChange notification because edit control is resyncing"
+1	TextInputFramework!TextInputClient::UpdateLayoutInfo
+1	TextInputFramework!TextInputClient::SetSelection
+2	TextInputFramework!TextInputClient::InsertText
+2	TextInputFramework!TextInputClient::InsertChar
+1	TextInputFramework!CGetSelectionAsync::Complete
+1	TextInputFramework!CInputContextAdapter::_UpdateInputSettings
+1	TextInputFramework!CInputContextAdapter::_GetCurrentSelection
+1	TextInputFramework!CInputContextAdapter::UpdateUILessMode
+2	TextInputFramework!CInputContextAdapter::SetSelection
+2	TextInputFramework!CInputContextAdapter::GetSelection
+1	selectionBegin
+1	selectionEnd
+1	TextInputFramework!CInputContextAdapter::InsertText
+1	TextInputFramework!CInputContextAdapter::InsertChar
+1	CTextInputClientFreeThread::SelectionChanged
+1	CTextInputClientFreeThread::CompleteGetSelection
+1	Cache tracker updated
+1	FEditBufferCacheTracker::InsertNewRegion
+1	SspipProcessSecurityContext: Too many output buffers: %lu
+1	SspipProcessSecurityContext: Null output buffers passed
+1	SspipProcessSecurityContext: Output buffers count too large: %lu vs %lu
+1	SspipProcessSecurityContext: Output buffer %lu too small: %lu vs %lu
+4	OpenWaitableTimerW
+3	NtOpenTimer
+2	Unable to update reboot required reason. Error = 0x%08x
+1	Update network info is: 
+1	Netinfo after adapter suffix select: 
+1	Entering Update_Send
+1	Entering Update_MultiMaster
+1	Entering Update_Private
+1	Leaving Update_Private
+1	Update Blob:
+1	Update Extra Info:
+1	NULL Update Extra Info ptr.
+1	Update message after reset for retry:
+1	UPDATE_IPV6
+1	n~Entering Update_FazSendFlush
+1	UPDATE
+1	DNS_ERROR_INVALID_ROLLOVER_PERIOD
+1	DNS_ERROR_INVALID_SIGNATURE_VALIDITY_PERIOD
+1	Coalesce_UpdateNetVersion
+2	DnsConnectionUpdateIfIndexTable
+1	DnsGetLastFailedUpdateInfo
+1	DnsUpdate
+1	DnsUpdateMachinePresence
+1	DnsUpdateTest_A
+1	DnsUpdateTest_UTF8
+1	DnsUpdateTest_W
+1	Dns_UpdateLib
+1	Dns_UpdateLibEx
+1	NetInfo_IsForUpdate
+1	NetInfo_UpdateDnsInterfaceConfigChange
+1	NetInfo_UpdateNetworkProperties
+1	NetInfo_UpdateServerReachability
+1	Reg_FreeUpdateInfo
+1	Reg_ReadUpdateInfo
+1	Update_ReplaceAddressRecordsW
+1	WSPSelect
+1	WSPAsyncSelect
+1	WSPEventSelect
+2	WahInsertHandleContext
+2	WSCUpdateProviderEx
+3	WSCUpdateProvider
+2	HidD_SetOutputReport
+1	PrivKeyCachePurgeIntervalSeconds
+4	UpdateDestListsPostFileOperation
+4	UpdateItemsInDestLists
+1	DefCollection_GroupInvalidateTimer
+1	CopyFilesToSyncRootSelection
+1	CopyWorkFilesToUSBSelection
+1	EncryptionUpdateType
+1	UpdateType
+4	UpdateEncryption
+1	SelectionCount
+1	AID_ToastUpdated
+1	UpdatePathIfDurableContentUri
+1	CompleteUpdatesAsync.MakeStagedAsyncOperation
+1	CompleteUpdatesAsync
+1	UpdateStorageProviderFileVersion
+1	CreateOrUpdateItemFromRoamingData
+1	onecoreuap\shell\windows.storage\fileexplorerdatabinding\itemrangeselector.cpp
+1	Toast Update Operation: %d with hadToasted = %ws failed
+3	EfsUIUtilSelectCard
+2	FECommon_UpdateFilePlaceholderStates
+1	GetCachedFileUpdateInformation
+3	GetSelectionStateFromItemArray
+3	RegistryVerbs_GetHandlerMultiSelectModel
+9	DeleteTimerQueueTimer
+6	UpdateProcThreadAttribute
+4	IsThreadpoolTimerSet
+5	SbSelectProcedure
+2	WSAAsyncSelect
+1	ws2_32.WSAAsyncSelect
+1	ws2_32.select
+4	AppXUpdatePackageCapabilities
+4	UpdatePackageStatus
+4	UpdatePackageStatusForUser
+4	UpdatePackageStatusForUserSid
+2	WTSVirtualChannelPurgeOutput
+2	UpdatePanningFeedback
+5	SelectClipPath
+3	NtGdiDdUpdateOverlay
+4	DwmCreatedBitmapRemotingOutput
+4	SelectBrushLocal
+4	SelectFontLocal
+4	UpdateICMRegKeyA
+4	UpdateICMRegKeyW
+3	ExtSelectClipRgnImpl
+3	SelectClipPathImpl
+4	UpdateColors
+1	ConfigureOPMProtectedOutput
+1	CreateOPMProtectedOutput
+1	CreateOPMProtectedOutputs
+2	D3DKMTCreateOutputDupl
+1	WIN32U.NtGdiDdDDICreateOutputDupl
+2	D3DKMTDestroyOutputDupl
+1	WIN32U.NtGdiDdDDIDestroyOutputDupl
+2	D3DKMTOutputDuplGetFrameInfo
+1	WIN32U.NtGdiDdDDIOutputDuplGetFrameInfo
+2	D3DKMTOutputDuplGetMetaData
+1	WIN32U.NtGdiDdDDIOutputDuplGetMetaData
+2	D3DKMTOutputDuplGetPointerShapeData
+1	WIN32U.NtGdiDdDDIOutputDuplGetPointerShapeData
+2	D3DKMTOutputDuplPresent
+1	WIN32U.NtGdiDdDDIOutputDuplPresent
+2	D3DKMTOutputDuplPresentToHwQueue
+1	WIN32U.NtDxgkOutputDuplPresentToHwQueue
+2	D3DKMTOutputDuplReleaseFrame
+1	WIN32U.NtGdiDdDDIOutputDuplReleaseFrame
+2	D3DKMTUpdateAllocationProperty
+1	WIN32U.NtGdiDdDDIUpdateAllocationProperty
+2	D3DKMTUpdateGpuVirtualAddress
+1	WIN32U.NtGdiDdDDIUpdateGpuVirtualAddress
+2	D3DKMTUpdateOverlay
+1	WIN32U.NtGdiDdDDIUpdateOverlay
+2	D3DKMTUpdateTrackedWorkload
+1	WIN32U.NtDxgkUpdateTrackedWorkload
+1	DdNotifyFullscreenSpriteUpdate
+1	DestroyOPMProtectedOutput
+1	GetSuggestedOPMProtectedOutputArraySize
+4	NtGdiConfigureOPMProtectedOutput
+4	NtGdiCreateOPMProtectedOutput
+4	NtGdiCreateOPMProtectedOutputs
+5	NtGdiDdNotifyFullscreenSpriteUpdate
+4	NtGdiDestroyOPMProtectedOutput
+4	NtGdiGetSuggestedOPMProtectedOutputArraySize
+2	SelectClipRgnImpl
+2	SelectObjectImpl
+1	minio\sockets\winsock2\ws2_32\src\select.cpp
+1	CROIDTable::ClientBulkUpdateOIDWithPingServer
+1	TotalWallClockPeriod
+1	VaCloneWallClockPeriod
+1	VaSpaceWallClockPeriod
+1	AuxPagesWallClockPeriod
+1	HandlesWallClockPeriod
+1	ThreadsWallClockPeriod
+2	NumConsequtiveTimerEvents
+1	CApartmentActivator::ContextSelector
+5	SetCoalescableTimer
+3	UpdateProcessTracing
+3	InternalCStdIdentityUpdateFlags
+3	UpdateDCOMSettings
+3	NtQueryTimerResolution
+1	isSpotlightIconSelected
+1	insideTimerCallback
+1	SpotlightIconCheckBoxSelected
+1	isSelected
+1	SelectedItemCount
+1	WallpaperUpdateFailed
+1	WallpaperUpdatedViaSetWallpaper
+1	WallpaperUpdatedViaUpdateImageToSystemSetting
+1	PositionSelectedItems DPIAware
+1	?Insert@Element@DirectUI@@UAEJPAPAV12@II@Z
+1	?_SelfLayoutUpdateDesiredSize@Element@DirectUI@@MAE?AUtagSIZE@@HHPAVSurface@2@@Z
+1	?UpdateTooltip@Element@DirectUI@@MAEXPAV12@@Z
+1	?GetValue@Element@DirectUI@@QAEPAVValue@2@P6GPBUPropertyInfo@2@XZHPAUUpdateCache@2@@Z
+1	?UpdateSheets@DUIXmlParser@DirectUI@@QAEJPAVElement@2@@Z
+1	?UpdateTooltip@HWNDElement@DirectUI@@UAEXPAVElement@2@@Z
+1	?SetSelected@Element@DirectUI@@QAEJ_N@Z
+1	?GetSelected@Element@DirectUI@@QAE_NXZ
+1	?GetValue@Element@DirectUI@@QAEPAVValue@2@PBUPropertyInfo@2@HPAUUpdateCache@2@@Z
+1	?Insert@Element@DirectUI@@QAEJPAV12@I@Z
+1	?SelectedProp@Element@DirectUI@@SGPBUPropertyInfo@2@XZ
+1	?_UpdateDesiredSize@Element@DirectUI@@QAE?AUtagSIZE@@HHPAVSurface@2@@Z
+1	?_UpdateLayoutSize@Element@DirectUI@@QAEXHH@Z
+1	?_UpdateLayoutPosition@Element@DirectUI@@QAEXHH@Z
+1	?GetClassInfoPtr@Selector@DirectUI@@SGPAUIClassInfo@2@XZ
+1	?SelectionChange@Selector@DirectUI@@SG?AVUID@@XZ
+1	?GetSelection@Selector@DirectUI@@QAEPAVElement@2@XZ
+1	?UpdateLayoutRect@Layout@DirectUI@@SGXPAVElement@2@HH0HHHH@Z
+2	GdipImageSelectActiveFrame
+2	SelectStorageVolumeEx
+1	SHHandleUpdateImage
+2	SHOpenFolderAndSelectItems
+1	SHUpdateImageA
+1	SHUpdateImageW
+1	SHUpdateRecycleBinIcon
+3	InsertMenuItemW
+3	InsertMenuW
+4	UpdateLayeredWindow
+1	SelectionChangedd
+1	SelectedItemsWWWl
+1	SelectItemWW
+1	SelectItemRelativeWW
+1	The Selection in the view changed.9
+1	The collection of Selected Items in folder(
+1	Select the itemWWW+
+1	Show items menu and return command selectedWWW'
+1	Select Item relative to the Current ItemWW-
+1	Updated IShellDispatch
+1	USER32.InsertMenuItemW
+1	USER32.InsertMenuW
+1	KERNEL32.OutputDebugStringW
+1	StrFromTimeIntervalA
+2	StrFromTimeIntervalW
+1	api-ms-win-core-com-private-l1-1-1.UpdateDCOMSettings
+1	api-ms-win-core-com-private-l1-1-1.UpdateProcessTracing
+5	NlsGetCacheUpdateCount
+3	A_SHAUpdate
+1	NTDLL.A_SHAUpdate
+2	MD4Update
+1	NTDLL.MD4Update
+3	MD5Update
+1	NTDLL.MD5Update
+1	UpdateTraceA
+2	UpdateTraceW
+2	RtlInsertElementGenericTable
+2	ActivatorUpdateForIsRouterChanges
+2	UpdateFromAppChange
+1	UpdateFromComponentChange
+1	$I10_OUTPUT
+1	_get_output_format
+1	_set_output_format
+1	_woutput_s
+1	NdrFullPointerInsertRefId
+2	NtSetIntervalProfile
+2	NtQueryIntervalProfile
+1	<capability name="InternetClient" selector="1" />
+1	<capability name="SharedUserCertificates" selector="1" />
+1	<capability name="deviceCapabilityLocation" selector="1" />
+1	<capability name="deviceCapabilityMicrophone" selector="1" />
+1	<capability name="deviceCapabilityCamera" selector="1" />
+1	<capability name="GraphicsCapture" selector="1" />
+1	<capability name="LpacCryptoServices" selector="1" />
+1	<capability name="LpacEnterprisePolicyChangeNotifications" selector="1" />
+1	<capability name="LpacPnPNotifications" selector="1" />
+1	<capability name="LpacServicesManagement" selector="1" />
+1	<capability name="LpacSessionManagement" selector="1" />
+1	<capability name="LpacPrinting" selector="1" />
+1	<capability name="LpacPayments" selector="1" />
+1	<capability name="LpacPackageManagerOperation" selector="2" />
+1	<capability name="EnterpriseAuthentication" selector="4" />
+1	<capability name="PrivateNetworkClientServer" selector="8" />
+1	<capability name="ChildWebContent" selector="0x10" />
+1	<capability name="LpacIME" selector="0x20" />
+1	<capability name="AllAppPackages" selector="0x40" />
+1	<capability name="MicrosoftEdgeRemoteDebugging" selector="0x80" />
+1	<capability name="smbios" selector="0x100" />
+1	<option name="OnlyAllowMicrosoftSignedBinaries" enabled="true" selector="0x200" />
+1	<option name="AllowStoreSignedBinaries" enabled="true" selector="0x200" />
+1	<option name="Win32kFiltering" enabled="true" selector="0x400" />
+1	<option name="Win32kFiltering" audit="true" selector="0x800" />
+1	<option name="Win32kFiltering" data="1" selector="0x1000" />
+1	<option name="Win32kFiltering" data="2" selector="0x2000" />
+1	<option name="Win32kFiltering" data="4" selector="0x4000" />
+1	<option name="Win32kFiltering" data="5" selector="0x8000" />
+1	<option name="RestrictSetThreadContext" enabled="true" selector="0x10000" />
+1	<option name="BlockChildProcessCreation" enabled="true" selector="0x20000" />
+1	<option name="BlockLowLabelImageLoads" enabled="true" selector="0x40000" />
+1	<option name="BlockRemoteImageLoads" enabled="true" selector="0x80000" />
+1	<option name="Acg" enabled="true" selector="0x100000" />
+1	<option name="AcgAllowRemoteDowngrade" enabled="true" selector="0x100000" />
+1	<option name="RestrictIndirectBranchPrediction" enabled="true" selector="0x200000" />
+1	<container name="flash" validSelectorMask="0x3f2e78" defaultSelectorMask="0x101" />
+1	<container name="jit" validSelectorMask="0x3ffe58" defaultSelectorMask="1" />
+1	<container name="dev" validSelectorMask="0x3ffe60" defaultSelectorMask="2" />
+1	<container name="edp" validSelectorMask="0x3ffe60" defaultSelectorMask="0x80" />
+1	<container name="mrac" validSelectorMask="0x3ffe78" defaultSelectorMask="1" />
+1	<container name="lrac" validSelectorMask="0x3ffe70" defaultSelectorMask="0xd" />
+1	<container name="webvw" validSelectorMask="0x3ffe40" defaultSelectorMask="0x2d" />
+3	I_CryptInsertLruEntry
+1	UseWMCHARForProgrammaticTextInsertion
+1	ImeSelect. Never called when Cicero unaware support.
+1	InternalSelectEx. imc==NULL
+1	CtfImeSelectEx. ptls==NULL.
+1	InternalSelectEx(hImc=%x, fSelect=%x, hKL=%x)
+1	CtfImeSelectEx. cic==NULL.
+1	CtfImeSelectEx. ptim_P==NULL.
+1	CicBridge::SelectEx(hImc=%x, fSelect=%x, hKL=%x)
+1	CicBridge::SelectEx. imc==NULL
+1	CicBridge::SelectEx. imc_ctfime==NULL
+1	CicBridge::DoOpenCandidateHanja. EscbGetSelection failed
+1	UIComposition::OnImeCompositionUpdate. _pCicContext==NULL
+1	UIComposition::UpdateShowCompWndFlag. imc==NULL
+1	UIComposition::UpdateShowCompWndFlag. imc->hWNd==NULL
+1	UIComposition::UpdateShowCompWndFlag. comp==NULL
+1	UIComposition::UpdateCompositionRect. imc==NULL
+1	UIComposition::UpdateCompWndFlag. imc_ctfime==NULL
+1	UIComposition::UpdateCompWndFlag. _pCicContext==NULL
+1	UIComposition::UpdateFont. imc==NULL
+1	UIComposition::UpdateCompositionRect. imc->hWNd==NULL
+1	UIComposition::UpdateCompositionRect. comp==NULL
+1	CEditSessionUpdateCompositionString::UpdateCompositionString. _pProfile==NULL.
+1	CUIElementSink::UpdateUIElement dwUIElementId=%d
+1	CUIElementSink::UpdateUIElement. imc==NULL.
+1	CUIElementSink::UpdateCandidateList. no candidate list in imc.
+1	CicInputContext::OnUpdateComposition
+1	insertedCharacterCount
+1	shortcutWinPeriodCount
+3	CtfImeSelect
+3	CtfImeSelectEx
+1	NtCompositorUpdateLastInputTime
+1	NtDCompositionGetFrameSurfaceUpdates
+1	NtDCompositionTelemetryTouchInteractionUpdate
+1	NtDCompositionUpdatePointerCapture
+1	NtDxgkOutputDuplPresentToHwQueue
+1	NtDxgkUpdateTrackedWorkload
+1	NtGdiDdDDICreateOutputDupl
+1	NtGdiDdDDIDestroyOutputDupl
+1	NtGdiDdDDIOutputDuplGetFrameInfo
+1	NtGdiDdDDIOutputDuplGetMetaData
+1	NtGdiDdDDIOutputDuplGetPointerShapeData
+1	NtGdiDdDDIOutputDuplPresent
+1	NtGdiDdDDIOutputDuplReleaseFrame
+1	NtGdiDdDDIUpdateAllocationProperty
+1	NtGdiDdDDIUpdateGpuVirtualAddress
+1	NtGdiDdDDIUpdateOverlay
+4	NtGdiDwmCreatedBitmapRemotingOutput
+4	NtGdiExtSelectClipRgn
+4	NtGdiSelectBitmap
+4	NtGdiSelectBrush
+4	NtGdiSelectClipPath
+4	NtGdiSelectFont
+4	NtGdiSelectPen
+4	NtGdiUpdateColors
+4	NtGdiUpdateTransform
+1	NtHWCursorUpdatePointer
+1	NtMITAccessibilityTimerNotification
+2	NtMITGetCursorUpdateHandle
+1	NtMITUpdateInputGlobals
+1	NtMinQUpdateWakeMask
+1	NtModerncoreBeginLayoutUpdate
+1	NtModerncoreIdleTimerThread
+2	NtRIMOnTimerNotification
+2	NtRIMUpdateInputObserverRegistration
+1	NtTokenManagerGetAnalogExclusiveSurfaceUpdates
+1	NtUpdateInputSinkTransforms
+2	NtUserBeginLayoutUpdate
+2	NtUserExcludeUpdateRgn
+2	NtUserGetUpdateRect
+2	NtUserGetUpdateRgn
+2	NtUserGetUpdatedClipboardFormats
+2	NtUserKillTimer
+2	NtUserLockWindowUpdate
+1	NtUserRemoteStopScreenUpdates
+2	NtUserSelectPalette
+2	NtUserSetFullscreenMagnifierOffsetsDWMUpdated
+2	NtUserSetMagnificationDesktopMagnifierOffsetsDWMUpdated
+1	NtUserSetMouseInputRateLimitingTimer
+2	NtUserSetSystemTimer
+2	NtUserSetTimer
+2	NtUserUpdateDefaultDesktopThumbnail
+3	NtUserUpdateInputContext
+2	NtUserUpdateInstance
+2	NtUserUpdateLayeredWindow
+2	NtUserUpdatePerUserSystemParameters
+2	NtUserUpdateWindowInputSinkHints
+2	NtUserUpdateWindowTrackingInfo
+2	NtUserValidateTimerCallback
+1	BiUpdateEventFlags
+1	BiUpdateEventParameters
+1	BiUpdateLockScreenApplications
+1	BiUpdateBackgroundAccessApplicationsForUser
+2	UpdateCalendarDayOfWeek
+2	GetThreadSelectorEntry
+1	PsmQueryApplicationResourceUsageForTimer
+1	PsmTimerCleanup
+1	PsmTimerElapsedResourceTimeGet
+1	PsmTimerInitialize
+1	PsmTimerRemainingResourceTimeGet
+1	PsmTimerStart
+2	CreateWaitableTimerA
+2	CreateWaitableTimerExA
+2	OpenWaitableTimerA
+1	PowerUpdateEnvironmentalMonitorState
+1	PowerUpdateEnvironmentalMonitorThresholds
+1	PowerUpdateLimitsMitigation
+1	CompositorUpdateLastInputTime
+1	MFSVROutputColorRangeIsLimitedRGB
+1	SRUpdatePackageStatus
+1	SRUpdatePackageStatusForUserFromToken
+1	SRUpdatePackageStatusForUserSid
+1	CheckForUpdatesAndWaitForInstallerIfNeeded
+1	IsMuxSelectionSupported
+1	AudioPolicyManagerExtension_HandlePolicyVolumeUpdates
+1	AudioPolicyManagerExtension_HandleProxyProcessVolumeUpdates
+1	WinBioEnrollSelect
+1	BluetoothUpdateDeviceRecord
+1	RmUpdateResourceSetProperties
+1	NetpUpdateAutoenrolConfig
+1	DwmpUpdateProxyWindowForCapture
+2	NtGdiDvpGetVideoPortOutputFormats
+2	NtGdiDvpUpdateVideoPort
+1	WGIUpdateGlobalSpellerKey
+3	BaseUpdateAppcompatCacheWorker
+3	BaseUpdateVDMEntry
+1	NetpProvCheckOfflineLsaPolicyUpdate
+1	InstallWindowsUpdateDriverEx
+1	InstallWindowsUpdateDrivers
+1	QueryWindowsUpdateDriverStatus
+1	UpdateDriverForPlugAndPlayDevicesA
+2	MITGetCursorUpdateHandle
+2	DwmLockScreenUpdates
+2	RIMOnTimerNotification
+2	RIMUpdateInputObserverRegistration
+1	UpdateAppContainerProfileWorker
+1	RasTlsExt_SelectCertificate
+1	GetWindowsUpdateServer
+1	SensorSetDataInterval
+1	UpdateUserTokenSessionId
+1	DPA_InsertPtr
+1	DSA_InsertItem
+1	SelectStorageVolume
+1	UwfServicingWinUpdateApply
+1	UwfServicingWinupdateCleanup
+1	UwfServicingWinupdateInitialize
+1	XamlControlsGetDatePickerSelection
+1	XamlControlsGetListPickerSelection
+1	XamlControlsGetTimePickerSelection
+1	XamlControlsTestHookCreateLoopingSelector
+1	ShowCustomSelectionUI
+1	XblaAllowUpdateManagerOverride
+1	XblaIsPass3UpdateComplete
+1	XblaUpdateCapabilityCerts
+1	XboxNetApiSvcExtGetCloudSettingSelectIpv6AddressesForConfig
+1	XboxNetApiSvcExtGetCloudSettingSelectIpv6AddressesForConsoleApps
+2	WER/CrashAPI:%u: ERROR UpdateProcThreadAttribute failed: 0x%x
+1	OutputDebugString faulted during output
+1	api-ms-win-core-psm-rtimer-l1-1-0.dll
+1	api-ms-win-core-psm-rtimer-l1-1-1.dll
+1	tzautoupdate.dll
+1	updateapi.dll
+1	updatepolicy.dll
+1	UpdateEasTrackingSchema
+1	UpdateDefCountry
+1	DeleteUpdatedPackageKey
+1	GetAllUpdatedPackages
+1	UpdatePackageInRegistryStore
+1	UpdatePackageSetupPhase
+1	UpdateUpgradePackageInRegistryStore
+1	GetBatMeterIconAnimationUpdate
+1	SubscribeBatteryUpdateNotification
+1	UnsubscribeBatteryUpdateNotification
+1	UpdateBatteryDataAsync
+1	Cab_CreateCabSelected
+1	Cab_ExtractSelected
+1	Cab_ExtractSelectedToTarget
+1	UpdateDefaultGlobalizationSettings
+1	SspiUpdateCredentials
+2	CryptObjectLocatorGetUpdated
+2	CryptUpdateProtectedState
+1	CertSelectCertificateW
+1	CertSelectCertificateA
+1	CertSelectionGetSerializedBlob
+1	CryptUIDlgSelectCertificateFromStore
+1	CryptUIDlgSelectCertificateW
+1	CryptUIDlgSelectCertificateA
+1	UpdateCalDavTrackingSchema
+1	UpdateGMailContactSyncPartner
+1	DafSelectCeremony
+1	DeviceCredentialMgrUpdateAuthenticationStage
+1	DeviceCredentialUpdateDeploymentData
+1	DeviceCredentialUpdatePresenceState
+1	DrtUpdateKey
+1	DriverStoreSelectNodeW
+1	DriverStoreUpdateDevicesW
+1	DsrBeginDeviceUpdate
+1	DsrBeginWorkplaceUpdate
+1	DsrDeviceHostNameUpdate
+1	NgcUpdateCertEnrollStatistics
+1	NgcUpdateStatistics
+1	DwmUpdateThumbnailProperties
+1	ReadAuditLogByTimeRange
+1	DpmStreamUpdate
+1	JetEscrowUpdate
+1	JetPrepareUpdate
+1	JetUpdate2
+1	JetUpdate
+1	FWUpdateDynamicKeywordAddress0
+1	FWUpdateDynamicKeywordAddress_Int
+1	FwHashtableInsert
+1	FwUpdateHash
+1	FwSetDynamicKeywordRuleLinkAddOrUpdateFn
+1	FwUpdateDynamicKeywordAddressInRegistry
+1	HNetCfgUpdateSharingSettingsFromStorage
+1	HttpUpdateServiceConfiguration
+1	IpNatHlpUpdateSharingSettingsFromStorage
+1	NetpUpdateW32timeConfig
+1	KerbClientUpdateSharedConfiguration
+1	I_DsUpdateReadOnlyServerDnsRecords
+1	LsaIUpdateKerbMaxTokenSize
+1	LsaIUpdateLogonSession
+1	MFCreateASFStreamSelector
+1	MFTranscodeGetAudioOutputAvailableTypes
+1	MFAddPeriodicCallback
+1	MFGetTimerPeriodicity
+1	MFRemovePeriodicCallback
+1	MprAdminInterfaceUpdatePhonebookInfo
+1	CdfPluginUpdatePresenceState
+1	NaDynamicLockShouldSkipGracePeriod
+1	NCryptStreamUpdate
+1	UpdateDriverForPlugAndPlayDevicesW
+1	RegisterOutputCallbackInteractionContext
+1	RegisterOutputCallbackInteractionContext2
+1	DBDsReplBackupUpdate
+1	DirReplicaReferenceUpdate
+1	DsUpdateOnPDC
+1	DsaDisableUpdates
+1	DsaEnableUpdates
+1	ReplicaLinkUpdateDSInstance
+1	NtdsaiUpdateKrbtgtAccounts
+1	UpdateDSPerfStats
+1	DsReplicaUpdateRefsA
+1	DsReplicaUpdateRefsW
+1	UpdateBackupExclusionKey
+1	OleUIInsertObjectW
+1	OleUIUpdateLinksA
+1	OleUIUpdateLinksW
+1	OneXUpdatePortProfile
+1	PeerCollabUpdateContact
+1	PeerGroupUpdateRecord
+1	PeerPnrpUpdateRegistration
+1	PeerGraphSuspendTimers
+1	PeerGraphUpdateRecord
+1	PdhUpdateLogA
+1	PdhUpdateLogW
+1	SendPictureUpdateNotification
+1	EnterprisePolicyManagerStore_EvaluatePoliciesUpdateCurrent
+1	UpdatePDC
+1	UpdatePdcRegenerationRegKey
+1	HamUpdateActivityProperties
+1	HTTP2TimerReschedule
+1	RtwqAddPeriodicCallback
+1	RtwqRemovePeriodicCallback
+1	RtlInsertElementGenericTable2
+1	SamIHandleObjectUpdate
+1	SamIUpdateLogonStatistics
+1	SampApplyDomainUpdatesForAllDomains
+1	SampDsUpdateContextAttributes
+1	SampUpdateMixedModeAndFindDomain
+1	SampUpdatePerformanceCounters
+1	SampUpdateAccountDisabledFlag
+1	SampUpdateComputedUserAccountControlBits
+1	SceSetupUpdateSecurityFile
+2	SceSetupUpdateSecurityKey
+2	SceSetupUpdateSecurityService
+2	SetupDiGetSelectedDevice
+2	SetupDiGetSelectedDriverW
+2	SetupDiSelectBestCompatDrv
+2	SetupDiSetSelectedDevice
+2	SetupDiSetSelectedDriverW
+1	SqmTimerAddToAverage
+1	SqmTimerRecord
+1	SqmTimerAccumulate
+1	SqmTimerStart
+1	SruUpdateStats
+1	SebCreateCachedFileUpdatedEvent
+1	TbUpdateCEvent
+1	TbUpdateEvent
+1	AttemptToUpdateTimeZone
+1	AttemptToUpdateTimeZoneAndEnableChangeDetection
+1	IsTimeZoneAutoUpdateEnabled
+1	DisableTimeZoneAutoUpdate
+1	EnableTimeZoneAutoUpdate
+1	LegacyIAccessiblePattern_Select
+1	UirOutCreateOutputFile
+1	CommitUpdate
+1	CleanupAllUpdateFiles
+1	CleanupAllUpdateFilesEx
+1	GetUpdateResultsEx
+1	StageUpdate
+1	GetUpdateResults
+1	UpdateContainerSandbox
+1	GetUpdatePolicyName
+1	GetAutoUpdatePolicy
+1	ReleaseAutoUpdatePolicy
+1	ReleaseUpdatePolicyValue
+1	GetSoftwareUpdateInfo
+1	SetSoftwareUpdateAdvertisementState
+2	UpdatePerUserSystemParameters
+2	UpdateWindowInputSinkHints
+1	FreeTrafficSelectors
+1	GetTrafficSelectorsRequest
+1	ProcessTrafficSelectorsReply
+1	RemoveTrafficSelectors
+1	ProcessTrafficSelectorsRequest
+1	UpdateTunnel
+1	ToplHeapInsert
+1	WcmUpdateCapabilityAccess
+1	WebAuthNCtapChangeClientPinForSelectedDevice
+1	WebAuthNCtapFreeSelectedDeviceInformation
+1	WebAuthNCtapManageSelect
+1	WebAuthNCtapRpcSelectGetAssertion
+1	WsSetOutputToBuffer
+1	WsSetOutput
+1	WerUIGetUserSelection
+1	WerUIUpdateStateProgress
+1	WerUIUpdateUIForState
+1	WinHttpConnectionUpdateIfIndexTable
+1	UpdateUrlCacheContentPath
+1	UrlCacheUpdateEntryExtraData
+2	timeEndPeriod
+2	timeBeginPeriod
+1	GetPrintOutputInfo
+1	sqlite3_last_insert_rowid
+1	sqlite3_set_last_insert_rowid
+1	sqlite3_update_hook
+1	WinStationQueryUpdateRequired
+1	_WinStationUpdateUserConfig
+1	_WinStationUpdateSettings
+1	_WinStationUpdateClientCachedCredentials
+1	WFDPairSelectCeremonyInt
+1	WFDResetSelectedWfdMgrInt
+1	WFDSetSelectedWfdMgrInt
+1	WFDUpdateDeviceVisibility
+1	WlanUpdateBasicProfileSecurity
+1	wscAutoUpdatesGetStatus
+1	CreateXmlWriterOutputWithEncodingName
+1	CreateXmlWriterOutputWithEncodingCodePage
+3	BaseUpdateAppcompatCache
+3	ChangeTimerQueueTimer
+2	NTDLL.TpReleaseTimer
+3	CreateTimerQueue
+2	CreateWaitableTimerW
+3	DeleteTimerQueueEx
+3	FillConsoleOutputCharacterA
+3	FillConsoleOutputCharacterW
+3	GetConsoleSelectionInfo
+2	GetThreadSelectedCpuSets
+2	NTDLL.TpIsTimerSet
+1	NamedPipeEventSelect
+3	NlsUpdateLocale
+3	NlsUpdateSystemLocale
+3	QueryProcessAffinityUpdateMode
+3	ReadConsoleOutputA
+3	ReadConsoleOutputAttribute
+3	ReadConsoleOutputCharacterA
+3	ReadConsoleOutputCharacterW
+3	ReadConsoleOutputW
+3	SetProcessAffinityUpdateMode
+2	SetThreadSelectedCpuSets
+2	NTDLL.TpSetTimer
+2	SetThreadpoolTimerEx
+2	NTDLL.TpSetTimerEx
+2	NTDLL.TpWaitForTimer
+3	WriteConsoleOutputA
+3	WriteConsoleOutputAttribute
+3	WriteConsoleOutputCharacterA
+3	WriteConsoleOutputCharacterW
+3	WriteConsoleOutputW
+2	TpSetTimer
+2	TpWaitForTimer
+2	TpReleaseTimer
+3	TpAllocTimer
+2	LdrUpdatePackageSearchPath
+2	NtCreateTimer2
+2	NtCreateTimer
+2	NtSetTimerEx
+2	NtCancelTimer
+2	RtlCreateTimerQueue
+2	RtlCreateTimer
+2	RtlUpdateTimer
+2	RtlDeleteTimer
+2	RtlDeleteTimerQueueEx
+2	ZwUpdateWnfStateData
+1	DlgDirSelectComboBoxExA
+1	DlgDirSelectComboBoxExW
+1	DlgDirSelectExA
+1	DlgDirSelectExW
+1	ExcludeUpdateRgn
+1	GetUpdatedClipboardFormats
+1	InsertMenuItemA
+1	SetFullscreenMagnifierOffsetsDWMUpdated
+1	SetMagnificationDesktopMagnifierOffsetsDWMUpdated
+1	UpdateDefaultDesktopThumbnail
+1	UpdateLayeredWindowIndirect
+1	VRipOutput
+1	VTagOutput
+2	RtlInsertEntryHashTable
+1	TermsrvUpdateAllUserMenu
+1	WER/ReportFault:%u: ERROR UpdateProcThreadAttribute/EXTENDED_FLAGS failed: %u.
+1	WER/ReportFault:%u: ERROR UpdateProcThreadAttribute/HANDLE_LIST failed: %u.
+1	WER/ReportFault:%u: ERROR UpdateProcThreadAttribute/CHILD_PROCESS failed: %u.
+1	BeginUpdateResourceA
+1	BeginUpdateResourceW
+1	CancelTimerQueueTimer
+1	DeleteTimerQueue
+1	EndUpdateResourceA
+1	EndUpdateResourceW
+1	api-ms-win-core-processthreads-l1-1-3.GetThreadSelectedCpuSets
+1	api-ms-win-core-processthreads-l1-1-3.SetThreadSelectedCpuSets
+1	SetTimerQueueTimer
+1	api-ms-win-core-synch-l1-1-0.SetWaitableTimerEx
+1	api-ms-win-core-processthreads-l1-1-0.UpdateProcThreadAttribute
+1	UpdateResourceA
+1	UpdateResourceW
+1	Wow64GetThreadSelectorEntry
+2	NtSetTimerResolution
+1	ImeSelect
+1	 CabUpdated
+2	ocspRespThisUpdate
+2	ocspRespNextUpdate
+1	SslTimeUpdated
+1	CertSelectApi
+1	selectedCertsCount
+1	CertSelectCertificates
+1	CRLValidityExtensionPeriod
+1	DPAPI.CryptUpdateProtectedState
+1	I_CertUpdateStore
+1	Set selected driver complete.
+1	Selected driver installs from section [%ws] in '%ws'.
+1	Unable to update active section names for: %ws
+1	Updated active section names for: %ws
+1	WindowsUpdateCallback
+1	DownloadUpdatedFiles
+1	Downloading files from Windows Update...
+1	Setting selected driver failed (0x%08x).
+1	{Select Best Driver}
+1	Selected Driver:
+1	Selected Extension Driver:
+1	Selected best compatible driver. (No Detail!)
+1	Selecting driver failed(0x%08x)
+1	{Select Best Driver - exit(0x%08x)}
+1	Skipping update based on NOCLOBBER/OVERWRITEONLY flags
+1	Unable to update driver package in driver store
+1	SetupDiGetSelectedDriverA
+1	SetupDiSelectDevice
+1	SetupDiSelectOEMDrv
+1	SetupDiSetSelectedDriverA
+1	pSetupDiEnumSelectedDrivers
+1	HeapGCTimerScheduled
+1	HeapGcTimerRun
+1	RtlpInsertAssemblyStorageMapEntry
+1	SXS: Attempt to insert well known storage root into assembly storage map assembly roster index %lu failed; Status = 0x%08lx
+1	SXS: Storage resolution failed to insert entry to storage map; Status = 0x%08lx
+1	NtCancelTimer2
+1	NtCreateIRTimer
+1	NtQueryTimer
+1	NtSetIRTimer
+1	NtSetTimer2
+1	NtSetTimer
+1	PfxInsertPrefix
+1	RtlAvlInsertNodeEx
+1	RtlCancelTimer
+1	RtlDeleteTimerQueue
+1	RtlInsertElementGenericTableFull
+1	RtlInsertElementGenericTableFullAvl
+1	RtlRbInsertNodeEx
+1	RtlSetTimer
+1	RtlUpdateClonedCriticalSection
+1	RtlUpdateClonedSRWLock
+1	TpIsTimerSet
+1	TpSetTimerEx
+1	TpTimerOutstandingCallbackCount
+1	ZwCancelTimer2
+1	ZwCancelTimer
+1	ZwCreateIRTimer
+1	ZwCreateTimer2
+1	ZwCreateTimer
+1	ZwOpenTimer
+1	ZwQueryIntervalProfile
+1	ZwQueryTimer
+1	ZwQueryTimerResolution
+1	ZwSetIRTimer
+1	ZwSetIntervalProfile
+1	ZwSetTimer2
+1	ZwSetTimer
+1	ZwSetTimerEx
+1	ZwSetTimerResolution
+=== UTF-16 строки (960) ===
+1	api-ms-win-core-psm-rtimer-l1-1-1
+2	config.mdb
+1	Format(r.Time2Minutes\60,'00') & ':' & Format(r.Time2Minutes Mod 60,'00') AS PassInterval 
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=0 AND Cmd.Param1=
+1	INSERT INTO Results (Success,Ptr) SELECT 
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=
+1	SELECT r.*,d.APBOn,d.EvActionOn,d.TimeOutOn,d.TimeOut,d.CounterLBound,d.CounterUBound,d.Updated AS DevUpdated,d.DevType 
+12	Updated
+1	UPDATE Readers AS r SET r.Updated = False WHERE r.RdrPtr=
+1	DevUpdated
+1	UPDATE Devices AS d SET d.Updated = False WHERE d.DevPtr=
+1	SELECT Users.Number, Users.NumberU, Users.Visitor, Users.KeyType, AT.*, 
+1	UPDATE Devices AS Dev INNER JOIN (Readers AS Rdr INNER JOIN AccessTable AS AT 
+1	UPDATE Devices AS Dev INNER JOIN VizGateFlats AS VG ON Dev.DevPtr=VG.DevPtr SET VG.Disabled=True
+1	UPDATE Devices AS Dev INNER JOIN VizGateDevices AS VG ON Dev.DevPtr=VG.DevPtr SET VG.GeneralCode=
+1	UPDATE Devices AS Dev INNER JOIN VizGateFlats AS VG ON Dev.DevPtr=VG.DevPtr SET VG.IndivCode=
+1	UPDATE Devices AS Dev INNER JOIN VizGateDevices AS VG ON Dev.DevPtr=VG.DevPtr SET VG.ConsiergeFlat=
+1	UPDATE Devices AS Dev INNER JOIN VizGateDevices AS VG ON Dev.DevPtr=VG.DevPtr SET VG.Pwd=
+1	SELECT Schedules.* FROM Schedules 
+1	DELETE CQ.* FROM CommandQuetch AS CQ INNER JOIN Ports ON CQ.PortPtr=Ports.PortPtr WHERE Ports.SrvPtr=
+1	DELETE CQ.* FROM CommandQuetch AS CQ WHERE CQ.PortPtr=0 AND CQ.Param1=
+2	DELETE CQ.* FROM CommandQuetch AS CQ LEFT JOIN Ports ON CQ.PortPtr=Ports.PortPtr WHERE Ports.PortPtr Is Null;
+1	DELETE Res.* FROM Results AS Res LEFT JOIN CommandQuetch AS Cmd ON Res.Ptr=Cmd.Ptr WHERE Cmd.Ptr Is Null;
+7	CommandQuetch
+2	UPDATE 
+1	SELECT Events.* FROM Events ORDER BY Events.DateTime
+1	SELECT Events.* FROM Events ORDER BY Events.DateTime, Events.Index
+1	UPDATE Users SET Users.LastUsed=
+1	UPDATE Ini SET Ini.LastBackupDate = Date();
+1	Config.mdb restored successfully
+1	Config.mdb TestRepair successfull
+1	Config.mdb TestRepair missed
+1	SELECT * FROM Devices WHERE Devices.NightCounterReset;
+1	SELECT d.PortPtr, d.Address, out.OutNum, os.OutPtr, s.TimeFrom FROM (((Devices AS d INNER JOIN Outputs AS out 
+1	UPDATE Devices INNER JOIN Ports ON Devices.PortPtr=Ports.PortPtr SET Devices.OnLine=False WHERE Ports.SrvPtr=
+1	UPDATE VizitBUD AS b INNER JOIN Ports AS p ON b.PortPtr = p.PortPtr SET b.OnLine = False WHERE p.SrvPtr=
+1	UPDATE Devices SET Devices.Version='
+1	UPDATE Devices AS Dev SET Dev.CounterLBound=
+1	UPDATE Devices INNER JOIN Readers ON Devices.DevPtr=
+1	UPDATE Devices AS Dev SET Dev.DoorFree=
+1	UPDATE Devices AS Dev SET Dev.Counter=
+1	SELECT DM.* FROM Devices AS Dev INNER JOIN DevModes AS DM ON 
+1	SELECT Rdr.*, Dev.Name AS Device FROM Devices AS Dev INNER JOIN Readers AS Rdr ON Dev.DevPtr=Rdr.DevPtr 
+1	SELECT Dev.[Name] AS Unit,Rdr.DevPtr,
+1	SELECT Rdr.* FROM Devices AS Dev INNER JOIN Readers AS Rdr ON Dev.DevPtr=Rdr.DevPtr 
+1	SELECT Rd.Num, Dv.Address, Dv.PortPtr FROM Readers AS Rd 
+1	SELECT Out.OutName FROM Outputs AS Out 
+1	SELECT u.*,iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName FROM Groups AS g RIGHT JOIN (Users AS u 
+1	SELECT u.*,iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName 
+1	SELECT * FROM Users WHERE Users.UserPtr=
+1	SELECT * FROM Users WHERE Users.KeyType=
+1	SELECT Users.* FROM Users WHERE Users.UserPtr=
+1	SELECT Readers.LockTime FROM Devices INNER JOIN Readers ON 
+1	SELECT false AS fBud, d.DevPtr, d.Version, d.KeyType, 0 AS BudModel, 0 AS BudType, 0 AS BudMode, d.SetClockPeriod, d.PollingPeriod  
+1	SELECT true AS fBud, d.BudPtr AS DevPtr, d.Version, 0 AS KeyType, d.BudModel, d.BudType, d.BudMode, d.SetClockPeriod, d.PollingPeriod  
+1	SELECT Users.* FROM Users LEFT JOIN AccessTable ON 
+1	UPDATE Users AS u SET u.Status = 2, u.LockDate = Now() WHERE u.UserPtr=
+1	SELECT DISTINCTROW AcT.RecordState, AcT.RdrPtr, Users.* FROM Users 
+1	UPDATE AccessTable AS a SET a.RecordState = 4 WHERE a.UserPtr=
+1	SELECT u.* FROM Users AS u LEFT JOIN AccessTable AS at ON u.UserPtr=at.UserPtr 
+1	UPDATE Users AS u SET u.Status = 3, u.LockDate = Now() WHERE u.UserPtr=
+1	SELECT DISTINCTROW at.RecordState, at.RdrPtr, u.* FROM Users AS u 
+8	SetClockPeriod
+9	PollingPeriod
+1	SELECT TOP 1 * FROM Devices WHERE NOT Devices.Disconnected ORDER BY Devices.DevPtr;
+1	SELECT rdr.* FROM (Devices AS dev INNER JOIN Readers AS rdr ON dev.DevPtr=rdr.DevPtr) INNER JOIN Ports ON 
+1	SELECT COUNT(d.DevPtr) AS DevCount FROM Devices AS d WHERE d.PortPtr=
+1	SELECT COUNT(d.BudPtr) AS DevCount FROM VizitBUD AS d WHERE d.PortPtr=
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=
+1	SELECT EA.* FROM (Devices AS Dev INNER JOIN Readers 
+1	UPDATE EventActions AS e SET e.UseInContr=iif(e.RecordState=1, False, e.UseInContr), e.RecordState=0 
+1	SELECT iif(EA.EventCode<56,EA.EventCode,EA.EventCode \2) AS EventCode ,Rdr.Num,EA.OutNum,
+1	SELECT Dev.* FROM Devices AS Dev WHERE Dev.FireOpen AND Dev.FirePtr=
+1	SELECT * FROM Ports WHERE (PortType IN (0,1,2,4)) AND NOT Disconnected AND SrvPtr=
+1	SELECT * FROM Ports WHERE (PortType IN (0,1,2,4)) AND SrvPtr=
+2	PollingInterval
+1	SELECT false AS fBud, d.DevPtr, d.Address, d.Version, d.KeyType, d.CounterLBound AS CntL, d.CounterUBound AS CntU, d.DevType, 
+1	d.ConfirmSupport AS conf, d.APBOn, d.SetClockPeriod, d.PollingPeriod, d.AutoNumbers, d.ThreeBytesAsW26, d.Name AS DevName 
+1	SELECT true AS fBud, d.BudPtr AS DevPtr, d.Address, d.Version, 0 AS KeyType, 0 AS CntL, 0 AS CntU, 0 AS DevType, 
+1	false AS conf,false AS APBOn,d.SetClockPeriod,d.PollingPeriod,false AS AutoNumbers,false AS ThreeBytesAsW26,d.Name AS DevName 
+1	SELECT false AS fBud, d.* FROM Devices AS d WHERE d.PeriodUpdated;
+1	SELECT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;
+9	PeriodUpdated
+1	SELECT Out.OutNum, OS.OutPtr FROM (Devices AS Dev INNER JOIN 
+1	Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON 
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN 
+1	SELECT * FROM Schedules WHERE 
+1	SELECT Dev.Address, Rdr.* FROM Devices AS Dev INNER JOIN Readers AS Rdr ON Dev.DevPtr=Rdr.DevPtr 
+1	SELECT * FROM EventActions AS EA 
+1	SELECT * FROM MsgTemplates AS MT WHERE MT.id=
+1	INSERT INTO Messages (EventType, EventCode, Message, DefMsg, AlarmStatus) 
+1	SELECT MT.EventType, MT.EventCode, MT.Message, MT.DefMsg, MT.AlarmStatus  FROM MessagesTmp AS MT;
+1	SELECT * FROM VisitorsInside AS VI WHERE (NOT VI.Offender) AND (VI.InsideTime>
+1	SELECT VI.* FROM VisitorsInside AS VI INNER JOIN Users ON VI.UserPtr=Users.UserPtr 
+1	SELECT * FROM Users WHERE (Users.Status=4) AND (DateDiff('d',Users.LockDate,Date())>=
+1	SELECT AT.* FROM AccessTable AS AT INNER JOIN VisitorsDoors AS VD ON AT.RdrPtr=VD.RdrPtr 
+1	SELECT * FROM VisitorsInside AS VI WHERE VI.UserPtr=
+1	SELECT * FROM AccessTable AS AT WHERE (AT.RecordState=0 OR AT.RecordState=2) AND AT.UserPtr=
+1	UPDATE AccessTable AS a SET a.RecordState=2 WHERE a.UserPtr=
+1	UPDATE Users AS u SET u.Status = 0, u.LockDate = Now() WHERE u.UserPtr=
+1	SELECT * FROM VisitorsDoors AS VD WHERE VD.SrvPtr=
+1	SELECT r.*, d.DevType, iif(d.DevMode IN (1,2,3), True, False) AS OneKeyBank 
+1	SELECT AT.*, IIf(IsNull(Users.Visitor), False, Users.Visitor) AS Visitor, 
+1	UPDATE AccessTable AS a SET a.RecordState = iif(a.RecordState=2,0,iif(a.RecordState=4,3,a.RecordState)) 
+1	SELECT d.* FROM Devices AS d WHERE d.DevPtr=
+1	ControlPeriod
+1	SELECT * FROM Operators WHERE Operators.Name='
+1	SELECT Fires.* FROM (Fires INNER JOIN Devices AS Dev ON Fires.DevPtr=Dev.DevPtr) INNER JOIN Ports ON 
+1	BackupPeriod
+1	LastBackupDate
+2	SELECT * FROM 
+1	SELECT * FROM users WHERE users.KeyType=3
+1	SELECT * FROM properties_integer AS p WHERE p.property_id=
+1	SELECT * FROM properties_string AS p WHERE p.property_id=
+1	UPDATE Users RIGHT JOIN AccessTable ON Users.UserPtr=AccessTable.
+1	UPDATE (Schedules RIGHT JOIN Readers ON Schedules.SchPtr = 
+1	UPDATE Schedules RIGHT JOIN Readers ON Schedules.SchPtr = 
+1	Readers.Updated = True WHERE (Schedules.SchPtr Is Null) AND 
+1	DELETE Outputs.* FROM Outputs LEFT JOIN Devices ON 
+1	Outputs.DevPtr = Devices.DevPtr WHERE Devices.DevPtr Is Null;
+1	DELETE Outputs.* FROM Outputs INNER JOIN Devices AS Dev ON 
+1	Outputs.DevPtr=Dev.DevPtr WHERE (Dev.DevType=1) OR (Dev.DevType=6);
+1	DELETE OutSch.* FROM Outputs RIGHT JOIN OutSch ON 
+1	Outputs.OutPtr = OutSch.OutPtr WHERE Outputs.OutPtr Is Null;
+1	UPDATE Users AS u SET u.NumberU = Right('000000000000' & u.NumberU, 12) WHERE Len(u.NumberU)<>12;
+1	UPDATE Users AS u SET u.NumberU = '000000' & Right(u.NumberU, 6) WHERE u.KeyType=1 AND Left(u.NumberU, 6)<>'000000';
+1	SELECT * FROM VizitBUD WHERE VizitBUD.BudPtr=
+1	SELECT * FROM VizitBud2Bud AS Bb WHERE Bb.BudNumInPBud<=15 AND Bb.BudNumInPBud>=0 AND Bb.PBudPtr=
+1	UPDATE VizitAccessTable AS AT SET AT.RecState0=0,AT.RecState1=0,AT.RecState2=0,AT.RecState3=0 WHERE AT.BudPtr=
+1	SELECT * FROM VizitFlat AS VF WHERE VF.FlatIndex<
+1	SELECT * FROM VizitButton AS vb WHERE vb.ButtonIndex<
+1	SELECT * FROM VizitEntry AS VE WHERE VE.EntryIndex<
+1	SELECT AT.InnerNum, 'FFFFFF' AS NumberV FROM VizitAccessTable AS AT 
+1	SELECT AT.InnerNum, Right(Users.NumberU,6) AS NumberV FROM Users INNER JOIN VizitAccessTable AS AT ON Users.UserPtr=AT.UserPtr 
+1	SELECT AT.InnerNum, Right(Users.NumberU,6) AS NumberV FROM Users INNER JOIN VizitAccessTable AS AT 
+1	INSERT INTO VizitKeyBuf (BudPtr, InnerNum, NumberV) SELECT 
+1	UPDATE VizitAccessTable AS AT SET AT.RecordState=3 WHERE (AT.RecordState=1) AND (AT.BudPtr=
+1	UPDATE VizitAccessTable AS AT SET AT.RecordState=0 WHERE (AT.RecordState=2) AND (AT.BudPtr=
+1	UPDATE VizitAccessTable AS AT SET AT.RecState
+1	SELECT * FROM VizitBUD AS d WHERE d.BudPtr=
+1	SELECT B2B.BudPtr, BS.Name FROM VizitBud2Bud AS B2B INNER JOIN VizitBUD AS BS ON B2B.BudPtr=BS.BudPtr 
+1	SELECT * FROM VizitBud2Bud AS B2B WHERE B2B.PBudNumInBud>=0 AND B2B.PBudNumInBud<=3 AND B2B.BudPtr=
+1	UPDATE VizitAccessTable AS AT SET AT.RecordState=1 WHERE AT.UserPtr=
+1	SELECT * FROM VizitBUD AS b WHERE b.BudPtr=
+1	UPDATE VizitAccessTable AS AT INNER JOIN VizitBud2Bud AS B2B ON AT.BudPtr=B2B.BudPtr 
+1	UPDATE Users AS u INNER JOIN VizitAccessTable AS a ON u.UserPtr=a.UserPtr SET a.RecordState=1 WHERE u.GroupPtr=
+1	UPDATE (VizitAccessTable AS a INNER JOIN VizitBud2Bud AS b2b ON a.BudPtr=b2b.BudPtr) INNER JOIN Users AS u ON a.UserPtr=u.UserPtr 
+1	UPDATE VizitBUD AS d SET d.Version='
+1	UPDATE VizitBUD AS d SET d.TypeError = true WHERE d.BudPtr=
+1	UPDATE Users AS u INNER JOIN VizitAccessTable AS a ON u.UserPtr=a.UserPtr SET a.RecordState=1 
+1	UpdatedFlats
+1	UpdatedButtons
+1	SELECT * FROM VizitBud2Bud AS b WHERE b.PBudPtr=
+1	UPDATE VizitBUD AS d SET d.Updated=false WHERE d.BudPtr=
+1	UPDATE VizitBUD AS d SET d.UpdatedFlats=false WHERE d.BudPtr=
+1	UPDATE VizitBUD AS d SET d.UpdatedButtons=false WHERE d.BudPtr=
+1	UPDATE VizitBud2Bud AS d SET d.UpdatedFlats=false WHERE d.PBudPtr=
+1	INSERT INTO Users (NumberU, [Number], LastName) SELECT '
+1	INSERT INTO VizitAccessTable (BudPtr, UserPtr, InnerNum) SELECT 
+1	SELECT r.*, p.PointName,
+1	PassInterval
+1	Format(r.Time1Minutes\60,'00') & ':' & Format(r.Time1Minutes Mod 60,'00') & '-' & Format(r.Time2Minutes\60,'00') & ':' & Format(r.Time2Minutes Mod 60,'00') AS PassInterval 
+1	UPDATE PassRulesPerDay SET Done = True, PassTime = '
+1	SELECT r.id AS RuleId, u.Number & '  ' & u.LastName & ' ' & u.FirstName & ' ' & u.FatherName AS UserName, p.PointName, 
+1	UPDATE PassRulesPerDay SET Expired=True WHERE id=
+1	INSERT INTO PassRulesMessages (RuleId, UserName, PointName, PassInterval) VALUES (
+1	CheckPassIntervalExpiration Error - 
+1	INSERT INTO PassRulesPerDay (UserPtr, PointType, PointPtr, Time1Minutes, Time2Minutes) 
+1	SELECT r.UserPtr,r.PointType,r.PointPtr,DateDiff('n',TimeValue('0:00:00'),TimeValue(s.TimeFrom)), DateDiff('n',TimeValue('0:00:00'),
+4	UPDATE ServerClock SET ServerClock.ServerTime = Time();
+1	SELECT Format(Dev.Address,'000') & ' - ' & Rdr.Name AS DoorName 
+1	INSERT INTO PassRulesMessages ( AddTime, RuleId, UserName, PointName, PassInterval ) 
+1	UPDATE Setup SET Setup.SrvPtr=[Setup].[Branch];
+1	Invalid update object (haspStatusInvalidUpdateObject).
+1	Update data consistency check failed (haspStatusInvalidUpdateData).
+1	Update not supported by this key (haspStatusUpdateNotSupported).
+1	Update counter mismatch (haspStatusInvalidUpdateCounter).
+1	Update requested ack., but no area to return it (haspStatusUpdateNoACK).
+1	Update installation not allowed
+1	HASP update incompatible with this hardware; HASP key is locked to other hardware
+1	Update was already installed
+1	Another update must be installed first
+1	Unknown recipient, update can only be applied to to recipent specified in hasp_detach() and not to this computer
+1	SELECT Cam.* FROM 
+1	SELECT Cam.* FROM Readers AS Rdr INNER JOIN 
+1	SELECT Cam.* FROM VizitBUD AS bud INNER JOIN 
+18	SELECT u.*, iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName FROM Groups AS g RIGHT JOIN Users AS u ON g.GroupPtr=u.GroupPtr;
+1	SELECT a.RdrPtr, a.UserPtr, a.InnerNum FROM (Devices AS d INNER JOIN (Readers AS r INNER JOIN AccessTable AS a 
+1	SELECT d.PortPtr, d.Name AS DevName, d.DevPtr, r.RdrPtr, r.Num, r.Name AS RdrName 
+1	CheckPollingTableUpdates Error: 
+1	SELECT * FROM Readers AS r WHERE r.DevPtr=
+1	INSERT INTO CommandQuetch (code,addr,portptr) VALUES (
+1	k0-windows-belgian-period
+4	masterio0
+1	ÙCT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=8 AND Dev.PortPtr=1 ORDER BY Out.OutNum, OS.SchPtr;
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 17:25:47#,Users.LastUsedRdrName='
+1	er\gate.mdw
+2	SELECT EA.* FROM (Devices AS Dev INNER JOIN Readers AS Rdr ON Dev.DevPtr=Rdr.DevPtr) INNER JOIN EventActions AS EA ON Rdr.RdrPtr=EA.RdrPtr WHERE (EA.RecordState<>0) AND (Dev.Address=1) AND (Dev.PortPtr=15);
+2	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=8 AND Dev.PortPtr=1 ORDER BY Out.OutNum, OS.SchPtr;
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=4 AND Dev.PortPtr=8 ORDER BY Out.OutNum, OS.SchPtr;
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=7 AND Dev.PortPtr=9 ORDER BY Out.OutNum, OS.SchPtr;
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=6 AND Dev.PortPtr=6 ORDER BY Out.OutNum, OS.SchPtr;
+4	SELECT d.PortPtr, d.Name AS DevName, d.DevPtr, r.RdrPtr, r.Num, r.Name AS RdrName FROM (Devices AS d INNER JOIN Readers AS r ON d.DevPtr=r.DevPtr) INNER JOIN Ports AS p ON d.PortPtr=p.PortPtr WHERE NOT d.Disconnected AND p.SrvPtr=0
+4	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=1 AND Dev.PortPtr=15 ORDER BY Out.OutNum, OS.SchPtr;
+10	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=15 ORDER BY Cmd.Ptr
+8	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=11 ORDER BY Cmd.Ptr
+1	UPDATE Devices SET Devices.Version='8216/003',Devices.MaxUsers=8167
+1	UPDATE Devices SET Devices.Version='8216/003',Devices.MaxUsers=
+2	gate.mdw
+1	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=1
+10	DateUpdate
+4	C:\GATE\Server\config.mdb
+2	C:\GATE\Server\gate.mdw
+1	åBSELECT Events.* FROM Events ORDER BY Events.DateTime, Events.Index
+1	å4SELECT Events.* FROM Events ORDER BY Events.DateTime
+2	SELECT AT.*, IIf(IsNull(Users.Visitor), False, Users.Visitor) AS Visitor, IIf(IsNull(VI.Offender), False, VI.Offender) AS Offender FROM (Users RIGHT JOIN AccessTable AS AT ON Users.UserPtr=AT.UserPtr) LEFT JOIN VisitorsInside AS VI ON AT.UserPtr=VI.UserPtr
+2	<SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=26
+1	r.Updated
+3	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 AND Cmd.Addr=8 ORDER BY Cmd.Ptr
+1	VSELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 AND Cmd.Addr=8 ORDER BY Cmd.Ptr
+2	d.Updated
+1	d.SetClockPeriod
+1	d.PollingPeriod
+1	æPeriodUpdated
+2	ÎSELECT EA.* FROM (Devices AS Dev INNER JOIN Readers AS Rdr ON Dev.DevPtr=Rdr.DevPtr) INNER JOIN EventActions AS EA ON Rdr.RdrPtr=EA.RdrPtr WHERE (EA.RecordState<>0) AND (Dev.Address=1) AND (Dev.PortPtr=15);
+1	{SELECT u.*, iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName FROM Groups AS g RIGHT JOIN Users AS u ON g.GroupPtr=u.GroupPtr;
+1	ÉSELECT r.*, d.DevType, iif(d.DevMode IN (1,2,3), True, False) AS OneKeyBank FROM Devices AS d INNER JOIN Readers AS r ON d.DevPtr=r.DevPtr WHERE  NOT((d.DevMode IN (1,2,3)) AND r.Num=2) AND d.DevPtr=13
+1	.SELECT d.* FROM Devices AS d WHERE d.DevPtr=13
+3	UPDATE Users SET Users.LastUsed=#11/17/2026 18:17:20#,Users.LastUsedRdrName='
+1	C:\GATE\Server\Gate.mdw
+1	SELECT u.*,iif(IsNull(g.GroupPtr),'',g.Name) AS GroupName FROM Groups AS g RIGHT JOIN (Users AS u INNER JOIN AccessTable AS at ON u.UserPtr=at.UserPtr) ON g.GroupPtr=u.GroupPtr WHERE at.RdrPtr=25 AND at.InnerNum=26;
+1	SELECT Users.* FROM Users LEFT JOIN AccessTable ON Users.UserPtr=AccessTable.UserPtr WHERE (AccessTable.UserPtr Is Null) AND (('0' & Users.Status)=0) AND (Users.UseExpiry) AND ((Users.ExpiryDate+Users.ExpiryTime)<=Now());
+1	Check for Updates Every 15 Days
+3	INSERT
+1	rPerioddD::
+1	ReadBufferPeriod
+1	olPeriod
+1	eUpdate
+1	Outputs
+7	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=15
+5	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=11
+9	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=21
+6	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=25
+3	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=17
+8	SELECT Max(InnerNum) AS Num FROM AccessTable WHERE RdrPtr=26
+2	SELECT d.* FROM Devices AS d WHERE d.DevPtr=11
+1	SELECT d.* FROM Devices AS d WHERE d.DevPtr=8
+1	.,Update 
+1	 CancelUpdate 
+5	 SELECT 
+1	 SELECT INTO (|) 
+1	 UPDATE (|) 
+1	 INSERT INTO 
+1	 'DELETE', 'INSERT', 'PROCEDURE', 'SELECT' 
+1	 'UPDATE'.&
+1	 INSERT INTO."
+1	 UPDATE.&
+1	 SELECT INTO 
+1	 SELECT.U
+1	 INSERT INTO (|) 
+1	: UPDATE 
+1	: SELECT.!VIEW 
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 16:27:18#,Users.LastUsedRdrName='
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 16:27:17#
+2	UPDATE Users SET Users.LastUsed=#11/17/2026 16:26:24#
+20	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=0 AND Cmd.Param1=0 ORDER BY Cmd.Ptr
+1	UPDATE Devices INNER JOIN Ports ON Devices.PortPtr=Ports.PortPtr SET Devices.OnLine=False WHERE Ports.SrvPtr=0
+9	LECT false AS fBud, d.* FROM Devices AS d WHERE d.PeriodUpdated;
+7	LECT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;
+5	vices AS d WHERE d.PeriodUpdated;
+1	itBUD AS d WHERE d.PeriodUpdated;
+2	ÜLECT true AS fBud, d.* FROM VizitBUD AS d WHERE d.PeriodUpdated;
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=
+1	 DevType, false AS conf,false AS APBOn,d.SetClockPeriod,d.PollingPeriod,false AS AutoNumbers,false AS ThreeBytesAsW26,d.Name AS DevName FROM VizitBUD AS d WHERE NOT d.Disconnected AND d.PortPtr=5
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:00:45#,Users.LastUsedRdrName='
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:14:01#,Users.LastUsedRdrName='
+3	UPDATE Users SET Users.LastUsed=#11/17/2026 18:16:38#,Users.LastUsedRdrName='
+2	UPDATE Users SET Users.LastUsed=#11/17/2026 18:15:11#,Users.LastUsedRdrName='
+1	hunderRT6Timer
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:09:48#,Users.LastUsedRdrName='
+5	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=6 AND Cmd.Addr=6 ORDER BY Cmd.Ptr
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=9 AND Cmd.Addr=7 ORDER BY Cmd.Ptr
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=5 AND Cmd.Addr=5 ORDER BY Cmd.Ptr
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev IN
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=3 AND Dev.PortPtr=11 ORDER BY Out.OutNum, OS.SchPtr;
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 16:14:59#,Users.LastUsedRdrName='
+4	UPDATE Devices AS Dev SET Dev.DoorFree=False, Dev.DevMode=
+7	UPDATE Devices AS Dev SET Dev.DoorFree=False
+1	UPDATE Devices AS Dev SET Dev.DoorFree=False, Dev.DevMode=2
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 17:50:03#,Users.LastUsedRdrName='
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 17:20:00#
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=8 ORDER BY Cmd.Ptr
+4	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 ORDER BY Cmd.Ptr
+2	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=5 ORDER BY Cmd.Ptr
+4	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=6 ORDER BY Cmd.Ptr
+5	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=9 ORDER BY Cmd.Ptr
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=5 AND Dev.PortPtr=5 ORDER BY Out.OutNum, OS.SchPtr;
+1	sUpdated
+1	hePeriodUpdated
+1	SELECT AT.*, IIf(IsNull(Users.Visitor), False, Users.Visitor) AS Visitor, IIf(IsNull(VI.Offender), False, VI.Offender) AS Offender FROM (Users RIGHT JOIN AccessTable AS AT ON Users.UserPtr=AT.UserPtr) LEFT JOIN VisitorsInside AS VI ON AT.UserPtr=VI.UserPtr WHERE (AT.RdrPtr=9) AND (AT.RecordState<>0) AND (AT.RecordState<>3) ORDER BY AT.InnerNum;
+1	pUpdated
+1	 "wsl.exe --update".
+1	 Update-ClusterFunctionalLevel PowerShell, 
+1	UCEERR_UNCHANGABLE_UPDATE_ATTEMPTED
+1	MILEFFECTSERR_OUTPUTSIZETOOLARGE
+2	 IOPMVideoOutput::GetInformation 
+3	 IOPMVideoOutput::Configure 
+1	 IOPMVideoOutput 
+2	 IOPMVideoOutput::COPPCompatibleGetInformation, IOPMVideoOutput::GetInformation 
+2	 IOPMVideoOutput::Configure. 
+2	 IOPMVideoOutput::COPPCompatibleGetInformation 
+1	 IOPMVideoOutput::Configure  
+1	Switch.System.Threading.UseNetCoreTimer
+1	outputCache
+1	System.Web.Configuration.OutputCacheSection, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+1	system.web/caching/outputCache
+1	outputCacheSettings
+1	System.Web.Configuration.OutputCacheSettingsSection, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+1	system.web/caching/outputCacheSettings
+3	traceOutputOptions
+3	autoConfigUrlRetryInterval
+2	UpdateStatusAfterSocketError
+1	XAML.MultipleLayoutUpdatedEventSubscribers
+1	XAML.ValidateSelectGroupStyleParameters
+1	XAML.KeepSelectionOfReplacedItem
+1	XAML.SetSelectedItemToNullWhenIsSynchronizedWithCurrentItemIsFalse
+1	XAML.ListShouldScrollDueToSelectionChangeOnCollectionChange
+1	XAML.LoopingSelectorAutomationPeerShouldReportExpandCollapsePattern
+1	XAML.ComboBoxSelectionChangedTriggerDefaultsToAlways
+1	XAML.IgnoreSelectedItemSetBeforeItemsSource
+1	XAML.ReplayPointerOnViewUpdate
+1	KPG.PLMSuspendDebouncePeriod
+1	AppModel.AppRequiresContentUpdate
+1	Networking.InsertXboxLiveAuthorizationToken
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=1 AND Dev.PortPtr=
+1	SELECT Out.OutNum,Out.OutPtr,OS.SchPtr FROM (Devices AS Dev INNER JOIN Outputs AS Out ON Dev.DevPtr=Out.DevPtr) INNER JOIN OutSch AS OS ON Out.OutPtr=OS.OutPtr WHERE Dev.Address=1 AND Dev.PortPtr=15
+3	Period
+1	UPDATE Devices AS Dev SET Dev.DoorFree=False, Dev.DevMode=2 WHERE Dev.Address=6
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 AND Cmd.Addr=
+1	UPDATE Devices AS Dev SET Dev.DoorFree=False, Dev.DevMode=2 WHERE Dev.Address=6 AND Dev.PortPtr=
+1	SELECT * FROM CommandQuetch AS Cmd WHERE Cmd.PortPtr=1 AND Cmd.Addr=8
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:16:38#,
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:11:12#,
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:07:48#,
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:14:01#
+1	UPDATE Users SET Users.LastUsed=#11/17/2026 18:11:12#
+7	SELECT
+1	TextSelectionGripper
+3	selector
+2	Sch_SelectorAttr
+1	Sch_DupSelector
+1	Sch_SelectorBeforeFields
+2	Xdom_Node_Insert_Child
+2	Xdom_Node_Insert_Path
+1	Xdom_Node_Insert_Location
+1	Xdom_Node_Insert_Context
+1	outputBuffer
+1	outputOffset
+1	UpdateAndExecuteVoid
+1	UpdateAndExecute
+1	UpdateRules
+3	Update
+1	CallSiteBinder.UpdateLabel
+1	collectionSelector
+1	resultSelector
+1	outerKeySelector
+1	innerKeySelector
+1	keySelector
+1	elementSelector
+1	updateAccumulatorFunc
+1	InvalidOutputDir
+2	net_log_cache_suppressing_headers_update_on_304
+1	WinInetCache.Update()
+1	WinInetCache.Update
+2	net_log_cache_max_stale_and_update_status
+2	IsVariationSelectors
+1	TimerThread#
+1	TimerThreadTimer#
+1	/utf8output 
+2	TimerInvalidInterval
+1	keepAliveInterval
+1	output
+2	net_log_proxy_system_setting_update
+2	net_log_proxy_update_due_to_ip_config_change
+1	net_log_cache_not_updated_based_on_ftp_response_status
+3	net_log_cache_update_not_supported_for_ftp_restart
+2	net_log_cache_dont_update_cached_headers
+3	net_log_cache_update_cached_headers
+3	net_log_selected_cert
+1	net_log_sspi_selected_cipher_suite
+1	net_sockets_empty_select
+2	net_sockets_toolarge_select
+2	net_sockets_select
+2	StandardOutputEncodingNotAllowed
+1	Extension_Names_Cannot_Be_Empty_Or_Non_Period_Based
+1	ErrorCreateTimer
+1	net_log_cache_not_updated_because_no_response
+1	net_log_cache_suppress_update_because_synched_last_minute
+1	net_log_cache_update_failed
+1	net_log_cache_cannot_update_cache_if_304
+2	TimerAutoReset
+2	TimerInterval
+1	TimerSynchronizingObject
+2	ProcessStandardOutput
+1	CodeGenOutputWriter
+1	ErrorKillTimer
+1	OutputDataReceived
+1	net_SelectModeNotSupportedException
+1	net_log_cache_cannot_update_cache_with_head_resp
+1	net_log_cache_no_update_based_on_method
+1	net_log_cache_not_updated_based_on_cache_protocol_status
+1	net_log_cache_not_updated_based_on_policy
+2	The encoded value is not valid under the selected encoding, but it may be valid under the BER encoding.
+1	System.Resources.WindowsRuntimeResourceManager, System.Runtime.WindowsRuntime, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+1	WaitOrTimerCallback
+1	millisecondsTimeOutInterval
+1	period
+1	periodTm
+2	ArgumentOutOfRange_PeriodTooLarge
+1	TimerCallback
+1	NotSupported_OutputStreamUsingTypeBuilder
+1	The encoded value is not valid under the selected encoding, but it may be valid under the BER or DER encoding.
+1	The encoded value is not valid under the selected encoding, but it may be valid under the BER or CER encoding.
+1	ArgumentOutOfRange_ArrayListInsert
+1	Argument_ConflictingDateTimeRoundtripStyles
+1	Argument_MustBeRuntimeReflectionObject
+1	EventSource_PeriodIllegalInProviderName
+1	InvalidOperation_HashInsertFailed
+1	Lazy_ctor_ValueSelectorNull
+1	Serialization_DuplicateSelector
+1	PERF_OUTPUT
+1	JIT_PERF_OUTPUT
+1	NGenAssemblyUsageLogRefreshInterval
+1	Thread_DeadThreadGCTriggerPeriodMilliseconds
+1	disableFusionUpdatesFromADManager
+1	HillClimbing_SampleIntervalLow
+1	HillClimbing_WavePeriod
+1	HillClimbing_SampleIntervalHigh
+1	StatsUpdatePeriod
+1	PeriodicPattern
+1	PerfOutput
+1	timer
+1	select
+2	update
+1	insert
+1	MSysUserList; Select
+1	MSysUserMemberships UserName Text; Select
+1	MSysGroupList; Select
+1	MSysGroupMembers GroupName Text; Select
+1	SELECT *    FROM    MSysRelationships    WHERE   szRelationship = wszRelName
+1	Update [%s] Set [%s] = [%s] ;
+1	LastUpdater
+1	RowsInserted
+1	RowsUpdated
+1	LogRetentionPeriod
+1	SELECT Name, ForeignName, Database from MSysObjects where Type = 9
+1	] tableid; SELECT (
+1	SELECT (
+1	 tableid; UPDATE 
+1	select 1 where 0 = 1
+1	SELECT Config, nValue FROM MSysConf
+1	(SELECT INTO insert)
+3	INSERT INTO 
+1	SET IDENTITY_INSERT 
+1	UPDATE
+1	SET IDENTITY_INSERT
+1	(INSERT)
+1	(UPDATE)
+1	SELECT @@IDENTITY
+2	SELECT 
+1	SELECT *
+1	Output
+1	Select
+1	Insert
+1	UpdateOwner
+2	Interval
+1	SelectSchema
+1	SelectSecurity
+1	UpdateIdentity
+1	UpdateSecurity
+1	PARAMETERS vt tableid; SELECT * FROM vt WHERE Not(
+1	INTERVAL
+1	get_LastUpdated
+1	get_UpdateOptions
+1	put_UpdateOptions
+1	CancelUpdate
+3	LastUpdated
+1	UpdateOptions
+1	PARAMETERS P1 TABLEID; SELECT * FROM P1
+1	INSERTNOTREPLACE
+1	No timer available
+1	Could not lock the database5The row has been deleted since the update was started
+1	+Unable to bind to field or DataMember: '|1'_Cannot bind this control to '|1'. Select a different datasource control (eg - Data1, or MSRDC1)eCannot bind this control to '|1'. Select a different datasource (eg - ADODC1, or DataEnvironment1...)
+1	Looking for object with CLSID: |1 '|1' is not a valid control type%'|1' is not a valid control container[Can't have child controls capable of receiving focus on a control that cannot receive focusjThe OLE client control and OLE embeddings are not allowed on UserControls, UserDocuments, or PropertyPages;Can't have windowed child controls on a windowless control.«|1 is a single-threaded component and cannot be used in multi-threaded projects.  Change the threading model for |2 or contact the component vendor for an updated version.^Control '|1' does not have the align property, so it cannot be placed directly on the MDI form-There is already a control with the name '|1'DControl container for Controls.Add cannot be a design time instance.ECannot add control while Control container is loading other controls.
+2	Windows.System.DispatcherQueueTimer
+1	IDispatcherQueueTimerTickEventHandler MUST be Agile
+1	CoreUI UpdateServiceStatus called
+1	Dispatcher - WakeLevel - UpdateWakeLevel (bits=%1 old=%2 new=%3)
+3	SynchronizeOutput
+3	Timer
+1	CoreUIService_UpdateServiceStatus
+1	Dispatcher_WakeLevel_UpdateWakeLevel
+1	CoreUI SessionManager - OnDeferredLaunchTimerExpired (type=%1)
+1	CoreUI SessionManager - UpdateLoadingScreenProperties (TaskID=%1; fileName=%2; color=%3)
+1	CoreUI ServerTask (TaskID=%1) - UpdateContextBufferFailed (key = %2; value = %3 hr = %4;)
+1	CoreUI UpdateServiceStatus called (serviceType=%1)
+1	Proxy - Property Update (%1)
+1	NavigationClient (TaskID=%1) - UpdateWindowActivationState ActivationState=%2
+1	CoreUI SessionLayer (Type=%1) - UpdateCurrentSession (SessionInstanceId=%2 addSession=%3)
+1	CoreUI SessionLayer (Type=%1) - UpdateCurrentTask (TaskID=%2; SessionInstanceId=%3; addTask=%4)
+1	CoreUI SessionLayer (Type=%1) - UpdateVisibleSession (SessionInstanceId=%2 addSession=%3)
+2	CoreUI SessionLayer (Type=%1) - UpdateVisibleTask (TaskID=%2; SessionInstanceId=%3; windowInstanceId=%4; addTask=%5)
+1	FailedToUpdateContextBuffer
+1	NSSMOnDeferredLaunchTimerExpired
+1	NSSMUpdateLoadingScreenProperties
+1	ProxyPropertyUpdate
+1	NavigationClientUpdateWindowActivationState
+1	SessionLayerUpdateCurrentSession
+1	SessionLayerUpdateCurrentTask
+1	SessionLayerUpdateVisibleSession
+1	SessionLayerUpdateVisibleTask
+1	ForegroundSessionLayerUpdateVisibleTask
+1	ASP Host Encode ObjectQCall the Encoder determined by szExt, passing bstrStreamIn and optional arguments3Retrieve the standard input, output or error stream
+1	windowsupdate.microsoft.com
+1	windowsupdate.com
+1	microsoftupdate.com
+1	update.microsoft.com
+1	microsoftupdate.microsoft.com
+1	RPC_NOTIFICATIONS_UPDATED
+1	RegistrationRefreshInterval
+1	UpdateSecurityLevel
+1	UpdateTopLevelDomainZones
+1	UpdateZoneExclusions
+1	UpdateZoneExcludeFile
+1	TestMode_AdaptiveTimeoutRecalculationInterval
+1	DisableDynamicUpdate
+1	DisableWanDynamicUpdate
+1	EnableWanDynamicUpdateEventLog
+1	DefaultRegistrationRefreshInterval
+1	SentUpdateToIp
+1	SentPriUpdateToIp
+2	UpdateReasonCode
+2	Sent UpdateServer
+1	DnsContextUpdate
+1	\Device\Afd\AsyncSelectHlp
+1	Enumerating new providers for updates
+1	Successfully installed new provider; adding to updated provider list
+1	Unable to add newly installed provider to updated provider list
+1	Updating the updated list in the online case
+1	Adding static provider to updated list
+1	Failed to add provider to updated list
+1	Adding offline-capable provider to updated list
+1	Successfully installed dynamic provider; adding it to updated list
+1	Failed to add to updated list
+1	Successfully updated dynamic provider
+1	Done populating the updated list
+1	Failed to write updated list to the old list registry key
+1	Failed to update LSP
+1	updatesoftwareinventory
+1	ImpliedSelectionModel
+1	UpdateItems
+2	AutoCheckSelect
+1	InvokeCommandOnSelection
+1	MultiSelectModel
+1	PropertyUpdateList
+1	LastUpdatedTime
+1	Windows.Storage.Provider.CachedFileUpdater
+2	Windows.CachedFileUpdater
+2	Software\Microsoft\EdgeUpdate\Clients\
+2	SELECT System.Contact.ConnectedServiceName, System.Contact.ConnectedServiceDisplayName, System.Contact.ConnectedServiceSupportedActions       FROM SystemIndex       WHERE SCOPE = '%s'      AND System.Contact.ConnectedServiceSupportedActions <> 0      AND System.Contact.ConnectedServiceName = '%s'
+2	FileAssociationsUpdateVersion
+3	NoWindowsUpdate
+2	NoForgetSoftwareUpdate
+2	PreviewDetailsNullSelect
+2	PreviewTitleNullSelect
+1	Windows.Storage.Pickers.CachedFileUpdateManager
+1	ConflictResolutionUpdateInformation
+1	Windows.Foundation.AsyncOperationCompletedHandler`1<Windows.Storage.Provider.FileUpdateStatus>
+1	Windows.Foundation.IAsyncOperation`1<Windows.Storage.Provider.FileUpdateStatus>
+2	PlaceholderResolverUpdateInformation
+1	PauseDeferredUpdate
+1	CompleteUpdatesAsync
+1	DeferUpdates
+1	Windows.Foundation.Collections.IIterator`1<Windows.Internal.Storage.RecentItemsUpdateResult>
+1	Windows.Foundation.Collections.IVector`1<Windows.Internal.Storage.RecentItemsUpdateResult>
+1	Windows.Foundation.AsyncOperationCompletedHandler`1<Windows.Internal.Storage.RecentItemsUpdateResult>
+1	Windows.Foundation.Collections.IVectorView`1<Windows.Internal.Storage.RecentItemsUpdateResult>
+1	Windows.Foundation.IAsyncOperation`1<Windows.Foundation.Collections.IVectorView`1<Windows.Internal.Storage.RecentItemsUpdateResult>>
+1	Windows.Foundation.IAsyncOperation`1<Windows.Internal.Storage.RecentItemsUpdateResult>
+1	Windows.Foundation.AsyncOperationCompletedHandler`1<Windows.Foundation.Collections.IVectorView`1<Windows.Internal.Storage.RecentItemsUpdateResult>>
+1	Global\RecentDocumentsUpdate
+1	UpdateAsync
+1	SELECT %s FROM SystemIndex WHERE path = '%s%s'
+1	Windows.Foundation.IAsyncAction Windows.Storage.Search.ContentIndexer.UpdateAsync
+1	FileExplorerDataBinding.ItemRangeSelector
+1	QIUpdateCategory
+1	TasksItemsSelected
+1	TasksNoItemsSelected
+1	UpdateType
+1	<toast scenario='reminder'>     <visual>         <binding template='ToastGeneric'>             <text id='1'></text>             <text id='2'></text>             <progress value='{progressValue}' status='{progressStatus}' valueStringOverride='{progressValueString}'/>             <image placement='appLogoOverride'/>         </binding>     </visual>     <actions>         <action id= 'button1' activationType='background' afterActivationBehavior='pendingUpdate'/>     </actions>     <audio src='ms-winsoundevent:Notification.Default' loop='false' silent='false'/> </toast>
+2	CurrentFolderAsSelection
+2	Software\Microsoft\Windows\CurrentVersion\Explorer\DeviceUpdateLocations
+2	Windows.UpdateTask
+1	ControlDarkSelectBackgroundDisabled
+1	ControlDarkSelectBackgroundHover
+1	ControlDarkSelectBackgroundPressed
+1	ControlDarkSelectBackgroundRest
+1	ControlDarkSelectBorderDisabled
+1	ControlDarkSelectBorderHover
+1	ControlDarkSelectBorderPressed
+1	ControlDarkSelectBorderRest
+1	ControlDarkSelectGlyphDisabled
+1	ControlDarkSelectGlyphRest
+1	ControlDarkSelectHighlightedSecondaryTextPressed
+1	ControlDarkSelectHighlightedTextPressed
+1	ControlDarkSelectHighlightHover
+1	ControlDarkSelectHighlightPressed
+1	ControlDarkSelectHighlightSelected
+1	ControlDarkSelectHighlightSelectedHover
+1	ControlDarkSelectPopupBackgroundDisabled
+1	ControlDarkSelectPopupBackgroundHover
+1	ControlDarkSelectPopupBackgroundPressed
+1	ControlDarkSelectPopupBackgroundRest
+1	ControlDarkSelectPopupBackgroundSelected
+1	ControlDarkSelectPopupBorder
+1	ControlDarkSelectPopupTextDisabled
+1	ControlDarkSelectPopupTextHover
+1	ControlDarkSelectPopupTextPressed
+1	ControlDarkSelectPopupTextRest
+1	ControlDarkSelectPopupTextSelected
+1	ControlDarkSelectSecondaryTextHighlighted
+1	ControlDarkSelectSecondaryTextHover
+1	ControlDarkSelectSecondaryTextPressed
+1	ControlDarkSelectTextDisabled
+1	ControlDarkSelectTextHighlighted
+1	ControlDarkSelectTextHover
+1	ControlDarkSelectTextPressed
+1	ControlDarkSelectTextRest
+1	ControlLightRadioButtonSelectedBackgroundDisabled
+1	ControlLightRadioButtonSelectedBackgroundDown
+1	ControlLightRadioButtonSelectedBackgroundHover
+1	ControlLightRadioButtonSelectedBackgroundRest
+1	ControlLightRadioButtonSelectedBackgroundUp
+1	ControlLightRadioButtonSelectedBorderDisabled
+1	ControlLightRadioButtonSelectedBorderDown
+1	ControlLightRadioButtonSelectedBorderHover
+1	ControlLightRadioButtonSelectedBorderRest
+1	ControlLightRadioButtonSelectedBorderUp
+1	ControlLightRadioButtonSelectedGlyphDisabled
+1	ControlLightRadioButtonSelectedGlyphDown
+1	ControlLightRadioButtonSelectedGlyphHover
+1	ControlLightRadioButtonSelectedGlyphRest
+1	ControlLightRadioButtonSelectedGlyphUp
+1	ControlLightRadioButtonUnselectedBackgroundDisabled
+1	ControlLightRadioButtonUnselectedBackgroundDown
+1	ControlLightRadioButtonUnselectedBackgroundHover
+1	ControlLightRadioButtonUnselectedBackgroundRest
+1	ControlLightRadioButtonUnselectedBackgroundUp
+1	ControlLightRadioButtonUnselectedBorderDisabled
+1	ControlLightRadioButtonUnselectedBorderDown
+1	ControlLightRadioButtonUnselectedBorderHover
+1	ControlLightRadioButtonUnselectedBorderRest
+1	ControlLightRadioButtonUnselectedBorderUp
+1	ControlLightRadioButtonUnselectedGlyphDisabled
+1	ControlLightRadioButtonUnselectedGlyphDown
+1	ControlLightRadioButtonUnselectedGlyphHover
+1	ControlLightRadioButtonUnselectedGlyphRest
+1	ControlLightRadioButtonUnselectedGlyphUp
+1	ControlLightSelectBackgroundDisabled
+1	ControlLightSelectBackgroundHover
+1	ControlLightSelectBackgroundPressed
+1	ControlLightSelectBackgroundRest
+1	ControlLightSelectBorderDisabled
+1	ControlLightSelectBorderHover
+1	ControlLightSelectBorderPressed
+1	ControlLightSelectBorderRest
+1	ControlLightSelectGlyphDisabled
+1	ControlLightSelectGlyphRest
+1	ControlLightSelectHighlightedTextPressed
+1	ControlLightSelectHighlightHover
+1	ControlLightSelectHighlightPressed
+1	ControlLightSelectHighlightSelected
+1	ControlLightSelectHighlightSelectedHover
+1	ControlLightSelectPopupBackgroundDisabled
+1	ControlLightSelectPopupBackgroundHover
+1	ControlLightSelectPopupBackgroundPressed
+1	ControlLightSelectPopupBackgroundRest
+1	ControlLightSelectPopupBackgroundSelected
+1	ControlLightSelectPopupBorder
+1	ControlLightSelectPopupTextDisabled
+1	ControlLightSelectPopupTextHover
+1	ControlLightSelectPopupTextPressed
+1	ControlLightSelectPopupTextRest
+1	ControlLightSelectPopupTextSelected
+1	ControlLightSelectTextDisabled
+1	ControlLightSelectTextHighlighted
+1	ControlLightSelectTextHover
+1	ControlLightSelectTextPressed
+1	ControlLightSelectTextRest
+1	ControlRadioButtonBackgroundDisabledSelected
+1	ControlRadioButtonBackgroundSelected
+1	ControlRadioButtonTextDisabledSelected
+1	ControlRadioButtonTextSelected
+1	FilesAppFolderSelectionHoverPrimaryText
+1	FilesAppFolderSelectionPrimaryText
+1	FilesAppLocalFolderSelectionHoverSecondaryText
+1	FilesAppLocalFolderSelectionSecondaryText
+1	FilesAppPhotosAppSelectionBackground
+1	FilesAppPickerSelectionHoverBackground
+1	FilesAppPickerSelectionHoverPrimaryText
+1	FilesAppPickerSelectionHoverSecondaryText
+1	FilesAppPickerSelectionPrimaryText
+1	FilesAppPickerSelectionSecondaryText
+1	FilesAppSelectionBackground
+1	FilesAppSelectionForeground
+1	FilesAppSkyDriveFolderSelectionHoverSecondaryText
+1	FilesAppSkyDriveFolderSelectionSecondaryText
+1	FilesAppTouchSelectHighlightSelected
+1	FilesAppTouchSelectHighlightSelectedHover
+1	FilesAppTouchSelectHighlightSelectedHoverText
+1	FilesAppTouchSelectHighlightSelectedText
+1	HardwareCharmsBarSelectedText
+1	HardwareDarkCandidateControlHighlightSelected
+1	HardwareDarkCandidateControlSecondaryTextSelect
+1	HardwareDarkCandidateControlTextSelect
+1	HardwareDarkKeyboardEmojiCategoryTextSelected
+1	HardwareHandwritingPanelConversionSelectedBackground
+1	HardwareHandwritingPanelConversionSelectedText
+1	HardwareHandwritingPanelConversionUnselectedBackground
+1	HardwareHandwritingPanelConversionUnselectedText
+1	HardwareHandwritingPanelInsertModeCharacter
+1	HardwareKeyboardEmojiCategoryTextSelected
+1	HardwareSettingCharmSystemPaneButtonSelected
+1	HardwareSettingCharmSystemPaneButtonTextSelected
+1	InputSwitchColorDarkRadioButtonBackgroundDisabledSelected
+1	InputSwitchColorDarkRadioButtonBackgroundSelected
+1	InputSwitchColorDarkRadioButtonTextDisabledSelected
+1	InputSwitchColorDarkSelectionPrimaryText
+1	InputSwitchDarkRadioButtonBackgroundDisabledSelected
+1	InputSwitchDarkRadioButtonBackgroundSelected
+1	InputSwitchDarkRadioButtonTextDisabledSelected
+1	InputSwitchDarkSelectionPrimaryText
+1	InputSwitchLightRadioButtonBackgroundDisabledSelected
+1	InputSwitchLightRadioButtonBackgroundSelected
+1	InputSwitchLightRadioButtonTextDisabledSelected
+1	InputSwitchLightSelectionPrimaryText
+1	LightEntityItemBackgroundSelected
+1	LightEntityItemBorderSelected
+1	LightSelectedTabText
+1	LightSelectionBackground
+1	LightSelectionHoverBackground
+1	LightSelectionHoverPrimaryText
+1	LightSelectionHoverSecondaryText
+1	LightSelectionPrimaryText
+1	LightSelectionSecondaryText
+1	SaturatedSelectionBackground
+1	SaturatedSelectionHoverBackground
+1	SaturatedSelectionHoverPrimaryText
+1	SaturatedSelectionHoverSecondaryText
+1	SaturatedSelectionPrimaryText
+1	SaturatedSelectionSecondaryText
+1	SaturatedSettingCharmSystemPaneButtonSelected
+1	SaturatedSettingCharmSystemPaneButtonTextSelected
+1	StartSelectionBackground
+1	StartSelectionHoverBackground
+1	StartSelectionHoverPrimaryText
+1	StartSelectionHoverSecondaryText
+1	StartSelectionPrimaryText
+1	StartSelectionSecondaryText
+1	Failed to write updated catalog to registry
+1	SCM bulk update OIDs, to add: %d (%ws), to remove: %d (%ws), status %08X
+1	AggressiveDllUnloadPeriod
+1	UnloadPeriodMs
+1	InsertableObject
+1	Woken by FreeUnusedDLLs timer
+1	Worker thread exiting early due to change in bulk update rate (test hook)
+2	OLE_DragDrop_DragOperation_UpdatePosition
+1	FullRowSelect
+1	MachineOobeUpdates
+1	AsyncUpdatePCSettings
+1	SelectorButton
+1	SelectionChanged
+1	PreviewSelectionInvatation
+1	prop:~System.StatusBarViewItemCount;~System.StatusBarSelectedItemCount;System.StatusBarStorageProviderError;System.StatusIcons;System.LibraryLocationsCount;System.Sync.ItemState
+1	Start_TrackCachedFileUpdaterContract
+1	NullSelectPropertyString
+1	NullSelectTitlePropertyString
+1	Windows.selectMode
+1	Windows.invertselection
+1	Windows.selectnone
+1	Windows.selectall
+1	selectall
+1	showupdates
+1	outputEncoding
+1	SIDUpdatedOnLibraries
+1	SELECT workid, System.Search.GatherTime FROM SystemIndex WHERE (Scope = '%s') ORDER BY System.Search.GatherTime DESC
+1	EventHandlersDefaultSelection
+1	Microsoft.WindowsUpdate
+1	%SystemRoot%\explorer.exe ms-settings:windowsupdate
+1	Selection
+1	eltTimeRemaining
+1	selected_link
+1	RetryInterval
+1	Sending SHCNE_UPDATEDIR to 
+1	More than 10 changes, sending SHCNE_UPDATEDIR to 
+1	cmdUpdate
+1	CMBIgnoreNextDeselect
+1	Invalid policy value:For new policies update nALL_POLICIES
+1	NoRestartOnTimer
+1	NoManualUpdates
+1	DontDisplayNetworkSelectionUI
+1	NoInstalledUpdates
+1	Windows.Storage.Streams.FileOutputStream
+1	Windows.Storage.Streams.OutputStreamOverStream
+1	Update_Check_Interval
+1	Update_Check_Page
+1	IEAKUpdateUrl
+1	CDragOperation::UpdateTarget
+2	Insertable
+1	NotInsertable
+1	IdleTimerWindow
+1	RpcVerifierPauseInjectIntervalType
+1	RpcVerifierPauseInjectIntervalLength
+1	Call: UpdateProcThreadAttribute (Adding LPAC to attribute list)
+1	Call: UpdateProcThreadAttribute (Adding manifest info to attribute list)
+1	Call: UpdateProcThreadAttribute (Setting allocated attributeList)
+1	%5C%5C.%5CWaitableTimer%5C
+1	validselectormask
+1	defaultselectormask
+1	Call: UpdateCapabilitiesByNameAsync
+1	Call: BlockOnCompletion(UpdateCapabilitiesByNameAsync)
+1	UpdateLoaderAlternatePath
+1	Xbox.SystemUpdate_cw5n1h2txyewy
+1	\Output
+1	Windows.Phone.UI.Core.CoreSelectionChangedEventArgs
+1	Windows.Phone.UI.Core.ICoreSelectionChangedEventArgs
+1	Windows.System.IDispatcherQueueTimer
+1	CryptnetPreFetchTriggerPeriodSeconds
+1	4AutoUpdatePinRules
+1	Software\Microsoft\SystemCertificates\AuthRoot\AutoUpdate
+1	MaxSslTimeUpdatedEventCount
+1	http://ctldl.windowsupdate.com/msdownload/update/v3/static/trustedr/en
+1	SelectionFlags
+1	CrossCertDownloadIntervalHours
+1	CRLValidityExtensionPeriod
+1	CRYPT_LDAP_INSERT_ENTRY_ATTRIBUTE
+1	9mosaicUpdatedSig
+1	ThisUpdate
+1	NextUpdate
+1	CERT_TRUST_AUTO_UPDATE_CA_REVOCATION
+1	CERT_TRUST_AUTO_UPDATE_END_REVOCATION
+1	CERT_TRUST_HAS_AUTO_UPDATE_WEAK_SIGNATURE
+1	CERT_CHAIN_ENABLE_CACHE_AUTO_UPDATE
+1	CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE
+1	AUTO_UPDATE_PIN_RULES_FLAG
+1	thisUpdate
+1	CERT_STORE_UPDATE_KEYID_FLAG
+1	thisUpdateTime
+1	nextUpdateTime
+1	SrvOcspRespMaxBeforeNextUpdateSeconds
+1	SrvOcspRespMinBeforeNextUpdateSeconds
+1	SrvOcspRespMinAfterNextUpdateSeconds
+1	DisableRootAutoUpdate
+1	EnableDisallowedCertAutoUpdate
+1	DisablePinRulesAutoUpdate
+1	HpkpUpdate
+1	HpkpMinDeltaUpdateSeconds
+1	CertSelect
+1	AlwaysExcludeFromSelect.NTx86
+1	AlwaysExcludeFromSelect.NT
+1	AlwaysExcludeFromSelect
+1	ExcludeFromSelect.NTx86
+1	ExcludeFromSelect.NT
+1	ExcludeFromSelect
+1	DIF_SELECTDEVICE
+1	DIF_SELECTCLASSDRIVERS
+1	DIF_SELECTBESTCOMPATDRV
+1	DIF_NEWDEVICEWIZARD_PRESELECT
+1	DIF_NEWDEVICEWIZARD_SELECT
+1	DIF_UPDATEDRIVER_UI
+1	WudfUpdate_?????.dll
+1	Select Best Driver
+1	UpdateIniFields
+1	UpdateInis
+1	FlushTimer
+1	Selectors
+2	UpdateService
+1	Timer Queue
+1	GCInterval
+1	The specified ResourceManager made no changes or updates to the resource under this transaction.
+1	The specified ring buffer was empty before the packet was successfully inserted.
+1	Select OK to set current directory to %hs, or select CANCEL to exit.
+1	A serial I/O operation completed because the time-out period expired. (The IOCTL_SERIAL_XOFF_COUNTER had not reached zero.)
+1	The image file %hs is valid, but is for a machine type other than the current machine. Select OK to continue, or CANCEL to fail the DLL load.
+1	The resumable flag to a timer API was ignored.
+1	Windows has detected that the system firmware (BIOS) was updated [previous firmware date = %2, current firmware date %3].
+1	An attempt was made to cancel or set a timer that has an associated APC and the subject thread is not the thread that originally set the timer with an associated APC routine.
+1	Please insert volume %hs into drive %hs.
+1	Please insert a disk into drive %hs.
+1	When trying to update a password, this return status indicates that the value provided as the current password is not correct.
+1	When trying to update a password, this return status indicates that the value provided for the new password contains values that are not allowed in passwords.
+1	When trying to update a password, this status indicates that some password update rule has been violated. For example, the password may not meet length criteria.
+1	When a block of memory is allotted for future updates, such as the memory allocated to hold discretionary access control and primary group information, successive updates may exceed the amount of memory originally allotted.
+1	The drive is not ready for use; its door may be open. Please check drive %hs and make sure that a disk is inserted and that the drive door is closed.
+1	The specified I/O operation on %hs was not completed before the time-out period expired.
+1	The session with a remote server has been disconnected because the time-out interval for a request has expired.
+1	STATUS_ABIOS_SELECTOR_NOT_AVAILABLE
+1	STATUS_ABIOS_INVALID_SELECTOR
+1	Indicates that an attempt was made to grow an LDT by setting its size, or that the size was not an even number of selectors.
+1	Indicates that the starting value for the LDT information was not an integral multiple of the selector size.
+1	There is no media in the drive. Please insert media into drive %hs.
+1	The attempt to insert the ID in the index failed because the ID is already in the index.
+1	The timer resolution was not previously set by the current process.
+1	The dynamic link library %hs is not written correctly. The stack pointer has been left in an inconsistent state. The entrypoint should be declared as WINAPI or STDCALL. Select YES to fail the DLL load. Select NO to continue execution. Selecting NO may cause the application to operate incorrectly.
+1	The %hs service is not written correctly. The stack pointer has been left in an inconsistent state. The callback entrypoint should be declared as WINAPI or STDCALL. Selecting OK will cause the service to continue operation. However, the service process may operate incorrectly.
+1	You have attempted to change your password to one that you have used in the past. The policy of your user account does not allow this. Please select a password that you have not previously used.
+1	The evaluation period for this installation of Windows has expired. This system will shutdown in 1 hour. To restore access to this installation of Windows, please upgrade this installation using a licensed distribution of this product.
+1	The specified I/O operation failed to complete within the expected time period.
+1	The thread context could not be updated because this has been restricted for the process.
+1	One of the volume corruption logs comes from a newer version of Windows and contains corruption records. The log will be emptied and reset to the current version, and the volume health state will be updated accordingly.
+1	Access Denied. Before opening files in this location, you must first browse to the web site and select the option to login automatically.
+1	The Local Administrator Password Solution password update operation failed because the legacy LAPS schema needs to be added to Active Directory.
+1	The Local Administrator Password Solution password update operation failed because the Windows LAPS schema needs to be added to Active Directory.
+1	The Local Administrator Password Solution encrypted password update operation failed because Active Directory is not yet running at the minimum required domain functional level (2016).
+1	Fast Cache data has exceeded its max size and cannot be updated.
+1	Fast Cache has been ReArmed and requires a reboot until it can be updated.
+1	The cloud operation was not completed before the time-out period expired.
+1	Please contact your system vendor for system BIOS update.
+1	There are no free output buffers available.
+1	The GDI display device passed to this function does not have any active protected outputs.
+1	The DxgkDdiOpmCreateProtectedOutput function could not create a protected output because the Video Present Target is in spanning mode.
+1	The DxgkDdiOpmCreateProtectedOutput function could not create a protected output because the Video Present Target is in theater mode.
+1	The protected output cannot enable the High-bandwidth Digital Content Protection (HDCP) System because it does not support HDCP.
+1	The protected output cannot enable Analogue Copy Protection (ACP) because it does not support ACP.
+1	The protected output cannot enable the Content Generation Management System Analogue (CGMS-A) protection technology because it does not support CGMS-A.
+1	The DxgkDdiOPMGetInformation function cannot return the version of the SRM being used because the application never successfully passed an SRM to the protected output.
+1	The DxgkDdiOPMConfigureProtectedOutput function cannot enable the specified output protection technology because the output's screen resolution is too high.
+1	The DxgkDdiOPMConfigureProtectedOutput function cannot enable HDCP because the display adapter's HDCP hardware is already being used by other physical outputs.
+1	The operating system asynchronously destroyed this OPM protected output because the operating system's state changed. This error typically occurs because the monitor PDO associated with this protected output was removed, the monitor PDO associated with this protected output was stopped, or the protected output's session became a non-console session.
+1	Either the DxgkDdiOPMGetCOPPCompatibleInformation, DxgkDdiOPMGetInformation, or DxgkDdiOPMConfigureProtectedOutput function failed. This error is returned when the caller tries to use a COPP specific command while the protected output has OPM semantics only.
+1	Either the DxgkDdiOPMGetCOPPCompatibleInformation, DxgkDdiOPMGetInformation, or DxgkDdiOPMConfigureProtectedOutput function failed. This error is returned when the caller tries to use an OPM specific command while the protected output has COPP semantics only.
+1	The DxgkDdiOPMGetCOPPCompatibleInformation and DxgkDdiOPMConfigureProtectedOutput functions return this error if the display driver does not support the DXGKMDT_OPM_GET_ACP_AND_CGMSA_SIGNALING and DXGKMDT_OPM_SET_ACP_AND_CGMSA_SIGNALING GUIDs.
+1	The DxgkDdiOPMConfigureProtectedOutput function returns this error code if the passed in sequence number is not the expected sequence number or the passed in OMAC value is invalid.
+1	The monitor connected to the specified video output does not have an I2C bus.
+1	The control block for the encrypted volume was updated by another thread. Try again.
+1	Your computer doesn't support BitLocker hardware-based encryption. Check with your computer manufacturer for firmware updates.
+1	The time interval is not valid.
+1	TPM 2.0: Union selector is incorrect.
+1	TPM 2.0: Key fields are not compatible with the selected use.
+1	TPM 2.0: authValue or authPolicy is not available for selected entity.
+1	The TPM is defending against dictionary attacks and is in a time-out period.
+1	The TPM returned incomplete PCR results. This maybe due to an unsupported selection set. Attempt the read again with a different selection set.
+1	Processor did not respond within the timeout period.
+1	A majority of disks failed to be updated with the new configuration.
+1	Failed to update the disk's partition layout.
+1	All disks failed to be updated with the new content of the log.
+1	VHD file is changed due to compaction, expansion, or offline updates.
+1	A new Secure Boot policy did not contain the current publisher on its update list.
+1	A column's state needs to be updated.
+1	DEVICENOTSELECTEDTIMEOUT
+done 18:18:00

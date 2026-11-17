@@ -1,0 +1,54 @@
+start 17.11.2026 16:40:02
+17.11.2026 16:40:17 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:17 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:17 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:17 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:17 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:18 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:19 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:20 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:20 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+17.11.2026 16:40:20 В ОЧЕРЕДИ 1
+    Ptr=360 | Code=10 | Addr=7 | NewAddr=0 | OperatorID=1 | OperatorName=Admin (SKUD) | PortPtr=9 | Param1=0 | Param2=0 | Branch=0 | 
+done 17.11.2026 16:40:20

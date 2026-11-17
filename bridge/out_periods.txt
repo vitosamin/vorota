@@ -1,0 +1,17 @@
+Devices.TimeOutOn = Ëîæü
+Devices.TimeOut = 0
+Devices.SetClockPeriod = 5
+Devices.PollingPeriod = 0
+Devices.PeriodUpdated = Ëîæü
+DevicesFull.TimeOutOn = Ëîæü
+DevicesFull.TimeOut = 0
+DevicesFull.SetClockPeriod = 5
+DevicesFull.PollingPeriod = 0
+DevicesFull.PeriodUpdated = Ëîæü
+Ini.BackupPeriod = 1
+Ini.ControlPeriod = 1
+Ports.PollingInterval = 500
+Ports.ReplyTimeout = 500
+Ports.RestoreTimeout = 10
+Readers.ConfirmTimeout = 255
+done
