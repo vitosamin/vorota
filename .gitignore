@@ -6,3 +6,5 @@ tools/test/json.jar
 *.idsig
 *.apk
 .DS_Store
+.tools/
+bridge/*.exe
