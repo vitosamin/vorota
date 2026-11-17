@@ -81,6 +81,12 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
 .tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Огонёк состояния: дышит, когда устройство на связи */
+.dot { width: 11px; height: 11px; border-radius: 999px; flex: 0 0 auto;
+       background: var(--success); animation: pulse 1.8s ease-in-out infinite; }
+.dot.warn { background: var(--warn); }
+.dot.err { background: var(--danger); animation: none; }
+.dot.dim { background: var(--text-dim); animation: none; }
 .status { font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; }
 .status.ok { color: var(--success); }
 .status.warn { color: var(--warn); }
@@ -124,6 +130,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 <body>
 <h1>Приложение «Доступ»</h1>
 <p class="note">Оформление панели sing-box: её палитра, радиусы, высота элементов и иконки Lucide.
+Состояние устройства показывает пульсирующий огонёк: зелёный — на связи, красный — нет.
 Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка зелёная,
 ворота синие, шлагбаум оранжевый, реле сиреневое. Название занимает две строки и подбирает кегль,
 поэтому длинное имя видно целиком.</p>
@@ -139,7 +146,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status ok">Готов</div>
+            <div class="dot" title="Готов"></div>
           </div>
           <div class="tname">Калитка</div>
           <div class="tsub">Gate-IP · вход и выход</div>
@@ -151,7 +158,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-barrier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
-            <div class="status ok">Открыто</div>
+            <div class="dot" title="Открыто"></div>
           </div>
           <div class="tname">Шлагбаум</div>
           <div class="tsub">Home Assistant · cover</div>
@@ -162,7 +169,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status warn">Открывается…</div>
+            <div class="dot warn" title="Открывается…"></div>
           </div>
           <div class="tname">КПП производство</div>
           <div class="tsub">Gate-IP · 6 дверей</div>
@@ -173,7 +180,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
-            <div class="status err">Нет связи</div>
+            <div class="dot err" title="Нет связи"></div>
           </div>
           <div class="tname">Северные ворота склад №3</div>
           <div class="tsub">Gate-IP · только вход</div>
@@ -184,7 +191,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status ok">Готов</div>
+            <div class="dot" title="Готов"></div>
           </div>
           <div class="tname">Ворота</div>
           <div class="tsub">Gate-IP · вход и выход</div>
@@ -196,7 +203,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-relay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
-            <div class="status dim">Выключено</div>
+            <div class="dot dim" title="Выключено"></div>
           </div>
           <div class="tname">Реле освещения</div>
           <div class="tsub">Tasmota · реле 1</div>
@@ -223,7 +230,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status ok">Готов</div>
+            <div class="dot" title="Готов"></div>
           </div>
           <div class="tname">Калитка</div>
           <div class="tsub">Gate-IP · вход и выход</div>
@@ -235,7 +242,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-barrier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M6 8h4"/><path d="M6 18h4"/><path d="m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/><path d="M14 8h4"/><path d="M14 18h4"/><path d="m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z"/></svg></div>
-            <div class="status ok">Открыто</div>
+            <div class="dot" title="Открыто"></div>
           </div>
           <div class="tname">Шлагбаум</div>
           <div class="tsub">Home Assistant · cover</div>
@@ -246,7 +253,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-gate"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status warn">Открывается…</div>
+            <div class="dot warn" title="Открывается…"></div>
           </div>
           <div class="tname">КПП производство</div>
           <div class="tsub">Gate-IP · 6 дверей</div>
@@ -257,7 +264,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"/><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 20h20"/></svg></div>
-            <div class="status err">Нет связи</div>
+            <div class="dot err" title="Нет связи"></div>
           </div>
           <div class="tname">Северные ворота склад №3</div>
           <div class="tsub">Gate-IP · только вход</div>
@@ -268,7 +275,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-wide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20H2"/><path d="M11 4.562v16.157a1 1 0 0 0 1.242.97L19 20V5.562a2 2 0 0 0-1.515-1.94l-4-1A2 2 0 0 0 11 4.561z"/><path d="M11 4H8a2 2 0 0 0-2 2v14"/><path d="M14 12h.01"/><path d="M22 20h-3"/></svg></div>
-            <div class="status ok">Готов</div>
+            <div class="dot" title="Готов"></div>
           </div>
           <div class="tname">Ворота</div>
           <div class="tsub">Gate-IP · вход и выход</div>
@@ -280,7 +287,7 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
         <div class="tile">
           <div class="trow">
             <div class="chip tint-relay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg></div>
-            <div class="status dim">Выключено</div>
+            <div class="dot dim" title="Выключено"></div>
           </div>
           <div class="tname">Реле освещения</div>
           <div class="tsub">Tasmota · реле 1</div>

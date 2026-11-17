@@ -24,11 +24,12 @@ def icon(name, size=16, stroke=2):
 
 
 def tile(name, sub, status, status_class, icon_name, tint, buttons):
-    """Компактная плитка: значок своего цвета, имя в две строки, кнопки."""
+    """Компактная плитка: значок, имя в две строки, огонёк состояния и кнопки."""
+    dot_class = {"ok": "", "warn": " warn", "err": " err", "dim": " dim"}[status_class]
     parts = [f'''        <div class="tile">
           <div class="trow">
             <div class="chip {tint}">{icon(icon_name, 16)}</div>
-            <div class="status {status_class}">{status}</div>
+            <div class="dot{dot_class}" title="{status}"></div>
           </div>
           <div class="tname">{name}</div>
           <div class="tsub">{sub}</div>
@@ -158,6 +159,12 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
 .tname { margin-top: 8px; font-size: var(--fs-l); font-weight: 600; line-height: 1.25; }
 .tsub { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Огонёк состояния: дышит, когда устройство на связи */
+.dot { width: 11px; height: 11px; border-radius: 999px; flex: 0 0 auto;
+       background: var(--success); animation: pulse 1.8s ease-in-out infinite; }
+.dot.warn { background: var(--warn); }
+.dot.err { background: var(--danger); animation: none; }
+.dot.dim { background: var(--text-dim); animation: none; }
 .status { font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; }
 .status.ok { color: var(--success); }
 .status.warn { color: var(--warn); }
@@ -252,6 +259,7 @@ def build():
 <body>
 <h1>Приложение «Доступ»</h1>
 <p class="note">Оформление панели sing-box: её палитра, радиусы, высота элементов и иконки Lucide.
+Состояние устройства показывает пульсирующий огонёк: зелёный — на связи, красный — нет.
 Устройства — компактные плитки по две в ряд, у каждого типа свой цвет значка: калитка зелёная,
 ворота синие, шлагбаум оранжевый, реле сиреневое. Название занимает две строки и подбирает кегль,
 поэтому длинное имя видно целиком.</p>

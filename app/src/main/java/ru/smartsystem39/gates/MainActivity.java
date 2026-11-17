@@ -79,6 +79,7 @@ public class MainActivity extends Activity {
     private boolean importingGate = false;
     private View statusDot;
     private ObjectAnimator pulse;
+    private ValueAnimator cardPulse;
     private ImageButton btnRefresh;
     private EditText haUrl;
     private EditText haToken;
@@ -106,6 +107,7 @@ public class MainActivity extends Activity {
         View dot;
         Button action;
         ImageView icon;
+        boolean live;
     }
 
     @Override
@@ -430,21 +432,18 @@ public class MainActivity extends Activity {
         chip.addView(icon);
         top.addView(chip);
 
-        TextView status = new TextView(this);
-        LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        stlp.leftMargin = dp(8);
-        status.setLayoutParams(stlp);
-        status.setGravity(Gravity.END);
-        status.setText(R.string.status_checking);
-        status.setTextColor(getColor(R.color.text_secondary));
-        status.setTextSize(11);
-        status.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        status.setSingleLine(true);
-        c.status = status;
+        // Состояние показывает огонёк: словами его не дублируем.
+        View spacer = new View(this);
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(0, 1, 1f));
+        top.addView(spacer);
+
+        View dot = new View(this);
+        dot.setLayoutParams(new LinearLayout.LayoutParams(dp(11), dp(11)));
+        dot.setBackgroundResource(R.drawable.dot_muted);
+        c.dot = dot;
+        c.status = null;
         c.pill = null;
-        c.dot = null;
-        top.addView(status);
+        top.addView(dot);
 
         // Имя занимает обе строки и подбирает кегль — длинное название видно целиком.
         TextView name = new TextView(this);
@@ -513,8 +512,7 @@ public class MainActivity extends Activity {
         });
 
         if (!d.isConfigured() && !d.isGate()) {
-            status.setText(R.string.not_configured_short);
-            status.setTextColor(getColor(R.color.text_secondary));
+            if (c.dot != null) c.dot.setContentDescription(getString(R.string.not_configured_short));
             if (c.action != null) {
                 c.action.setText(R.string.action_setup);
                 Ui.styleButton(this, c.action, R.drawable.btn_secondary, R.color.text_primary,
@@ -580,7 +578,7 @@ public class MainActivity extends Activity {
     }
 
     private void applyStatus(Card c, Status s) {
-        c.status.setText(s.text);
+        if (c.status != null) c.status.setText(s.text);
         int color;
         switch (s.kind) {
             case Status.OPEN:
@@ -603,7 +601,33 @@ public class MainActivity extends Activity {
                 color = getColor(R.color.text_secondary);
                 break;
         }
-        c.status.setTextColor(color);
+        if (c.status != null) c.status.setTextColor(color);
+        int dotRes;
+        switch (s.kind) {
+            case Status.OPEN:
+            case Status.ON:
+            case Status.READY:
+                dotRes = R.drawable.dot_green;
+                c.live = true;
+                break;
+            case Status.MOVING:
+                dotRes = R.drawable.dot_amber;
+                c.live = true;
+                break;
+            case Status.OFFLINE:
+                dotRes = R.drawable.dot_red;
+                c.live = false;
+                break;
+            default:
+                dotRes = R.drawable.dot_muted;
+                c.live = false;
+                break;
+        }
+        if (c.dot != null) {
+            c.dot.setBackgroundResource(dotRes);
+            c.dot.setContentDescription(s.text);
+            if (!c.live) c.dot.setAlpha(1f);
+        }
         if (c.action == null) return;
 
         boolean online = s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
@@ -1282,6 +1306,30 @@ public class MainActivity extends Activity {
         if (statusDot != null) statusDot.setAlpha(1f);
     }
 
+    /** Огоньки на плитках дышат — видно, что устройство на связи. */
+    private void startCardPulse() {
+        if (cardPulse != null) return;
+        cardPulse = ValueAnimator.ofFloat(0.3f, 1f);
+        cardPulse.setDuration(900);
+        cardPulse.setRepeatCount(ValueAnimator.INFINITE);
+        cardPulse.setRepeatMode(ValueAnimator.REVERSE);
+        cardPulse.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            for (List<Card> list : cards.values()) {
+                for (Card card : list) {
+                    if (card.live && card.dot != null) card.dot.setAlpha(value);
+                }
+            }
+        });
+        cardPulse.start();
+    }
+
+    private void stopCardPulse() {
+        if (cardPulse == null) return;
+        cardPulse.cancel();
+        cardPulse = null;
+    }
+
     private void startPolling() {
         if (polling) return;
         polling = true;
@@ -1298,6 +1346,7 @@ public class MainActivity extends Activity {
         super.onResume();
         reloadDevices();
         startPulse();
+        startCardPulse();
         startPolling();
     }
 
@@ -1306,6 +1355,7 @@ public class MainActivity extends Activity {
         super.onPause();
         stopPolling();
         stopPulse();
+        stopCardPulse();
     }
 
     @Override
@@ -1321,6 +1371,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         stopPolling();
         stopPulse();
+        stopCardPulse();
         ui.removeCallbacksAndMessages(null);
         if (io != null) io.shutdownNow();
         if (commands != null && !commands.shutdownNow().isEmpty()) commandInFlight.set(false);
