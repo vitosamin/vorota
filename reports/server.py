@@ -39,6 +39,15 @@ SESSION_HOURS = int(AUTH.get("session_hours", 12))
 SECRET = (gate.CFG.get("secret") or "gate-skud-secret").encode("utf-8")
 COOKIE = "gate_session"
 
+def page_version():
+    """Версия интерфейса — меняется при каждой правке index.html."""
+    try:
+        st = os.stat(os.path.join(WEB, "index.html"))
+        return "%d-%d" % (int(st.st_mtime), int(st.st_size))
+    except OSError:
+        return "0"
+
+
 sync_lock = threading.Lock()
 last_sync = {"at": None, "result": None, "error": None}
 
@@ -284,7 +293,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         if filename:
             disp = "attachment; filename=\"%s\"; filename*=UTF-8''%s" % (
                 ascii_name or "report.csv", urllib.parse.quote(filename))
@@ -330,6 +341,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.serve_static("index.html")
             if path.startswith("/static/"):
                 return self.serve_static(path[len("/static/"):])
+            if path == "/api/version":
+                return self.send_json({"version": page_version()})
             if path == "/api/status":
                 return self.api_status()
             if path == "/api/kpi":
@@ -406,7 +419,8 @@ class Handler(BaseHTTPRequestHandler):
         gate.init_db(con)
         st = gate.db_status(con)
         con.close()
-        st.update({"last_sync": last_sync, "server_time": dt.datetime.now().isoformat(timespec="seconds"),
+        st.update({"version": page_version(),
+                   "last_sync": last_sync, "server_time": dt.datetime.now().isoformat(timespec="seconds"),
                    "shift_start": gate.CFG.get("shift_start"), "shift_end": gate.CFG.get("shift_end")})
         return self.send_json(st)
 

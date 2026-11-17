@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>СКУД Gate — мониторинг и отчёты</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23f2c200'/><path d='M8 22V10h4l4 6 4-6h4v12h-3.4v-6.6L16.4 21h-.8L11.4 15.4V22z' fill='%2312325c'/></svg>">
 <style>
@@ -499,7 +502,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
     </div>
   </section>
 
-  <div class="foot">СКУД Gate-IP · источник: суточные журналы <span class="mono">Server\Events\nГГММДД.mdb</span> · отчёты «Ворота»</div>
+  <div class="foot">СКУД Gate-IP · источник: суточные журналы <span class="mono">Server\Events\nГГММДД.mdb</span> · отчёты «Ворота» · <span id="buildTag" style="cursor:pointer" title="нажмите, чтобы принудительно перезагрузить страницу">сборка …</span></div>
 </div>
 
 <div class="modal" id="modal">
@@ -1293,6 +1296,35 @@ $('#btnSync').onclick=async()=>{
   b.disabled=false;b.innerHTML='⟳ Обновить';
 };
 
+
+/* ---------- автообновление при выходе новой версии ---------- */
+let PAGE_V=null, RELOADING=false;
+async function checkVersion(){
+  if(RELOADING) return;
+  try{
+    const d=await api('/api/version',1);
+    if(!d || !d.version) return;
+    if(PAGE_V===null){
+      PAGE_V=d.version;
+      const bt=$('#buildTag');
+      if(bt){ const m=/^(\d+)/.exec(d.version); bt.textContent='сборка '+(m? new Date(+m[1]*1000).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : d.version); }
+      return;
+    }
+    if(d.version!==PAGE_V){
+      RELOADING=true;
+      toast('Вышло обновление — страница перезагрузится через 3 секунды…');
+      setTimeout(()=>{ location.href='/?v='+Date.now(); }, 3000);
+    }
+  }catch(e){ /* тихо */ }
+}
+setInterval(checkVersion, 15000);
+document.addEventListener('DOMContentLoaded', ()=>{
+  const bt=$('#buildTag');
+  if(bt) bt.onclick=()=>{ location.href='/?v='+Date.now(); };
+});
+window.addEventListener('focus', checkVersion);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkVersion(); });
+
 /* ===================== старт ===================== */
 let REFS_OK=false;
 async function loadRefs(){
@@ -1340,6 +1372,7 @@ function initDates(){
   loadAnalytics();
   setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
   setInterval(loadStatus,30000);
+  checkVersion();
 })();
 </script>
 </body>

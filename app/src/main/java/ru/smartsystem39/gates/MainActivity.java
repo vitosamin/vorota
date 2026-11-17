@@ -372,7 +372,7 @@ public class MainActivity extends Activity {
         FrameLayout.LayoutParams flp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER);
         icon.setLayoutParams(flp);
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.bg));
+        icon.setColorFilter(getColor(R.color.accent_deep));
         c.icon = icon;
         iconBox.addView(icon);
         top.addView(iconBox);
@@ -458,7 +458,7 @@ public class MainActivity extends Activity {
             action.setPadding(dp(12), dp(12), dp(12), dp(12));
             action.setImageResource(R.drawable.ic_power);
             action.setColorFilter(getColor(R.color.accent));
-            action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
+            action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
             action.setContentDescription(getString(R.string.app_name) + " " + name.getText());
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
@@ -478,7 +478,7 @@ public class MainActivity extends Activity {
             if (action != null) {
                 action.setImageResource(R.drawable.ic_settings);
                 action.setColorFilter(getColor(R.color.text_secondary));
-                action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.field), dp(23)), dp(23)));
+                action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.field), dp(23)), dp(23)));
             }
         }
         return c;
@@ -530,12 +530,12 @@ public class MainActivity extends Activity {
         if (s.isMoving()) {
             c.action.setImageResource(R.drawable.ic_stop);
             c.action.setColorFilter(getColor(R.color.warn));
-            c.action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.warn_soft), dp(23)), dp(23)));
+            c.action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.warn_soft), dp(23)), dp(23)));
         } else {
             c.action.setImageResource(R.drawable.ic_power);
             boolean online = s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
             c.action.setColorFilter(getColor(online ? R.color.accent : R.color.text_muted));
-            c.action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
+            c.action.setBackground(Ui.ripple(0x22000000, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
         }
     }
 
@@ -554,7 +554,7 @@ public class MainActivity extends Activity {
         b.setMinHeight(0);
         b.setMinimumWidth(0);
         b.setMinimumHeight(0);
-        b.setTextColor(getColor(R.color.white));
+        b.setTextColor(getColor("out".equals(dir) ? R.color.info : R.color.accent_deep));
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setBackgroundResource("out".equals(dir) ? R.drawable.btn_out : R.drawable.btn_in);
         b.setCompoundDrawablesWithIntrinsicBounds(
@@ -845,7 +845,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(32), dp(32));
         icon.setLayoutParams(ilp);
         icon.setImageResource(Device.typeIcon(d.type));
-        icon.setColorFilter(getColor(R.color.bg));
+        icon.setColorFilter(getColor(R.color.accent_deep));
         row.addView(icon);
 
         LinearLayout col = new LinearLayout(this);

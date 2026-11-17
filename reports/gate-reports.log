@@ -568,3 +568,4 @@ ConnectionResetError: [Errno 104] Connection reset by peer
 ConnectionResetError: [Errno 104] Connection reset by peer
 ----------------------------------------
 ----------------------------------------
+СКУД Gate: http://0.0.0.0:8095/  вход: vitosamin  (Ctrl+C — стоп)
