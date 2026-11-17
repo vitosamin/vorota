@@ -88,6 +88,7 @@
     <string name="label_favorite">Показывать в избранном</string>
     <string name="gate_auto">Двери Gate-IP загружаются…</string>
     <string name="gate_unreachable">Gate-IP: %1$s</string>
+    <string name="not_configured_short">Не настроено</string>
     <string name="dir_in">Вход</string>
     <string name="dir_out">Выход</string>
     <string name="updates_section">Обновления</string>

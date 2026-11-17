@@ -1,0 +1,4 @@
+17.11.2026 12:31:50 type=1 code=8 dev=13 rdr=25
+17.11.2026 12:31:50 type=1 code=2 dev=13 rdr=25
+17.11.2026 12:29:48 type=1 code=8 dev=11 rdr=21
+17.11.2026 12:29:48 type=1 code=2 dev=11 rdr=21

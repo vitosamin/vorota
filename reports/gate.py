@@ -607,7 +607,7 @@ def _real_name(fio):
     return len(fio) >= 3 and not _SERVICE_NAME.match(fio)
 
 
-def absent(con, from_day, to_day, group=None, search=None):
+def absent(con, from_day, to_day, group=None, search=None, user_ptr=None):
     """Сотрудники без единого прохода за период («не приходили»)."""
     users = _user_names(con)
     seen = {r["user_ptr"] for r in con.execute(
@@ -618,6 +618,8 @@ def absent(con, from_day, to_day, group=None, search=None):
     days = (d1 - d0).days + 1
     out = []
     for pid, u in users.items():
+        if user_ptr and pid != int(user_ptr):
+            continue
         if u["deleted"] or u["visitor"] or pid in seen:
             continue
         if not _real_name(u["fio"]):
@@ -781,7 +783,7 @@ def events_summary(con, from_day, to_day):
 
 
 def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=False,
-                limit=200, offset=0, message=None):
+                limit=200, offset=0, message=None, user_ptr=None):
     """Страница журнала событий (новые сверху).
 
     `search` — ФИО, табельный номер или текст события (без учёта регистра);
@@ -797,6 +799,9 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
     if message:
         where.append("message = ?")
         params.append(message)
+    if user_ptr:
+        where.append("user_ptr = ?")
+        params.append(int(user_ptr))
     if search:
         clauses = ["instr_ru(message, ?)", "instr_ru(unit, ?)", "instr_ru(name, ?)"]
         sparams = [search, search, search]
@@ -825,11 +830,30 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
 
 
 
+
+def employees(con, group=None, include_visitors=False):
+    """Справочник сотрудников по алфавиту (для выбора в отчётах)."""
+    out = []
+    for pid, u in _user_names(con).items():
+        if u["deleted"]:
+            continue
+        if u["visitor"] and not include_visitors:
+            continue
+        if not _real_name(u["fio"]):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        out.append({"user_ptr": pid, "fio": u["fio"], "number": u["number"],
+                    "group": u["group"], "position": u["position"]})
+    out.sort(key=lambda x: x["fio"])
+    return out
+
+
 def late_report(con, from_day, to_day, group=None, search=None,
-                shift_start=None, shift_end=None):
+                shift_start=None, shift_end=None, user_ptr=None):
     """Опоздания за период: по сотрудникам, с худшим днём."""
     rows = attendance(con, from_day, to_day, group=group, search=search,
-                      shift_start=shift_start, shift_end=shift_end)
+                      shift_start=shift_start, shift_end=shift_end, user_ptr=user_ptr)
     per = {}
     for r in rows:
         a = per.setdefault(r["user_ptr"], {
@@ -872,7 +896,7 @@ def person_history(con, user_ptr, from_day, to_day):
 
 
 
-def users_report(con, group=None, search=None, include_deleted=False):
+def users_report(con, group=None, search=None, include_deleted=False, user_ptr=None):
     """Отчёт о пользователях: табельный, ФИО, подразделение, должность, последний проход."""
     last = {}
     for r in con.execute(
@@ -886,6 +910,8 @@ def users_report(con, group=None, search=None, include_deleted=False):
         last_unit[r["user_ptr"]] = r["unit"]
     out = []
     for pid, u in _user_names(con).items():
+        if user_ptr and pid != int(user_ptr):
+            continue
         if u["deleted"] and not include_deleted:
             continue
         if group and group not in ("", "all") and u["group"] != group:
@@ -913,7 +939,7 @@ EVENTS_COLS_CSV = [
 
 
 def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
-               alarms_only=False, sep=";", enc="cp1251"):
+               alarms_only=False, sep=";", enc="cp1251", user_ptr=None):
     """Весь журнал событий за период в CSV (потоком, без загрузки всех строк в память)."""
     where = ["day BETWEEN ? AND ?"]
     params = [from_day, to_day]
@@ -925,6 +951,9 @@ def events_csv(con, from_day, to_day, etype=None, search=None, message=None,
         params.append(message)
     if alarms_only:
         where.append("alarm_status = 1")
+    if user_ptr:
+        where.append("user_ptr = ?")
+        params.append(int(user_ptr))
     if search:
         where.append("(instr_ru(message, ?) OR instr_ru(unit, ?) OR instr_ru(name, ?))")
         params += [search, search, search]

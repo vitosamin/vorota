@@ -1,0 +1,49 @@
+c:\Users\Public\GateBridge.cs(675,149): error CS1010: Символ новой строки в константе
+c:\Users\Public\GateBridge.cs(676,36): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(676,55): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(678,40): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(679,30): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(679,36): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(679,43): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(680,32): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(680,38): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(680,46): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,71): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,88): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,103): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,155): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,176): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,197): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(681,229): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(686,27): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(686,46): error CS1012: Превышение допустимого числа символов в символьной константе
+c:\Users\Public\GateBridge.cs(689,24): error CS1010: Символ новой строки в константе
+c:\Users\Public\GateBridge.cs(675,30): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(675,34): error CS1519: Недопустимый токен "">'+(d.name.includes('КПП')..." в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(675,149): error CS1519: Недопустимый токен "">'+d.name+'</div>';"" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(676,12): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(676,54): error CS1519: Недопустимый токен "=" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(677,15): error CS1519: Недопустимый токен "||" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(677,18): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(677,19): error CS1031: Ожидался тип
+c:\Users\Public\GateBridge.cs(677,19): error CS1519: Недопустимый токен ")" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(677,21): error CS1520: Методы должны содержать тип возвращаемого значения
+c:\Users\Public\GateBridge.cs(677,31): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(678,16): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(679,20): error CS1519: Недопустимый токен "=" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(679,27): error CS1519: Недопустимый токен "==" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(680,22): error CS1519: Недопустимый токен "=" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(680,29): error CS1519: Недопустимый токен "==" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(681,18): error CS1519: Недопустимый токен "=" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(681,19): error CS1520: Методы должны содержать тип возвращаемого значения
+c:\Users\Public\GateBridge.cs(681,26): error CS1002: ожидалась ;
+c:\Users\Public\GateBridge.cs(681,41): error CS1519: Недопустимый токен "=" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(681,58): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(681,127): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(681,143): error CS1520: Методы должны содержать тип возвращаемого значения
+c:\Users\Public\GateBridge.cs(681,154): error CS1001: Ожидался идентификатор
+c:\Users\Public\GateBridge.cs(681,173): error CS1519: Недопустимый токен ")" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(681,195): error CS1519: Недопустимый токен "||" в объявлении класса, структуры или интерфейса
+c:\Users\Public\GateBridge.cs(681,214): error CS0116: Пространство имен не может напрямую включать в себя такие члены, как поля или методы
+c:\Users\Public\GateBridge.cs(681,294): error CS1022: Ожидалось определение типа или пространства имен, либо признак конца файла
+rc=1 

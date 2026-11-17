@@ -296,7 +296,11 @@ class GateBridge
     static void ClickOpen()
     {
         RECT br; GetWindowRect(openBtn, out br);
-        Click((br.Left + br.Right) / 2, (br.Top + br.Bottom) / 2);
+        int cx = (br.Left + br.Right) / 2, cy = (br.Top + br.Bottom) / 2;
+        // первый клик активирует окно, второй — нажимает кнопку
+        Click(cx, cy);
+        Thread.Sleep(180);
+        Click(cx, cy);
     }
 
     /// <summary>Нажимает кнопку окна по подписи (Открыть дверь / Заблокировать / Разблокировать).</summary>
@@ -310,7 +314,10 @@ class GateBridge
         }, IntPtr.Zero);
         if (btn == IntPtr.Zero || !IsWindowEnabled(btn)) return false;
         RECT br; GetWindowRect(btn, out br);
-        Click((br.Left + br.Right) / 2, (br.Top + br.Bottom) / 2);
+        int cx = (br.Left + br.Right) / 2, cy = (br.Top + br.Bottom) / 2;
+        Click(cx, cy);
+        Thread.Sleep(180);
+        Click(cx, cy);
         return true;
     }
 
@@ -597,6 +604,105 @@ class GateBridge
         }
     }
 
+
+    const string WEB_USER = "vitosamin";
+    const string WEB_PASS = "Admin910327";
+
+    static bool BasicAuthOk(HttpListenerContext ctx)
+    {
+        try
+        {
+            string h = ctx.Request.Headers["Authorization"];
+            if (string.IsNullOrEmpty(h) || !h.StartsWith("Basic ")) return false;
+            string decoded = Encoding.UTF8.GetString(Convert.FromBase64String(h.Substring(6).Trim()));
+            return decoded == WEB_USER + ":" + WEB_PASS;
+        }
+        catch { return false; }
+    }
+
+    static void RespondHtml(HttpListenerContext ctx, string html)
+    {
+        try
+        {
+            byte[] data = Encoding.UTF8.GetBytes(html);
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/html; charset=utf-8";
+            ctx.Response.ContentLength64 = data.Length;
+            ctx.Response.OutputStream.Write(data, 0, data.Length);
+            ctx.Response.OutputStream.Close();
+        }
+        catch { }
+    }
+
+    const string Page = @"<!doctype html>
+<html lang='ru'><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Ворота</title>
+<style>
+:root{--bg:#0a0e13;--card:#151b24;--line:#243040;--acc:#3ddc97;--txt:#f2f6fa;--mut:#9ba8b8}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(160deg,#101822,#070a0e);color:var(--txt);min-height:100vh;padding:24px 16px}
+h1{font-size:30px;font-weight:300;margin:0 0 4px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:22px}
+.grid{display:grid;gap:12px;max-width:760px;margin:0 auto}
+.card{background:linear-gradient(150deg,#1a2330,#141a22);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2e6b4f,#14a277);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+.name{flex:1 1 140px;font-size:17px;font-weight:500}
+.btns{display:flex;gap:8px;flex:0 0 auto}
+button{border:0;border-radius:13px;padding:11px 16px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;min-width:86px}
+.bin{background:linear-gradient(90deg,#3ddc97,#14a277);color:#04231a}
+.bout{background:linear-gradient(90deg,#5b8def,#3b6fd4)}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.5}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1f2937;border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+#toast.show{opacity:1}
+</style></head><body>
+<div class='grid'>
+<h1>Ворота</h1>
+<div class='sub' id='sub'>Загрузка…</div>
+<div id='list' class='grid'></div>
+</div>
+<div id='toast'></div>
+<script>
+var TOKEN='vorota-2026';
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2200);}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
+async function openDoor(id,dir,name,btn){
+  btn.disabled=true;
+  try{
+    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+TOKEN);
+    var o=await x.json();
+    toast(o.ok?'Открыто: '+name:'Ошибка: '+(o.error||'нет ответа'));
+  }catch(e){toast('Ошибка сети');}
+  setTimeout(function(){btn.disabled=false;},1200);
+}
+async function load(){
+  try{
+    var r=await fetch('/doors?token='+TOKEN);
+    var j=await r.json();
+    var list=document.getElementById('list');
+    list.innerHTML='';
+    j.doors.forEach(function(d){
+      if(!d.readers||!d.readers.length)return;
+      var c=el('div','card');
+      c.appendChild(el('div','icon','🚪'));
+      c.appendChild(el('div','name',d.name));
+      var b=el('div','btns');
+      d.readers.forEach(function(rd){
+        var btn=el('button',rd.dir==='out'?'bout':'bin',rd.dir==='out'?'Выход':'Вход');
+        btn.onclick=function(){openDoor(d.id,rd.dir,d.name,btn);};
+        b.appendChild(btn);
+      });
+      c.appendChild(b);
+      list.appendChild(c);
+    });
+    document.getElementById('sub').textContent='Дверей: '+j.doors.length;
+  }catch(e){document.getElementById('sub').textContent='Нет связи с мостом';}
+}
+load();setInterval(load,15000);
+</script></body></html>
+";
+
     static void Respond(HttpListenerContext ctx, int code, string body)
     {
         try
@@ -617,6 +723,21 @@ class GateBridge
         {
             var q = ctx.Request.QueryString;
             string path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
+            if (path == "" || path == "/index.html")
+            {
+                if (!BasicAuthOk(ctx))
+                {
+                    ctx.Response.StatusCode = 401;
+                    ctx.Response.AddHeader("WWW-Authenticate", "Basic realm=\"Vorota\"");
+                    ctx.Response.ContentType = "text/plain; charset=utf-8";
+                    byte[] msg = Encoding.UTF8.GetBytes("Требуется авторизация");
+                    ctx.Response.OutputStream.Write(msg, 0, msg.Length);
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+                RespondHtml(ctx, Page);
+                return;
+            }
             if (q["token"] != TOKEN) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"token\"}"); return; }
             if (path == "/status") { Respond(ctx, 200, "{\"state\":\"CLOSED\",\"calibrated\":" + (Map.Count > 0 ? "true" : "false") + "}"); return; }
             if (path == "/doors") { Respond(ctx, 200, DoorsJson()); return; }

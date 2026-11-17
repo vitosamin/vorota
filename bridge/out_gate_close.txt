@@ -1,0 +1,9 @@
+﻿win: Управление точками доступа visible=True
+win:  Настройка реакций на события visible=True
+closing:  Настройка реакций на события
+win: GATE Terminal.  Версия 1.22.112 visible=True
+win: GateTerm visible=True
+win: Notification Window visible=False
+win: MSCTFIME UI visible=False
+win: Default IME visible=False
+done

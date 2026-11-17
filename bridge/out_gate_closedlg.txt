@@ -1,0 +1,11 @@
+﻿dlg=590234 visible=True
+  ctl: ThunderRT6CommandButton [Скопировать]
+  ctl: ThunderRT6CommandButton [Очистить все]
+  ctl: ThunderRT6CommandButton [Выход]
+  ctl: ThunderRT6CommandButton [Сохранить]
+  ctl: ThunderRT6Frame [События для выбранного считывателя]
+  ctl: MSFlexGridWndClass []
+  ctl: ThunderRT6ComboBox []
+click Выход at 812,672
+dlg still visible=True
+done

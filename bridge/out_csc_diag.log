@@ -1,0 +1,3 @@
+c:\Users\Public\GateDiag.cs(82,20): error CS1502: Наиболее подходящий перегруженный метод для "GateDiag.GetWindowThreadProcessId(System.IntPtr, out uint)" имеет несколько недопустимых аргументов
+c:\Users\Public\GateDiag.cs(82,49): error CS1503: Аргумент "2": преобразование типа из "System.IntPtr" в "out uint" невозможно
+rc=1 

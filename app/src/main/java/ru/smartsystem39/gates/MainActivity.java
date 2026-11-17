@@ -349,14 +349,19 @@ public class MainActivity extends Activity {
         c.id = d.id;
         c.device = d;
 
+        // Внешний контейнер: сверху иконка/название/звезда, снизу — кнопки направлений.
         LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(dp(16), dp(16), dp(14), dp(16));
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(16), dp(14), dp(14), dp(14));
         card.setBackground(Ui.cardBackground(this));
         card.setElevation(dp(2));
         card.setLayoutParams(Ui.rowLp(this));
         c.root = card;
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        card.addView(top);
 
         FrameLayout iconBox = new FrameLayout(this);
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(46), dp(46));
@@ -370,14 +375,14 @@ public class MainActivity extends Activity {
         icon.setColorFilter(getColor(R.color.bg));
         c.icon = icon;
         iconBox.addView(icon);
-        card.addView(iconBox);
+        top.addView(iconBox);
 
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         tlp.leftMargin = dp(14);
-        tlp.rightMargin = dp(10);
+        tlp.rightMargin = dp(8);
         texts.setLayoutParams(tlp);
 
         TextView name = new TextView(this);
@@ -415,13 +420,12 @@ public class MainActivity extends Activity {
         status.setLayoutParams(slp);
         status.setText(R.string.status_checking);
         status.setTextColor(getColor(R.color.text_secondary));
-        status.setTextSize(13);
-        status.setMaxLines(1);
-        status.setEllipsize(TextUtils.TruncateAt.END);
+        status.setTextSize(12);
+        status.setSingleLine(true);
         c.status = status;
         row.addView(status);
         texts.addView(row);
-        card.addView(texts);
+        top.addView(texts);
 
         ImageButton star = new ImageButton(this);
         star.setLayoutParams(new LinearLayout.LayoutParams(dp(34), dp(34)));
@@ -431,19 +435,26 @@ public class MainActivity extends Activity {
         star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_muted));
         star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
         star.setOnClickListener(v -> toggleFavorite(d));
-        card.addView(star);
+        top.addView(star);
 
         ImageButton action = null;
         if (d.isGate()) {
             LinearLayout dirs = new LinearLayout(this);
-            dirs.setOrientation(LinearLayout.VERTICAL);
-            if (d.dirIn) dirs.addView(dirButton(d, "in", getString(R.string.dir_in)));
-            if (d.dirOut) dirs.addView(dirButton(d, "out", getString(R.string.dir_out)));
+            dirs.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dlp.topMargin = dp(12);
+            dirs.setLayoutParams(dlp);
+            boolean both = d.dirIn && d.dirOut;
+            if (d.dirIn) dirs.addView(dirButton(d, "in", getString(R.string.dir_in), both ? 1f : 1f, both));
+            if (d.dirOut) dirs.addView(dirButton(d, "out", getString(R.string.dir_out), both ? 1f : 1f, false));
             card.addView(dirs);
             c.action = null;
         } else {
             action = new ImageButton(this);
-            action.setLayoutParams(new LinearLayout.LayoutParams(dp(46), dp(46)));
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(dp(46), dp(46));
+            alp.leftMargin = dp(4);
+            action.setLayoutParams(alp);
             action.setPadding(dp(12), dp(12), dp(12), dp(12));
             action.setImageResource(R.drawable.ic_power);
             action.setColorFilter(getColor(R.color.accent));
@@ -451,7 +462,7 @@ public class MainActivity extends Activity {
             action.setContentDescription(getString(R.string.app_name) + " " + name.getText());
             action.setOnClickListener(v -> onTap(d));
             c.action = action;
-            card.addView(action);
+            top.addView(action);
         }
 
         card.setOnClickListener(v -> onTap(d));
@@ -461,7 +472,7 @@ public class MainActivity extends Activity {
         });
 
         if (!d.isConfigured() && !d.isGate()) {
-            status.setText(R.string.not_configured_hint);
+            status.setText(R.string.not_configured_short);
             status.setTextColor(getColor(R.color.text_secondary));
             dot.setBackgroundResource(R.drawable.dot_muted);
             if (action != null) {
@@ -528,21 +539,28 @@ public class MainActivity extends Activity {
         }
     }
 
-    private Button dirButton(Device d, String dir, String label) {
+    private Button dirButton(Device d, String dir, String label, float weight, boolean marginRight) {
         Button b = new Button(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(78), dp(38));
-        lp.bottomMargin = dp(6);
+        LinearLayout.LayoutParams lp = weight > 0
+                ? new LinearLayout.LayoutParams(0, dp(42), weight)
+                : new LinearLayout.LayoutParams(dp(88), dp(42));
+        if (marginRight) lp.rightMargin = dp(10);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
-        b.setTextSize(12);
+        b.setTextSize(14);
+        b.setSingleLine(true);
+        b.setMinWidth(0);
+        b.setMinHeight(0);
+        b.setMinimumWidth(0);
+        b.setMinimumHeight(0);
         b.setTextColor(getColor(R.color.white));
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         b.setBackgroundResource("out".equals(dir) ? R.drawable.btn_out : R.drawable.btn_in);
         b.setCompoundDrawablesWithIntrinsicBounds(
                 "out".equals(dir) ? R.drawable.ic_arrow_out : R.drawable.ic_arrow_in, 0, 0, 0);
-        b.setCompoundDrawablePadding(dp(4));
-        b.setPadding(dp(8), 0, dp(8), 0);
+        b.setCompoundDrawablePadding(dp(6));
+        b.setPadding(dp(10), 0, dp(10), 0);
         b.setOnClickListener(v -> onTapDir(d, dir));
         return b;
     }

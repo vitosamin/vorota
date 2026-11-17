@@ -197,6 +197,20 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
   .pres-card .presence-list{max-height:420px}
 }
 .rdesc{color:var(--muted);font-size:12.5px;line-height:1.4;min-height:52px}
+
+.combo{position:relative}
+.combo input{width:100%}
+.combo-list{position:absolute;z-index:60;left:0;right:0;top:100%;margin-top:2px;max-height:330px;overflow:auto;
+  background:#fff;border:1px solid var(--line);border-radius:3px;display:none;
+  box-shadow:0 10px 26px -14px rgba(16,24,40,.45)}
+.combo-list.open{display:block}
+.combo-list .ci{padding:5px 9px;cursor:pointer;font-size:12.5px;border-bottom:1px solid var(--line2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combo-list .ci:hover,.combo-list .ci.sel{background:#eaf2fd}
+.combo-list .ci .g{color:var(--dim);font-size:11px}
+.combo-list .ci.all{font-weight:600;color:var(--accent)}
+.combo-list .none{padding:8px 9px;color:var(--dim);font-size:12px}
+.combo-list .ch{position:sticky;top:0;z-index:2;background:#eef2f6;color:#3d4652;font-size:10.5px;
+  font-weight:700;padding:3px 9px;border-bottom:1px solid var(--line);border-top:1px solid var(--line2)}
 </style>
 </head>
 <body>
@@ -374,6 +388,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
           <div><label class="f">Подразделение</label><select id="rGroup"><option value="">все</option></select></div>
           <div><label class="f">Контрольная точка</label><select id="rPoint"><option value="">все точки</option></select></div>
           <div><label class="f">Поиск (ФИО, номер)</label><input type="text" id="rSearch" placeholder="начните вводить…"></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="rEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="rEmpList"></div></div></div>
           <div><label class="f">Вид</label><select id="rView">
             <option value="detail">По дням</option>
             <option value="summary">Свод по сотрудникам</option>
@@ -413,6 +428,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
           <div><label class="f">По дату</label><input type="date" id="pTo"></div>
           <div><label class="f">Подразделение</label><select id="pGroup"><option value="">все</option></select></div>
           <div><label class="f">Контрольная точка</label><select id="pPoint"><option value="">все точки</option></select></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="pEmpList"></div></div></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="pGo">Обновить счётчики</button>
@@ -440,6 +456,7 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
             <div><label class="f">По дату</label><input type="date" id="eTo"></div>
             <div><label class="f">Подразделение</label><select id="eGroup"><option value="">все</option></select></div>
             <div><label class="f">Точка</label><select id="ePoint"><option value="">все точки</option></select></div>
+            <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="eEmp" autocomplete="off" placeholder="все сотрудники — или фамилия"><div class="combo-list" id="eEmpList"></div></div></div>
             <div><label class="f">Вид</label><select id="eView">
               <option value="detail">По дням (табель)</option>
               <option value="summary">Свод по сотрудникам</option>
@@ -509,7 +526,19 @@ function initials(fio){const p=(fio||'').trim().split(/\s+/);return ((p[0]||'?')
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function toast(msg,isErr){const t=$('#toast');t.textContent=msg;t.classList.toggle('err',!!isErr);t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),5000);}
-async function api(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function api(url, tries){
+  tries=tries||2; let last=null;
+  for(let i=0;i<tries;i++){
+    try{
+      const r=await fetch(url);
+      if(r.status===401){ location.href='/login'; throw new Error('нужно войти заново'); }
+      if(r.ok) return await r.json();
+      last=new Error('HTTP '+r.status);
+    }catch(e){ last=e; }
+    if(i<tries-1) await new Promise(res=>setTimeout(res,400));
+  }
+  throw last||new Error('нет связи');
+}
 function delta(v, suffix){
   if(!v) return '<span class="delta flat">= '+suffix+'</span>';
   return '<span class="delta '+(v>0?'up':'down')+'">'+(v>0?'▲':'▼')+' '+NUM(Math.abs(v))+'</span> '+suffix;
@@ -669,6 +698,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     document.querySelectorAll('section.tab').forEach(x=>x.classList.remove('active'));
     b.classList.add('active'); $('#tab-'+b.dataset.tab).classList.add('active');
     state.tab=b.dataset.tab;
+    if(!REFS_OK) loadRefs();
     if(state.tab==='mon') loadMon();
     if(state.tab==='ana') loadAnalytics();
     if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
@@ -804,6 +834,68 @@ async function loadAnalytics(){
 }
 $('#aGo').onclick=loadAnalytics;
 
+
+/* ---------- выбор сотрудника с поиском по фамилии ---------- */
+let EMP_ITEMS=[];
+
+function empUid(sel){
+  const el=$(sel);
+  return (el && el.dataset)? (el.dataset.uid||'') : '';
+}
+function buildCombo(inputSel, listSel){
+  const inp=$(inputSel), list=$(listSel);
+  if(!inp||!list||inp.dataset.combo==='1') return;
+  inp.dataset.combo='1';
+  function render(){
+    const q=(inp.value||'').trim().toLowerCase();
+    // если человек уже выбран — показываем полный список, чтобы можно было выбрать другого
+    const filtering = !inp.dataset.uid && q && q!=='все сотрудники';
+    const base = filtering ? EMP_ITEMS.filter(x=>x.fio.toLowerCase().includes(q)) : EMP_ITEMS;
+    if(base.length===0 && filtering){
+      list.innerHTML='<div class="none">ничего не найдено</div>';
+      list.classList.add('open');
+      return;
+    }
+    let html='<div class="ci all'+(inp.dataset.uid?'':' sel')+'" data-uid="">все сотрудники</div>';
+    let last='';
+    base.forEach(x=>{
+      if(!filtering){
+        const ch=(x.fio||'').charAt(0).toUpperCase();
+        if(ch!==last){ html+='<div class="ch">'+esc(ch)+'</div>'; last=ch; }
+      }
+      html+='<div class="ci'+(String(x.user_ptr)===String(inp.dataset.uid||'')?' sel':'')+'" data-uid="'+x.user_ptr+'">'
+        +esc(x.fio)+(x.group?' <span class="g">· '+esc(x.group)+'</span>':'')+'</div>';
+    });
+    list.innerHTML=html;
+    list.classList.add('open');
+  }
+  inp.addEventListener('focus', ()=>{ render(); try{inp.select();}catch(e){} });
+  inp.addEventListener('input', ()=>{ inp.dataset.uid=''; render(); });
+  inp.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape'){ list.classList.remove('open'); inp.blur(); }
+    if(e.key==='Enter'){ list.classList.remove('open'); }
+  });
+  list.addEventListener('mousedown',(e)=>{
+    const it=e.target.closest('.ci'); if(!it) return;
+    e.preventDefault();
+    const uid=it.dataset.uid||'';
+    inp.dataset.uid=uid;
+    if(uid){
+      const emp=EMP_ITEMS.find(x=>String(x.user_ptr)===uid);
+      inp.value=emp?emp.fio:'';
+    }else{
+      inp.value='';
+    }
+    list.classList.remove('open');
+  });
+  inp.addEventListener('blur', ()=>setTimeout(()=>list.classList.remove('open'),160));
+}
+
+/* комбобоксы сотрудников можно открыть ещё до загрузки справочника */
+buildCombo('#rEmp','#rEmpList');
+buildCombo('#eEmp','#eEmpList');
+buildCombo('#pEmp','#pEmpList');
+
 /* ---------- вкладка «Отчёты» ---------- */
 const REPORTS=[
   {key:'urv', title:'Учёт рабочего времени (УРВ)', view:'detail', unit:'зап.',
@@ -829,6 +921,7 @@ function rptQS(){
   p.set('to',$('#pTo').value||todayISO());
   if($('#pGroup').value)p.set('group',$('#pGroup').value);
   if($('#pPoint').value)p.set('point',$('#pPoint').value);
+  const pe=empUid('#pEmp'); if(pe)p.set('user_ptr',pe);
   return p;
 }
 function rptUrl(r, kind){
@@ -836,6 +929,7 @@ function rptUrl(r, kind){
   if(r.custom==='users'){
     const u=new URLSearchParams();
     if($('#pGroup').value)u.set('group',$('#pGroup').value);
+    const pe2=empUid('#pEmp'); if(pe2)u.set('user_ptr',pe2);
     if(kind==='print') return '/print?view=users&'+u.toString();
     return kind==='xls' ? '/export/users.xls?'+u : '/export/users.csv?'+u;
   }
@@ -1003,6 +1097,7 @@ function reportQS(prefix){
   if(g(prefix+'Point'))p.set('point',g(prefix+'Point'));
   if(g(prefix+'ShiftS'))p.set('shift_start',g(prefix+'ShiftS'));
   if(g(prefix+'ShiftE'))p.set('shift_end',g(prefix+'ShiftE'));
+  const emp=empUid(prefix+'Emp'); if(emp)p.set('user_ptr',emp);
   return p;
 }
 async function loadReport(){
@@ -1199,14 +1294,33 @@ $('#btnSync').onclick=async()=>{
 };
 
 /* ===================== старт ===================== */
+let REFS_OK=false;
 async function loadRefs(){
+  let okGroups=false;
   try{
     const [g,pts]=await Promise.all([api('/api/groups'),api('/api/points')]);
-    const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
-    const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
-    ['#rGroup','#eGroup','#aGroup','#pGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
-    ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
-  }catch(e){}
+    if(Array.isArray(g) && Array.isArray(pts)){
+      const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
+      const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
+      ['#rGroup','#eGroup','#aGroup','#pGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+      ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
+      okGroups=true;
+    }
+  }catch(e){ /* повторим позже */ }
+  let okEmp=false;
+  try{
+    const emps=await api('/api/employees');
+    if(emps && Array.isArray(emps.items)){ EMP_ITEMS=emps.items; okEmp=EMP_ITEMS.length>0; }
+  }catch(e){ /* повторим позже */ }
+  buildCombo('#rEmp','#rEmpList');
+  buildCombo('#eEmp','#eEmpList');
+  buildCombo('#pEmp','#pEmpList');
+  REFS_OK = okGroups && okEmp;
+  if(!REFS_OK && !loadRefs._warned){
+    loadRefs._warned=true;
+    toast('Справочники не загрузились — откройте вкладку ещё раз или обновите страницу', true);
+  }
+  return REFS_OK;
 }
 function initDates(){
   const t=todayISO(), week=shiftISO(6);

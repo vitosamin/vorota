@@ -358,6 +358,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_person(q)
             if path == "/api/users":
                 return self.api_users(q)
+            if path == "/api/employees":
+                return self.api_employees(q)
             if path == "/api/reports/preview":
                 return self.api_reports_preview(q)
             if path == "/export/users.csv":
@@ -448,14 +450,16 @@ class Handler(BaseHTTPRequestHandler):
         view = q.get("view", "detail")
         con = gate.connect()
         if view == "absent":
-            rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"))
+            rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"),
+                               user_ptr=q.get("user_ptr") or None)
             con.close()
             return self.send_json({"from": frm, "to": to, "view": view, "count": len(rows),
                                    "people": len(rows), "total_hours": 0, "late_days": 0,
                                    "rows": rows, "summary": rows})
         if view == "late":
             items = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
-                                     shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+                                     shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
+                                     user_ptr=q.get("user_ptr") or None)
             con.close()
             return self.send_json({"from": frm, "to": to, "view": view, "count": len(items),
                                    "people": len(items),
@@ -465,7 +469,8 @@ class Handler(BaseHTTPRequestHandler):
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
                                point=q.get("point"), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",
-                               shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+                               shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
+                               user_ptr=q.get("user_ptr") or None)
         summary = gate.attendance_summary(rows)
         con.close()
         return self.send_json({
@@ -508,10 +513,17 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "not found"}, code=404)
         return self.send_json(data)
 
+    def api_employees(self, q):
+        con = gate.connect()
+        items = gate.employees(con, group=q.get("group"))
+        con.close()
+        return self.send_json({"count": len(items), "items": items})
+
     def api_users(self, q):
         con = gate.connect()
         items = gate.users_report(con, group=q.get("group"), search=q.get("search"),
-                                  include_deleted=q.get("deleted") == "1")
+                                  include_deleted=q.get("deleted") == "1",
+                                  user_ptr=q.get("user_ptr") or None)
         con.close()
         return self.send_json({"count": len(items), "items": items})
 
@@ -519,11 +531,12 @@ class Handler(BaseHTTPRequestHandler):
         frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
         to = q.get("to") or dt.date.today().isoformat()
         con = gate.connect()
-        rows = gate.attendance(con, frm, to, group=q.get("group"), point=q.get("point"))
+        up = q.get("user_ptr") or None
+        rows = gate.attendance(con, frm, to, group=q.get("group"), point=q.get("point"), user_ptr=up)
         summary = gate.attendance_summary(rows)
         late = sum(1 for a in summary if a["late_total"])
-        absent = len(gate.absent(con, frm, to, group=q.get("group")))
-        users = len(gate.users_report(con, group=q.get("group")))
+        absent = len(gate.absent(con, frm, to, group=q.get("group"), user_ptr=up))
+        users = len(gate.users_report(con, group=q.get("group"), user_ptr=up))
         events = con.execute("SELECT COUNT(*) c FROM events WHERE day BETWEEN ? AND ?",
                              (frm, to)).fetchone()["c"]
         con.close()
@@ -533,7 +546,8 @@ class Handler(BaseHTTPRequestHandler):
     def export_users(self, q, fmt):
         con = gate.connect()
         rows = gate.users_report(con, group=q.get("group"), search=q.get("search"),
-                                 include_deleted=q.get("deleted") == "1")
+                                 include_deleted=q.get("deleted") == "1",
+                                 user_ptr=q.get("user_ptr") or None)
         con.close()
         cols = COLS_USERS
         if fmt == "xls":
@@ -554,6 +568,7 @@ class Handler(BaseHTTPRequestHandler):
                                   etype=q.get("type") or None,
                                   search=(q.get("search") or "").strip() or None,
                                   message=(q.get("message") or "").strip() or None,
+                                  user_ptr=q.get("user_ptr") or None,
                                   alarms_only=q.get("alarms") == "1",
                                   sep=sep, enc=enc)
         con.close()
@@ -580,6 +595,7 @@ class Handler(BaseHTTPRequestHandler):
             etype=q.get("type") or None,
             search=(q.get("search") or "").strip() or None,
             message=(q.get("message") or "").strip() or None,
+            user_ptr=q.get("user_ptr") or None,
             alarms_only=(q.get("alarms") == "1"),
             limit=max(1, min(500, int(q.get("limit", 200)))),
             offset=max(0, int(q.get("offset", 0))))
@@ -648,18 +664,21 @@ class Handler(BaseHTTPRequestHandler):
         view = q.get("view")
         con = gate.connect()
         if view == "absent":
-            rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"))
+            rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"),
+                               user_ptr=q.get("user_ptr") or None)
             con.close()
             return rows, COLS_ABS, frm, to
         if view == "late":
             rows = gate.late_report(con, frm, to, group=q.get("group"), search=q.get("search"),
-                                    shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+                                    shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
+                                    user_ptr=q.get("user_ptr") or None)
             con.close()
             return rows, COLS_LATE, frm, to
         rows = gate.attendance(con, frm, to, group=q.get("group"), search=q.get("search"),
                                point=q.get("point"), include_deleted=q.get("deleted") == "1",
                                include_visitors=q.get("visitors") == "1",
-                               shift_start=q.get("shift_start"), shift_end=q.get("shift_end"))
+                               shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
+                               user_ptr=q.get("user_ptr") or None)
         con.close()
         if view == "summary":
             return gate.attendance_summary(rows), COLS_SUM, frm, to
@@ -691,7 +710,8 @@ class Handler(BaseHTTPRequestHandler):
         con = gate.connect()
 
         if view == "users":
-            rows = gate.users_report(con, group=q.get("group"), search=q.get("search"))
+            rows = gate.users_report(con, group=q.get("group"), search=q.get("search"),
+                                      user_ptr=q.get("user_ptr") or None)
             cols, title = COLS_USERS, "Отчёт о пользователях"
             subtitle = "Справочник сотрудников и гостевых карт СКУД"
             stats = [("Сотрудников", len(rows)),
@@ -702,6 +722,7 @@ class Handler(BaseHTTPRequestHandler):
             items = gate.events_list(con, frm, to, etype=q.get("type") or None,
                                      search=(q.get("search") or "").strip() or None,
                                      message=(q.get("message") or "").strip() or None,
+                                     user_ptr=q.get("user_ptr") or None,
                                      alarms_only=q.get("alarms") == "1", limit=2000)
             rows = [dict(it, alarm_flag=("да" if it["alarm"] else "")) for it in items["items"]]
             cols, title = COLS_EVENTS, "Отчёт о событиях СКУД"
