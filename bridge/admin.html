@@ -35,7 +35,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   __MSG__
   <div class="card">
     <h2>Добавить пользователя</h2>
-    <form method="post" action="/admin/add">
+    <form method="post" action="/admin/add"><input type="hidden" name="csrf" value="__CSRF__">
       <div class="row">
         <div><input name="login" placeholder="Логин" autocomplete="off"></div>
         <div><input name="pass" type="password" placeholder="Пароль (мин. 8)" autocomplete="new-password"></div>
@@ -58,7 +58,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   </div>
   <div class="card">
     <h2>Сменить пароль</h2>
-    <form method="post" action="/admin/pass">
+    <form method="post" action="/admin/pass"><input type="hidden" name="csrf" value="__CSRF__">
       <div class="row">
         <div><input name="login" placeholder="Логин" autocomplete="off"></div>
         <div><input name="pass" type="password" placeholder="Новый пароль (мин. 8)" autocomplete="new-password"></div>

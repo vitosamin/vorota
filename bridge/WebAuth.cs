@@ -336,14 +336,38 @@ static class WebAuth
         catch { }
     }
 
+    /// <summary>Адреса, которым доверяем заголовки прокси (сам прокси).</summary>
+    static readonly string[] TrustedProxies = { "127.0.0.1", "::1", "::ffff:127.0.0.1", "192.168.2.165" };
+
+    public static bool IsTrustedProxy(string remote)
+    {
+        foreach (string p in TrustedProxies)
+            if (string.Equals(remote, p, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
+    public static string ForwardedIp(HttpListenerContext ctx)
+    {
+        try
+        {
+            string fwd = ctx.Request.Headers["CF-Connecting-IP"];
+            if (string.IsNullOrEmpty(fwd)) fwd = ctx.Request.Headers["X-Forwarded-For"];
+            if (string.IsNullOrEmpty(fwd)) return "";
+            // XFF прокси дописывает в конец: берём последний (его добавил наш прокси),
+            // иначе клиент подделает первый элемент.
+            string[] parts = fwd.Split(',');
+            return parts[parts.Length - 1].Trim();
+        }
+        catch { return ""; }
+    }
+
     public static string ClientIp(HttpListenerContext ctx)
     {
         try
         {
             string remote = ctx.Request.RemoteEndPoint == null ? "?" : ctx.Request.RemoteEndPoint.Address.ToString();
-            // Заголовкам прокси верим только если запрос пришёл с этой же машины
-            // (cloudflared/nginx), иначе клиент подделает X-Forwarded-For.
-            bool local = remote == "127.0.0.1" || remote == "::1" || remote == "::ffff:127.0.0.1";
+            // Заголовкам прокси верим только от самого прокси, иначе клиент подделает X-Forwarded-For.
+            bool local = IsTrustedProxy(remote);
             if (!local) return remote;
             string fwd = ctx.Request.Headers["CF-Connecting-IP"];
             if (!string.IsNullOrEmpty(fwd)) return fwd.Trim();

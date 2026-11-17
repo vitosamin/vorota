@@ -821,7 +821,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   __MSG__
   <div class=""card"">
     <h2>Добавить пользователя</h2>
-    <form method=""post"" action=""/admin/add"">
+    <form method=""post"" action=""/admin/add""><input type=""hidden"" name=""csrf"" value=""__CSRF__"">
       <div class=""row"">
         <div><input name=""login"" placeholder=""Логин"" autocomplete=""off""></div>
         <div><input name=""pass"" type=""password"" placeholder=""Пароль (мин. 8)"" autocomplete=""new-password""></div>
@@ -844,7 +844,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
   </div>
   <div class=""card"">
     <h2>Сменить пароль</h2>
-    <form method=""post"" action=""/admin/pass"">
+    <form method=""post"" action=""/admin/pass""><input type=""hidden"" name=""csrf"" value=""__CSRF__"">
       <div class=""row"">
         <div><input name=""login"" placeholder=""Логин"" autocomplete=""off""></div>
         <div><input name=""pass"" type=""password"" placeholder=""Новый пароль (мин. 8)"" autocomplete=""new-password""></div>
@@ -941,15 +941,9 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
         try
         {
             string remote = ctx.Request.RemoteEndPoint == null ? "" : ctx.Request.RemoteEndPoint.Address.ToString();
-            bool loopback = remote == "127.0.0.1" || remote == "::1" || remote == "::ffff:127.0.0.1";
-            if (loopback)
-            {
-                // через прокси: доверяем только если он прислал настоящий IP и тот локальный
-                string fwd = ctx.Request.Headers["CF-Connecting-IP"];
-                if (string.IsNullOrEmpty(fwd)) fwd = ctx.Request.Headers["X-Forwarded-For"];
-                if (string.IsNullOrEmpty(fwd)) return false;
-                return WebAuth.IsPrivate(fwd.Split(',')[0].Trim());
-            }
+            // Токен API — только при прямом локальном подключении.
+            // Через прокси (NPM/туннель) он не работает никогда: снаружи только вход с паролем и 2FA.
+            if (WebAuth.IsTrustedProxy(remote)) return false;
             return WebAuth.IsPrivate(remote);
         }
         catch { return false; }
@@ -1013,17 +1007,38 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 .Replace("\"", "&quot;").Replace("'", "&#39;");
     }
 
-    static bool CsrfOk(HttpListenerContext ctx, WebAuth.Session s)
+    static string FormField(string body, string key)
+    {
+        var nv = ParseForm(body);
+        return nv[key] ?? "";
+    }
+
+    static bool CsrfOk(HttpListenerContext ctx, WebAuth.Session s, string body)
     {
         try
         {
             string h = ctx.Request.Headers["X-CSRF"];
             if (!string.IsNullOrEmpty(h) && h == s.Csrf) return true;
+            if (!string.IsNullOrEmpty(body))
+            {
+                string f = FormField(body, "csrf");
+                if (!string.IsNullOrEmpty(f) && f == s.Csrf) return true;
+            }
             string origin = ctx.Request.Headers["Origin"];
+            if (string.IsNullOrEmpty(origin)) origin = ctx.Request.Headers["Referer"];
             if (!string.IsNullOrEmpty(origin))
             {
-                var u = ctx.Request.Url;
-                return origin == (u.Scheme + "://" + u.Authority);
+                string hostHdr = ctx.Request.Headers["Host"];
+                if (!string.IsNullOrEmpty(hostHdr))
+                {
+                    try
+                    {
+                        var u = new Uri(origin);
+                        string hh = hostHdr.Split(':')[0];
+                        if (string.Equals(u.Host, hh, StringComparison.OrdinalIgnoreCase)) return true;
+                    }
+                    catch { }
+                }
             }
             return false;
         }
@@ -1182,7 +1197,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                     body2 += "<form method='post' action='/2fa/enable'><button type='submit'>Включить 2FA</button></form>";
                 }
                 body2 += "</div><a class='link' href='/'>← К дверям</a>";
-                RespondHtml(ctx, TwoFaPageRender("Защита аккаунта", Escape(session.Login), body2));
+                RespondHtml(ctx, TwoFaPageRender("Защита аккаунта", Escape(session.Login), body2).Replace("__CSRF__", session.Csrf));
                 return;
             }
             if (path == "/2fa/verify" && ctx.Request.HttpMethod == "POST")
@@ -1212,7 +1227,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
             if (path == "/2fa/enable" && ctx.Request.HttpMethod == "POST")
             {
                 if (session == null) { Redirect(ctx, "/login"); return; }
-                if (!CsrfOk(ctx, session) && ctx.Request.Headers["Origin"] == null) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                if (!CsrfOk(ctx, session, ReadBody(ctx))) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
                 string secret = WebAuth.NewSecret();
                 WebAuth.SetPendingSecret(session.Login, secret);
                 string uri = "otpauth://totp/Vorota:" + Uri.EscapeDataString(session.Login) + "?secret=" + secret + "&issuer=Vorota";
@@ -1264,8 +1279,8 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 string msg = "";
                 if (ctx.Request.HttpMethod == "POST")
                 {
-                    if (!CsrfOk(ctx, session)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
                     string body = ReadBody(ctx);
+                    if (!CsrfOk(ctx, session, body)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
                     if (path == "/admin/add")
                     {
                         string err = WebAuth.AddUser(FormValue(body, "login"), FormValue(body, "pass"), FormValue(body, "role"));
@@ -1296,7 +1311,8 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                             .Append("<button class='mini' type='submit'>Удалить</button></form>");
                     rows.Append("</td></tr>");
                 }
-                string html = AdminPage.Replace("__ROWS__", rows.ToString())
+                string html = AdminPage.Replace("__CSRF__", session.Csrf)
+                                       .Replace("__ROWS__", rows.ToString())
                                        .Replace("__AUDIT__", Escape(WebAuth.AuditTail(60)))
                                        .Replace("__MSG__", msg);
                 RespondHtml(ctx, html);
@@ -1316,8 +1332,9 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 if (ctx.Request.HttpMethod == "POST")
                 {
                     if (session == null) { Respond(ctx, 401, "{\"ok\":false,\"error\":\"auth\"}"); return; }
-                    if (!CsrfOk(ctx, session)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
-                    q = ParseForm(ReadBody(ctx));
+                    string openBody = ReadBody(ctx);
+                    if (!CsrfOk(ctx, session, openBody)) { Respond(ctx, 403, "{\"ok\":false,\"error\":\"csrf\"}"); return; }
+                    q = ParseForm(openBody);
                 }
                 else if (!lanToken)
                 {

@@ -1,6 +1,6 @@
 # STATE — gates («Ворота»)
 
-> Обновлено: 2026-11-17 14:48 (Europe/Kaliningrad)
+> Обновлено: 2026-11-17 14:55 (Europe/Kaliningrad)
 > main · последний коммит: 4d66133 «2.3: статус СКУД в шапке»
 > Версия 2.3 (`versionCode 14`), пакет `ru.smartsystem39.gates`
 
@@ -21,8 +21,14 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
 
 - API: `/status`, `/doors`, `/open?id=<dev>&dir=in|out`, `/calibrate`,
   `/reload`, `/press?id=<row>&btn=lock|unlock`.
-- **Веб-версия:** `http://192.168.2.160:8099/` — страница входа, сессии,
-  управление пользователями (`/admin`), журнал действий. Автообновление 15 с.
+- **Веб-версия:** локально `http://192.168.2.160:8099/`, снаружи
+  **https://kp.almak.ru/** — страница входа, сессии, пользователи (`/admin`),
+  журнал действий, 2FA. Автообновление 15 с.
+- **Публикация:** Nginx Proxy Manager на `192.168.2.165` (UI :81, вход
+  `vitosamin@yandex.ru`), proxy host id=10 → 192.168.2.160:8099, Let's Encrypt
+  cert id=12 (до 15.02.2027), Force SSL + HTTP/2 + HSTS, кэш выключен,
+  Block Exploits включён. DNS: `kp.almak.ru A 212.44.69.66` в nic.ru
+  (зона almak.ru; `212.44.69.66` = mx.almak.ru, там проброшены 80/443 → NPM).
 - **Безопасность (v4):** пароли в PBKDF2-SHA1 (120 000 итераций, соль),
   файл `C:\Users\Public\gate_users.json`; сессии в памяти на 8 ч;
   cookie HttpOnly + SameSite=Strict (+Secure при HTTPS); CSRF-заголовок для
@@ -31,8 +37,12 @@ https://github.com/vitosamin/vorota/releases/latest/download/Vorota.apk
   `gate_audit.log` (входы, открытия, правка пользователей).
   Токен `vorota-2026` работает **только из локальной сети** (RFC1918) и только
   для API приложения — в HTML страницы его больше нет.
-  `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от localhost,
-  а `TokenAllowed()` вообще не пускает токен через прокси без реального IP.
+  `X-Forwarded-For`/`CF-Connecting-IP` принимаются только от доверенных прокси
+  (`WebAuth.TrustedProxies`: 127.0.0.1 и 192.168.2.165), из XFF берётся
+  **последний** адрес. `TokenAllowed()` не пускает токен через прокси вообще —
+  снаружи только вход по паролю + 2FA (проверено: 401 снаружи, 200 в локалке).
+- CSRF: скрытое поле `csrf` во всех формах + заголовок `X-CSRF`; сравнение
+  Origin идёт по Host (за прокси схема http/https различается).
 - **2FA (TOTP)**: страница `/2fa` — включение/отключение, секрет base32,
   otpauth-ссылка, подтверждение кодом. Вход: пароль → `/2fa` → код → сессия.
   У `vitosamin` 2FA включена (секрет в `gate_users.json`).
