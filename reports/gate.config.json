@@ -1,0 +1,21 @@
+{
+  "share": "//192.168.2.160/GATE",
+  "user": "alm\\shapovalenko",
+  "password": "Adminfzd13m08g07",
+  "smbclient": "/home/dsh/projects/gates/.tools/smb/root/usr/bin/smbclient",
+  "smb_lib": "/home/dsh/projects/gates/.tools/smb/root/usr/lib/x86_64-linux-gnu:/home/dsh/projects/gates/.tools/smb/root/lib/x86_64-linux-gnu",
+  "mdbtools": "/home/dsh/projects/gates/reports/tools/mdbroot/usr/bin",
+  "mdb_lib": "/home/dsh/projects/gates/reports/tools/mdbroot/usr/lib/x86_64-linux-gnu",
+  "events_remote": "Server\\Events",
+  "config_remote": "Server\\config.mdb",
+  "shift_start": "08:00",
+  "shift_end": "17:00",
+  "port": 8095,
+  "auth": {
+    "user": "vitosamin",
+    "password": "Admin910327",
+    "realm": "SKUD Gate",
+    "session_hours": 12
+  },
+  "secret": "Ld7nOaQw2Fp3tZxV9kR1sB4mYc6uHjE0"
+}

@@ -1,0 +1,21 @@
+[Unit]
+Description=СКУД Gate — мониторинг проходов и отчёты посещаемости
+Documentation=file:/home/dsh/projects/gates/reports/README.md
+After=network-online.target
+Wants=network-online.target
+# не сдаваться, если сервис несколько раз подряд не смог занять порт
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=dsh
+Group=dsh
+WorkingDirectory=/home/dsh/projects/gates/reports
+ExecStart=/usr/bin/python3 /home/dsh/projects/gates/reports/server.py 8095
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/dsh/projects/gates/reports/gate-reports.log
+StandardError=append:/home/dsh/projects/gates/reports/gate-reports.log
+
+[Install]
+WantedBy=multi-user.target

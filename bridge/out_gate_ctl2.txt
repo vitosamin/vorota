@@ -1,0 +1,4 @@
+﻿start 11:11:44.429 mode=test row=0
+access=1049372 grid=328052 openBtn=2556638 enabled=True
+clicking OPEN without selection
+done 11:11:46.261

@@ -1,0 +1,7 @@
+--- CommandQuetch ---
+--- Results ---
+--- Servers ---
+SrvPtr=1 Name=Удаленный сервер Path=C:\GATE\Server\SrvSetup.mdb Type=0
+--- nEvBuf tables ---
+nEvBuf events=0
+done

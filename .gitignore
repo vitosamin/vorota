@@ -8,3 +8,4 @@ tools/test/json.jar
 .DS_Store
 .tools/
 bridge/*.exe
+bridge/research/

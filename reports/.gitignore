@@ -1,0 +1,5 @@
+data/
+tools/*.deb
+tools/mdbroot/
+__pycache__/
+*.pyc

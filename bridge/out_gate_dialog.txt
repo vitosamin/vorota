@@ -1,0 +1,49 @@
+﻿main=7078068 menuId=13
+--- before ---
+WIN class=ThunderRT6FormDC text=[GATE Terminal.  Версия 1.22.112]
+    ctrl class=ThunderRT6Timer text=[] visible=False
+    ctrl class=ThunderRT6CommandButton text=[Посетители] visible=False
+    ctrl class=ThunderRT6Frame text=[] visible=True
+    ctrl class=ThunderRT6Frame text=[Мониторинг событий системы:] visible=True
+    ctrl class=MSFlexGridWndClass text=[] visible=True
+    ctrl class=ThunderRT6CommandButton text=[Выход] visible=True
+    ctrl class=ThunderRT6Timer text=[] visible=False
+WIN class=ThunderRT6Main text=[GateTerm]
+    ctrl class=VBFocusRT6 text=[] visible=False
+--- after ---
+WIN class=ThunderRT6FormDC text=[ Настройка реакций на события]
+    ctrl class=ThunderRT6CommandButton text=[Скопировать] visible=True
+    ctrl class=ThunderRT6CommandButton text=[Очистить все] visible=True
+    ctrl class=ThunderRT6CommandButton text=[Выход] visible=True
+    ctrl class=ThunderRT6CommandButton text=[Сохранить] visible=True
+    ctrl class=ThunderRT6Frame text=[События для выбранного считывателя] visible=True
+    ctrl class=MSFlexGridWndClass text=[] visible=True
+    ctrl class=ThunderRT6ComboBox text=[] visible=True
+      items=16
+      item[0]=08 - Сан пропускник - Вход
+      item[1]=08 - Сан пропускник - Выход
+      item[2]=02 - Магазин - Вход
+      item[3]=02 - Магазин - Выход
+      item[4]=05 - КПП2 - Вход
+      item[5]=05 - КПП2 - Выход
+      item[6]=06 - КПП1 - Выход
+      item[7]=06 - КПП1 - Вход
+      item[8]=04 - Кадры вход
+      item[9]=04 - Кадры выход
+      item[10]=07 - Кпп произ-во вход
+      item[11]=07 - Кпп произ-во выход
+      item[12]=03 - Досмотровая - ВыХОД
+      item[13]=03 - Досмотровая - ВХОД
+      item[14]=01 - Вход из Зала
+      item[15]=01 - Вход из СЛ.ПОМ
+WIN class=ThunderRT6FormDC text=[GATE Terminal.  Версия 1.22.112]
+    ctrl class=ThunderRT6Timer text=[] visible=False
+    ctrl class=ThunderRT6CommandButton text=[Посетители] visible=False
+    ctrl class=ThunderRT6Frame text=[] visible=True
+    ctrl class=ThunderRT6Frame text=[Мониторинг событий системы:] visible=True
+    ctrl class=MSFlexGridWndClass text=[] visible=True
+    ctrl class=ThunderRT6CommandButton text=[Выход] visible=True
+    ctrl class=ThunderRT6Timer text=[] visible=False
+WIN class=ThunderRT6Main text=[GateTerm]
+    ctrl class=VBFocusRT6 text=[] visible=False
+done

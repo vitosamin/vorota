@@ -1,0 +1,20 @@
+﻿2026-11-17T10:42:50 bridge start
+2026-11-17T10:42:51 listening 8099
+2026-11-17T10:42:59 open id=3
+2026-11-17T10:45:24 open id=3
+2026-11-17T10:52:36 open id=3
+2026-11-17T11:20:51 bridge 2.0 start, doors=8
+2026-11-17T11:20:51 listening 8099
+2026-11-17T11:21:00 verify row=7 rgb=63,153,225 blue=True
+2026-11-17T11:21:01 open row=7
+2026-11-17T11:21:02 verify row=8 rgb=63,123,171 blue=True
+2026-11-17T11:21:03 open row=8
+2026-11-17T11:27:10 bridge 2.0 start, doors=8
+2026-11-17T11:27:10 listening 8099
+2026-11-17T11:27:17 verify row=11 rgb=0,120,215 blue=True
+2026-11-17T11:27:18 open row=11
+2026-11-17T11:28:46 bridge 2.0 start, doors=8
+2026-11-17T11:28:46 listening 8099
+2026-11-17T11:28:56 form reset, fresh=True
+2026-11-17T11:28:57 verify row=11 rgb=0,120,215 blue=True
+2026-11-17T11:28:58 open row=11

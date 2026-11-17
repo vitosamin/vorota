@@ -51,6 +51,7 @@ public class MainActivity extends Activity {
     private final Map<String, Status> lastStatus = new HashMap<>();
     private final AtomicBoolean inFlight = new AtomicBoolean(false);
     private boolean polling = false;
+    private boolean allExpanded = false;
     private int tab = 0;
 
     private ScrollView scrollMain;
@@ -68,6 +69,7 @@ public class MainActivity extends Activity {
     private String pendingApkUrl;
     private boolean checkingUpdates = false;
     private boolean downloadingUpdate = false;
+    private boolean importingGate = false;
     private View statusDot;
     private ImageButton btnRefresh;
     private EditText haUrl;
@@ -109,6 +111,7 @@ public class MainActivity extends Activity {
         reloadDevices();
         selectTab(0);
         ui.postDelayed(() -> checkUpdates(true), 1500);
+        ui.postDelayed(this::autoImportGate, 900);
     }
 
     private void bind() {
@@ -240,11 +243,102 @@ public class MainActivity extends Activity {
             listMain.addView(buildEmptyView());
             return;
         }
+
+        List<Device> favorites = new ArrayList<>();
         for (Device d : devices) {
-            Card c = buildCard(d);
-            cards.put(d.id, c);
-            listMain.addView(c.root);
+            if (d.favorite) favorites.add(d);
         }
+
+        if (favorites.isEmpty()) {
+            listMain.addView(buildHint(getString(R.string.favorites_hint)));
+        } else {
+            listMain.addView(buildSection(getString(R.string.section_favorites)));
+            for (Device d : favorites) addCard(d);
+        }
+
+        boolean expanded = allExpanded || favorites.isEmpty();
+        listMain.addView(buildAllHeader(expanded));
+        if (expanded) {
+            for (Device d : devices) addCard(d);
+        }
+    }
+
+    private void addCard(Device d) {
+        Card c = buildCard(d);
+        cards.put(d.id, c);
+        listMain.addView(c.root);
+        Status known = lastStatus.get(d.id);
+        if (known != null) applyStatus(c, known);
+    }
+
+    private TextView buildSection(String text) {
+        TextView title = new TextView(this);
+        title.setText(text);
+        title.setTextColor(getColor(R.color.text_muted));
+        title.setTextSize(11);
+        title.setAllCaps(true);
+        title.setLetterSpacing(0.12f);
+        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = dp(6);
+        lp.bottomMargin = dp(10);
+        title.setLayoutParams(lp);
+        return title;
+    }
+
+    private View buildHint(String text) {
+        TextView hint = new TextView(this);
+        hint.setText(text);
+        hint.setTextColor(getColor(R.color.text_muted));
+        hint.setTextSize(12);
+        hint.setLineSpacing(dp(2), 1f);
+        hint.setPadding(dp(4), dp(4), dp(4), dp(4));
+        hint.setLayoutParams(Ui.rowLp(this));
+        return hint;
+    }
+
+    private View buildAllHeader(boolean expanded) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(14), dp(14), dp(14), dp(14));
+        row.setBackground(Ui.cardBackground(this));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = dp(4);
+        lp.bottomMargin = dp(10);
+        row.setLayoutParams(lp);
+
+        TextView title = new TextView(this);
+        title.setText(getString(R.string.section_all_count, devices.size()));
+        title.setTextColor(getColor(R.color.text_primary));
+        title.setTextSize(15);
+        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        title.setLayoutParams(tlp);
+        row.addView(title);
+
+        ImageView chevron = new ImageView(this);
+        chevron.setLayoutParams(new LinearLayout.LayoutParams(dp(24), dp(24)));
+        chevron.setImageResource(R.drawable.ic_chevron);
+        chevron.setColorFilter(getColor(R.color.text_secondary));
+        chevron.setRotation(expanded ? 90f : 0f);
+        row.addView(chevron);
+
+        row.setOnClickListener(v -> {
+            allExpanded = !allExpanded;
+            rebuildMain();
+        });
+        return row;
+    }
+
+    private void toggleFavorite(Device d) {
+        d.favorite = !d.favorite;
+        cfg.upsert(d);
+        toast(getString(d.favorite ? R.string.fav_added : R.string.fav_removed));
+        rebuildMain();
     }
 
     private Card buildCard(Device d) {
@@ -322,16 +416,36 @@ public class MainActivity extends Activity {
         texts.addView(row);
         card.addView(texts);
 
-        ImageButton action = new ImageButton(this);
-        action.setLayoutParams(new LinearLayout.LayoutParams(dp(46), dp(46)));
-        action.setPadding(dp(12), dp(12), dp(12), dp(12));
-        action.setImageResource(R.drawable.ic_power);
-        action.setColorFilter(getColor(R.color.accent));
-        action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
-        action.setContentDescription(getString(R.string.app_name) + " " + name.getText());
-        action.setOnClickListener(v -> onTap(d));
-        c.action = action;
-        card.addView(action);
+        ImageButton star = new ImageButton(this);
+        star.setLayoutParams(new LinearLayout.LayoutParams(dp(38), dp(38)));
+        star.setPadding(dp(7), dp(7), dp(7), dp(7));
+        star.setBackgroundResource(R.drawable.bg_circle_ripple);
+        star.setImageResource(d.favorite ? R.drawable.ic_star : R.drawable.ic_star_outline);
+        star.setColorFilter(getColor(d.favorite ? R.color.warn : R.color.text_muted));
+        star.setContentDescription(getString(d.favorite ? R.string.fav_remove : R.string.fav_add));
+        star.setOnClickListener(v -> toggleFavorite(d));
+        card.addView(star);
+
+        ImageButton action = null;
+        if (d.isGate()) {
+            LinearLayout dirs = new LinearLayout(this);
+            dirs.setOrientation(LinearLayout.VERTICAL);
+            if (d.dirIn) dirs.addView(dirButton(d, "in", getString(R.string.dir_in)));
+            if (d.dirOut) dirs.addView(dirButton(d, "out", getString(R.string.dir_out)));
+            card.addView(dirs);
+            c.action = null;
+        } else {
+            action = new ImageButton(this);
+            action.setLayoutParams(new LinearLayout.LayoutParams(dp(46), dp(46)));
+            action.setPadding(dp(12), dp(12), dp(12), dp(12));
+            action.setImageResource(R.drawable.ic_power);
+            action.setColorFilter(getColor(R.color.accent));
+            action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
+            action.setContentDescription(getString(R.string.app_name) + " " + name.getText());
+            action.setOnClickListener(v -> onTap(d));
+            c.action = action;
+            card.addView(action);
+        }
 
         card.setOnClickListener(v -> onTap(d));
         card.setOnLongClickListener(v -> {
@@ -339,13 +453,15 @@ public class MainActivity extends Activity {
             return true;
         });
 
-        if (!d.isConfigured()) {
+        if (!d.isConfigured() && !d.isGate()) {
             status.setText(R.string.not_configured_hint);
             status.setTextColor(getColor(R.color.text_secondary));
             dot.setBackgroundResource(R.drawable.dot_muted);
-            action.setImageResource(R.drawable.ic_settings);
-            action.setColorFilter(getColor(R.color.text_secondary));
-            action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.field), dp(23)), dp(23)));
+            if (action != null) {
+                action.setImageResource(R.drawable.ic_settings);
+                action.setColorFilter(getColor(R.color.text_secondary));
+                action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.field), dp(23)), dp(23)));
+            }
         }
         return c;
     }
@@ -382,6 +498,7 @@ public class MainActivity extends Activity {
         }
         c.status.setTextColor(color);
         c.dot.setBackgroundResource(dot);
+        if (c.action == null) return;
         if (s.isMoving()) {
             c.action.setImageResource(R.drawable.ic_stop);
             c.action.setColorFilter(getColor(R.color.warn));
@@ -392,6 +509,36 @@ public class MainActivity extends Activity {
             c.action.setColorFilter(getColor(online ? R.color.accent : R.color.text_muted));
             c.action.setBackground(Ui.ripple(0x33FFFFFF, Ui.fill(getColor(R.color.accent_soft), dp(23)), dp(23)));
         }
+    }
+
+    private Button dirButton(Device d, String dir, String label) {
+        Button b = new Button(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(84), dp(40));
+        lp.bottomMargin = dp(4);
+        b.setLayoutParams(lp);
+        b.setText(label);
+        b.setAllCaps(false);
+        b.setTextSize(13);
+        b.setTextColor(getColor(R.color.bg));
+        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        b.setBackgroundResource(R.drawable.btn_primary);
+        b.setPadding(0, 0, 0, 0);
+        b.setOnClickListener(v -> onTapDir(d, dir));
+        return b;
+    }
+
+    private void onTapDir(Device d, String dir) {
+        final String base = HaClient.normalizeBase(d.address);
+        if (base.isEmpty()) { toast(getString(R.string.status_ha_not_set)); return; }
+        runIo(() -> {
+            Http.Response r = Http.get(base + "/open?id=" + d.gateId + "&dir=" + dir
+                    + "&token=" + Uri.encode(d.gateToken), null, false);
+            final String err = r.ok() ? null : (r.error == null ? "HTTP " + r.code : r.error);
+            ui.post(() -> {
+                toast(err == null ? getString(R.string.cmd_sent) : err);
+                pollOnce();
+            });
+        });
     }
 
     private void onTap(Device d) {
@@ -405,7 +552,7 @@ public class MainActivity extends Activity {
             return;
         }
         final Card c = cards.get(d.id);
-        if (c != null) c.action.setEnabled(false);
+        if (c != null && c.action != null) c.action.setEnabled(false);
 
         if (Device.SRC_HA.equals(d.source)) {
             final String domain = domainOf(d.entity);
@@ -414,7 +561,7 @@ public class MainActivity extends Activity {
                 HaClient.Result<String> r = new HaClient(cfg.getHaUrl(), cfg.getHaToken(), cfg.haInsecure())
                         .callService(domain, service, d.entity);
                 ui.post(() -> {
-                    if (c != null) c.action.setEnabled(true);
+                    if (c != null && c.action != null) c.action.setEnabled(true);
                     toast(r.error == null ? getString(R.string.cmd_sent) : r.error);
                     pollOnce();
                 });
@@ -423,7 +570,7 @@ public class MainActivity extends Activity {
             runIo(() -> {
                 DirectClient.Result r = DirectClient.toggle(d, cfg.haInsecure());
                 ui.post(() -> {
-                    if (c != null) c.action.setEnabled(true);
+                    if (c != null && c.action != null) c.action.setEnabled(true);
                     toast(r.error == null ? getString(R.string.cmd_sent) : r.error);
                     pollOnce();
                 });
@@ -486,20 +633,56 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Убирает незаполненные заготовки «Шлагбаум»/«Калитка», когда появились реальные двери. */
+    private List<Device> prunePlaceholders(List<Device> devices) {
+        List<Device> out = new ArrayList<>();
+        for (Device d : devices) {
+            boolean placeholder = ("Шлагбаум".equals(d.name) || "Калитка".equals(d.name))
+                    && (d.entity == null || d.entity.trim().isEmpty())
+                    && (d.address == null || d.address.trim().isEmpty());
+            if (!placeholder) out.add(d);
+        }
+        return out;
+    }
+
     private void importGateDoors() {
+        importGate(false);
+    }
+
+    private boolean hasGateDevices() {
+        for (Device d : cfg.getDevices()) {
+            if (d.isGate()) return true;
+        }
+        return false;
+    }
+
+    private void autoImportGate() {
+        if (importingGate || hasGateDevices()) return;
+        if (cfg.getGateUrl().trim().isEmpty()) return;
+        importGate(true);
+    }
+
+    private void importGate(final boolean silent) {
+        if (importingGate) return;
+        importingGate = true;
         final String rawUrl = gateUrl.getText().toString().trim();
         final String token = gateToken.getText().toString().trim();
         cfg.setGateUrl(rawUrl);
         cfg.setGateToken(token);
         final String base = HaClient.normalizeBase(rawUrl);
         if (base.isEmpty()) {
-            gateStatus.setTextColor(getColor(R.color.danger));
-            gateStatus.setText(getString(R.string.gate_error, "укажите адрес моста"));
+            importingGate = false;
+            if (!silent) {
+                gateStatus.setTextColor(getColor(R.color.danger));
+                gateStatus.setText(getString(R.string.gate_error, "укажите адрес моста"));
+            }
             return;
         }
         btnGateImport.setEnabled(false);
-        gateStatus.setTextColor(getColor(R.color.text_muted));
-        gateStatus.setText(R.string.gate_loading);
+        if (!silent) {
+            gateStatus.setTextColor(getColor(R.color.text_muted));
+            gateStatus.setText(R.string.gate_loading);
+        }
         final String encToken = Uri.encode(token);
         runIo(() -> {
             Http.Response r = Http.get(base + "/doors?token=" + encToken, null, false);
@@ -516,27 +699,38 @@ public class MainActivity extends Activity {
                         String id = o.optString("id", "");
                         String name = o.optString("name", "");
                         if (id.isEmpty() || name.isEmpty()) continue;
-                        boolean exists = false;
-                        for (Device d : devices) {
-                            if (d.openUrl != null && d.openUrl.contains("/open?id=" + id + "&")) {
-                                exists = true;
-                                break;
+                        JSONArray readers = o.optJSONArray("readers");
+                        boolean in = false, out = false;
+                        if (readers != null) {
+                            for (int k = 0; k < readers.length(); k++) {
+                                String dir = readers.getJSONObject(k).optString("dir", "in");
+                                if ("out".equals(dir)) out = true; else in = true;
                             }
                         }
-                        if (exists) continue;
-                        Device d = new Device(Device.newId(), name, Device.TYPE_GATE);
-                        d.source = Device.SRC_HTTP;
-                        d.protocol = Device.P_CUSTOM;
-                        d.address = base;
-                        d.pulse = true;
-                        d.openUrl = base + "/open?id=" + id + "&token=" + encToken;
-                        d.closeUrl = base + "/lock?id=" + id + "&token=" + encToken;
-                        d.statusUrl = base + "/status?id=" + id + "&token=" + encToken;
-                        d.statusField = "state";
-                        d.onValue = "OPEN";
-                        devices.add(d);
+                        Device found = null;
+                        for (Device d : devices) {
+                            if (id.equals(d.gateId)) { found = d; break; }
+                        }
+                        if (found == null) {
+                            found = new Device(Device.newId(), name, Device.TYPE_WIDE);
+                            devices.add(found);
+                        }
+                        found.name = name;
+                        found.source = Device.SRC_HTTP;
+                        found.protocol = Device.P_CUSTOM;
+                        found.address = base;
+                        found.gateId = id;
+                        found.gateToken = token;
+                        found.dirIn = in;
+                        found.dirOut = out;
+                        found.pulse = false;
+                        found.openUrl = "";
+                        found.closeUrl = "";
+                        found.statusUrl = "";
+                        found.statusField = "";
                         added++;
                     }
+                    devices = prunePlaceholders(devices);
                     cfg.saveDevices(devices);
                 } catch (Exception e) {
                     error = "некорректный ответ моста";
@@ -545,10 +739,15 @@ public class MainActivity extends Activity {
             final String ferr = error;
             final int fadded = added;
             ui.post(() -> {
+                importingGate = false;
                 btnGateImport.setEnabled(true);
                 if (ferr != null) {
                     gateStatus.setTextColor(getColor(R.color.danger));
                     gateStatus.setText(getString(R.string.gate_error, ferr));
+                    if (silent && tab == 0) {
+                        setHeader(getString(R.string.gate_unreachable, ferr),
+                                R.drawable.dot_red, getColor(R.color.danger));
+                    }
                 } else {
                     gateStatus.setTextColor(getColor(R.color.accent));
                     gateStatus.setText(getString(R.string.gate_ok, fadded));

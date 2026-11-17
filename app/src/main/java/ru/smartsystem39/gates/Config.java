@@ -80,7 +80,9 @@ public class Config {
         String raw = sp.getString(K_DEVICES, null);
         if (raw == null) {
             Device barrier = new Device(Device.newId(), "Шлагбаум", Device.TYPE_BARRIER);
+            barrier.favorite = true;
             Device gate = new Device(Device.newId(), "Калитка", Device.TYPE_GATE);
+            gate.favorite = true;
             out.add(barrier);
             out.add(gate);
             saveDevices(out);

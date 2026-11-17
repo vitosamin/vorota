@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СКУД Gate — мониторинг и отчёты</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234c8dff'/><path d='M8 22V10h4l4 6 4-6h4v12h-3.4v-6.6L16.4 21h-.8L11.4 15.4V22z' fill='white'/></svg>">
+<style>
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --panel2:#f7f9fb; --head:#eef2f6;
+  --line:#c9d2dc; --line2:#e3e8ee; --text:#1f2328; --muted:#6b7280; --dim:#8b95a1;
+  --accent:#2f6fd0; --accent2:#2559a8; --green:#1a7f37; --amber:#b26a00; --red:#b42318; --cyan:#1f7a8c;
+  --radius:5px; --shadow:0 1px 2px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font:13px/1.45 "Segoe UI",Tahoma,Verdana,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1560px;margin:0 auto;padding:14px 18px 40px}
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;border-radius:var(--radius);display:grid;place-items:center;background:var(--accent)}
+.logo svg{width:20px;height:20px}
+.brand h1{margin:0;font-size:15px;font-weight:600}
+.brand .sub{color:var(--muted);font-size:11.5px;margin-top:1px}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:3px;padding:5px 10px;font-size:12px;color:var(--muted);white-space:nowrap}
+.pill b{color:var(--text);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.dot.ok{background:#2e9e5b}
+.dot.err{background:#d9534f}
+.clock{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text)}
+button,.btn{font:inherit;cursor:pointer;border-radius:3px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);padding:6px 12px;transition:background .12s,border-color .12s;
+  display:inline-flex;align-items:center;gap:6px;text-decoration:none;line-height:1.4}
+button:hover,.btn:hover{background:#eaf2fd;border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+button.ghost{background:transparent}
+button:disabled{opacity:.5;cursor:not-allowed}
+nav.tabs{display:flex;gap:2px;border-bottom:2px solid var(--accent);margin-bottom:14px;flex-wrap:wrap}
+nav.tabs button{background:var(--panel2);border:1px solid var(--line);border-bottom:none;
+  border-radius:3px 3px 0 0;color:#404040;padding:7px 16px;font-weight:500;margin-bottom:-2px}
+nav.tabs button:hover{background:#eaf2fd;border-color:var(--accent)}
+nav.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+section.tab{display:none}
+section.tab.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px}
+.card .hd{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--head);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;border-radius:var(--radius) var(--radius) 0 0}
+.card .hd h3{margin:0;font-size:13px;font-weight:600}
+.card .hd .hint{color:var(--muted);font-size:11.5px;margin-left:auto}
+.card .bd{padding:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  border-top:3px solid var(--accent);padding:10px 12px;box-shadow:var(--shadow)}
+.kpi.g{border-top-color:#2e9e5b}.kpi.a{border-top-color:#d99000}
+.kpi.r{border-top-color:#d9534f}.kpi.c{border-top-color:#2b8fa8}
+.kpi .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.kpi .val{font-size:24px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .sub{color:var(--dim);font-size:11px;margin-top:2px}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;align-items:start}
+@media(max-width:1080px){.grid2{grid-template-columns:1fr}}
+.tblwrap{overflow:auto;max-height:640px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;z-index:2;background:var(--head);color:#3d4652;text-align:left;
+  font-weight:600;font-size:11.5px;padding:7px 10px;border:1px solid var(--line);white-space:nowrap}
+tbody td{padding:6px 10px;border:1px solid var(--line2);vertical-align:middle}
+tbody tr:nth-child(even) td{background:var(--panel2)}
+tbody tr:hover td{background:#eaf2fd}
+td.num,th.num{text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mono{font-variant-numeric:tabular-nums}
+.empty{padding:28px;text-align:center;color:var(--dim)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:3px;font-size:11.5px;
+  font-weight:600;border:1px solid transparent;white-space:nowrap}
+.badge.in{background:#e8f6ec;color:#1a7f37;border-color:#bfe3c8}
+.badge.out{background:#fdeceb;color:#b42318;border-color:#f5c6c2}
+.badge.na{background:#eef1f5;color:#5b6572;border-color:#d5dce4}
+.badge.live{background:#e7f4f8;color:#1f7a8c;border-color:#bfe0e8}
+.badge.late{background:#fdf3e2;color:#8a5300;border-color:#f0d9ad}
+.tag{color:var(--muted);font-size:11.5px}
+.avatar{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;
+  font-weight:700;background:#dbe7f6;color:#2f6fd0;flex:0 0 auto}
+.person{display:flex;align-items:center;gap:8px;min-width:0}
+.person .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .pos{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed{max-height:660px;overflow:auto}
+.feed .row{display:flex;gap:10px;padding:6px 12px;border-bottom:1px solid var(--line2);align-items:center}
+.feed .row:nth-child(even){background:var(--panel2)}
+.feed .row.new{animation:flash 1.8s ease}
+@keyframes flash{from{background:#d8e8fb}to{background:transparent}}
+.feed .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;width:58px;flex:0 0 auto}
+.feed .who{flex:1;min-width:0}
+.feed .who .n{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed .who .d{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end}
+label.f{display:block;color:#4a5560;font-size:11.5px;margin-bottom:4px}
+input,select{width:100%;font:inherit;color:var(--text);background:#fff;border:1px solid var(--line);
+  border-radius:3px;padding:5px 8px;outline:none;transition:.12s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,208,.15)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chk{display:flex;align-items:center;gap:6px;color:#4a5560;font-size:12px;cursor:pointer;user-select:none}
+.chk input{width:auto}
+.notice{display:flex;gap:10px;align-items:flex-start;background:#f3f8ff;border:1px solid #cfe0f7;
+  border-radius:var(--radius);padding:10px 12px;color:#33465e;font-size:12.5px;margin-bottom:12px}
+.muted{color:var(--muted)} .dim{color:var(--dim)}
+.spin{width:12px;height:12px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--accent);border-radius:50%;
+  display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+pre.prev{background:#fbfcfd;border:1px solid var(--line);border-radius:3px;padding:10px;overflow:auto;
+  max-height:320px;font:12px/1.5 ui-monospace,Consolas,monospace;color:#2b3440;margin:0}
+.toast{position:fixed;right:18px;bottom:18px;background:#fff;border:1px solid var(--line);
+  border-left:4px solid var(--accent);border-radius:var(--radius);padding:11px 16px;
+  box-shadow:0 8px 24px -12px rgba(16,24,40,.4);opacity:0;transform:translateY(10px);
+  transition:.2s;pointer-events:none;z-index:99;max-width:440px;font-size:12.5px}
+.toast.show{opacity:1;transform:none}
+.toast.err{border-left-color:#d9534f}
+.presence-list{max-height:420px;overflow:auto}
+.presence-list .it{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line2)}
+.presence-list .it:nth-child(even){background:var(--panel2)}
+.presence-list .it:last-child{border-bottom:none}
+.foot{margin-top:18px;color:var(--dim);font-size:11.5px;text-align:center}
+.chart-box{padding:10px 12px 4px}
+.chart-box svg{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 12px 10px;color:var(--muted);font-size:11.5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20V6.5A2.5 2.5 0 0 1 6.5 4H12v16H4Z" stroke="#fff" stroke-width="1.7"/><path d="M12 4h5.5A2.5 2.5 0 0 1 20 6.5V20h-8" stroke="#fff" stroke-width="1.7" opacity=".7"/><circle cx="9.2" cy="12" r="1.1" fill="#fff"/></svg></div>
+      <div>
+        <h1>СКУД Gate — мониторинг и отчёты</h1>
+        <div class="sub">Шлагбаумы, КПП и пропускники · сервер Gate-IP 192.168.2.160</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill"><span class="dot" id="stDot"></span><span id="stText">связь…</span></span>
+    <span class="pill"><span class="clock" id="clock">--:--:--</span></span>
+    <button class="ghost" id="btnSync" title="Загрузить свежие события с сервера Gate">⟳ Обновить</button>
+    <a class="btn ghost" href="/logout" title="Выйти">⎋ Выход</a>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="mon" class="active">Мониторинг</button>
+    <button data-tab="ana">Аналитика</button>
+    <button data-tab="rep">Посещаемость</button>
+    <button data-tab="exp">Выгрузка в 1С</button>
+  </nav>
+
+  <!-- ================= МОНИТОРИНГ ================= -->
+  <section class="tab active" id="tab-mon">
+    <div class="card" style="margin-bottom:18px">
+      <div class="bd" style="display:flex;gap:14px;align-items:end;flex-wrap:wrap">
+        <div style="width:190px"><label class="f">День наблюдения</label><input type="date" id="mDay"></div>
+        <button id="mToday">Сегодня</button>
+        <span class="pill"><span class="dot" id="liveDot"></span><span id="liveState">поток…</span></span>
+        <span class="muted" id="mNote" style="font-size:13px"></span>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Проходов сегодня</div><div class="val" id="kPasses">—</div><div class="sub" id="kPassesSub">—</div></div>
+      <div class="kpi g"><div class="lbl">Сейчас на объекте</div><div class="val" id="kOnSite">—</div><div class="sub" id="kOnSiteSub">последний проход — вход</div></div>
+      <div class="kpi c"><div class="lbl">Входов / выходов</div><div class="val" id="kInOut">—</div><div class="sub">за текущие сутки</div></div>
+      <div class="kpi a"><div class="lbl">Людей за день</div><div class="val" id="kPeople">—</div><div class="sub">уникальных сотрудников</div></div>
+      <div class="kpi r"><div class="lbl">Тревог и взломов</div><div class="val" id="kAlerts">—</div><div class="sub">события устройств</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="hd">
+          <h3>Лента проходов</h3>
+          <span class="hint" id="liveHint">вживую</span>
+          <label class="chk"><input type="checkbox" id="liveAll"> все события</label>
+        </div>
+        <div class="feed" id="feed"><div class="empty">Загрузка…</div></div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:18px">
+          <div class="hd"><h3>Проходы по часам</h3><span class="hint" id="chartDay"></span></div>
+          <div class="chart-box" id="chHour"></div>
+          <div class="legend"><span><i style="background:#2f6fd0"></i>вход</span><span><i style="background:#d9534f"></i>выход</span></div>
+        </div>
+        <div class="card">
+          <div class="hd"><h3>На объекте сейчас</h3><span class="hint" id="presCount">—</span></div>
+          <div class="presence-list" id="presence"><div class="empty">Загрузка…</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= АНАЛИТИКА ================= -->
+  <section class="tab" id="tab-ana">
+    <div class="card" style="margin-bottom:18px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">С даты</label><input type="date" id="aFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="aTo"></div>
+          <div><label class="f">Подразделение</label><select id="aGroup"><option value="">все</option></select></div>
+          <div><label class="f">Контрольная точка</label><select id="aPoint"><option value="">все точки</option></select></div>
+        </div>
+        <div class="row-actions"><button class="primary" id="aGo">Построить графики</button>
+          <button id="aPrint">🖨 Печать</button></div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Проходов за период</div><div class="val" id="aPasses">—</div><div class="sub" id="aPeriod">—</div></div>
+      <div class="kpi c"><div class="lbl">Сотрудников</div><div class="val" id="aPeople">—</div><div class="sub">уникальных</div></div>
+      <div class="kpi g"><div class="lbl">Часов всего</div><div class="val" id="aHours">—</div><div class="sub">человеко-часов</div></div>
+      <div class="kpi a"><div class="lbl">Дней с опозданием</div><div class="val" id="aLate">—</div><div class="sub">человеко-дней</div></div>
+    </div>
+
+    <div class="grid3">
+      <div class="card" style="grid-column:1/-1">
+        <div class="hd"><h3>Динамика по дням</h3><span class="hint">проходы и уникальные сотрудники</span></div>
+        <div class="chart-box" id="chDays"></div>
+        <div class="legend"><span><i style="background:#2f6fd0"></i>проходы</span><span><i style="background:#2e9e5b"></i>сотрудники</span></div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><h3>Опоздания</h3><span class="hint" id="lateHint"></span></div>
+        <div class="chart-box" id="chLate"></div>
+      </div>
+      <div class="card">
+        <div class="hd"><h3>Время на объекте</h3><span class="hint">человеко-дней</span></div>
+        <div class="chart-box" id="chHours"></div>
+      </div>
+      <div class="card">
+        <div class="hd"><h3>Вход / выход по часам</h3><span class="hint">за период</span></div>
+        <div class="chart-box" id="chHour2"></div>
+        <div class="legend"><span><i style="background:#2f6fd0"></i>вход</span><span><i style="background:#d9534f"></i>выход</span></div>
+      </div>
+
+      <div class="card" style="grid-column:1/-1">
+        <div class="hd"><h3>Активность: день недели × час</h3><span class="hint">чем ярче — тем больше проходов</span></div>
+        <div class="chart-box" id="chHeat"></div>
+      </div>
+
+      <div class="card" style="grid-column:span 2">
+        <div class="hd"><h3>Подразделения</h3><span class="hint">человеко-дней за период</span></div>
+        <div class="chart-box" id="chGroups"></div>
+      </div>
+      <div class="card">
+        <div class="hd"><h3>Кто больше всех опаздывает</h3><span class="hint">минут суммарно</span></div>
+        <div class="chart-box" id="chTopLate"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="hd" id="evHead" style="cursor:pointer" title="нажмите, чтобы раскрыть">
+        <h3>Журнал событий СКУД</h3>
+        <span class="hint" id="evHint">свёрнуто · данные не загружаются</span>
+        <button id="evToggle" style="margin-left:auto">▸ Развернуть</button>
+      </div>
+      <div id="evBody" style="display:none">
+        <div class="bd">
+          <div class="filters">
+            <div><label class="f">Тип события</label><select id="evType"><option value="">все типы</option></select></div>
+            <div><label class="f">Поиск по тексту</label><input type="text" id="evSearch" placeholder="взлом, дверь, тревога…"></div>
+            <div><label class="f">Только тревоги</label><select id="evAlarms"><option value="0">нет</option><option value="1">да</option></select></div>
+            <div><label class="f">Строк</label><select id="evLimit"><option value="100">100</option><option value="200" selected>200</option><option value="500">500</option></select></div>
+          </div>
+          <div class="row-actions"><button class="primary" id="evApply">Показать события</button></div>
+          <div class="kpis" style="margin-top:12px">
+            <div class="kpi"><div class="lbl">Событий за период</div><div class="val" id="evTotal">—</div><div class="sub" id="evPeriod">—</div></div>
+            <div class="kpi r"><div class="lbl">Тревог</div><div class="val" id="evAlarmCnt">—</div><div class="sub">взлом, дверь не закрыта</div></div>
+            <div class="kpi c"><div class="lbl">Типов событий</div><div class="val" id="evTypesCnt">—</div><div class="sub">встретилось в журнале</div></div>
+            <div class="kpi a"><div class="lbl">В среднем в день</div><div class="val" id="evAvg">—</div><div class="sub">событий</div></div>
+          </div>
+          <div class="grid2">
+            <div class="card"><div class="hd"><h3>События по дням</h3></div><div class="chart-box" id="evDayChart"></div></div>
+            <div class="card"><div class="hd"><h3>По типам</h3></div><div class="chart-box" id="evTypeChart"></div></div>
+          </div>
+          <div class="tblwrap" id="evList"><div class="empty">—</div></div>
+          <div class="row-actions">
+            <button id="evMore" style="display:none">Показать ещё</button>
+            <span class="muted" id="evShown" style="font-size:12px;align-self:center"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ПОСЕЩАЕМОСТЬ ================= -->
+  <section class="tab" id="tab-rep">
+    <div class="card" style="margin-bottom:18px">
+      <div class="hd"><h3>Параметры отчёта</h3><span class="hint">приход — первый проход дня, уход — последний</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">С даты</label><input type="date" id="rFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="rTo"></div>
+          <div><label class="f">Подразделение</label><select id="rGroup"><option value="">все</option></select></div>
+          <div><label class="f">Контрольная точка</label><select id="rPoint"><option value="">все точки</option></select></div>
+          <div><label class="f">Поиск (ФИО, номер)</label><input type="text" id="rSearch" placeholder="начните вводить…"></div>
+          <div><label class="f">Вид</label><select id="rView">
+            <option value="detail">По дням</option>
+            <option value="summary">Свод по сотрудникам</option>
+            <option value="absent">Не приходили (нет проходов)</option>
+          </select></div>
+          <div><label class="f">Начало смены</label><input type="time" id="rShiftS" value="08:00"></div>
+          <div><label class="f">Конец смены</label><input type="time" id="rShiftE" value="17:00"></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="rGo">Показать отчёт</button>
+          <button id="rPrint">🖨 Печать / PDF</button>
+          <button id="rXls">⤓ Excel (.xls)</button>
+          <button id="rCsv">⤓ CSV</button>
+        </div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Записей в отчёте</div><div class="val" id="sRows">—</div><div class="sub">человеко-дней</div></div>
+      <div class="kpi c"><div class="lbl">Сотрудников</div><div class="val" id="sPeople">—</div><div class="sub">с проходами за период</div></div>
+      <div class="kpi g"><div class="lbl">Часов всего</div><div class="val" id="sHours">—</div><div class="sub">по первому и последнему проходу</div></div>
+      <div class="kpi a"><div class="lbl">Дней с опозданием</div><div class="val" id="sLate">—</div><div class="sub" id="sShift">смена с 08:00 до 17:00</div></div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3 id="repTitle">Отчёт посещаемости</h3><span class="hint" id="repHint"></span></div>
+      <div class="tblwrap" id="repWrap"><div class="empty">Нажмите «Показать отчёт»</div></div>
+    </div>
+  </section>
+
+  <!-- ================= ВЫГРУЗКА ================= -->
+  <section class="tab" id="tab-exp">
+    <div class="notice">
+      <span>ℹ️</span>
+      <div>Файл <b>CSV</b> открывается в 1С:Предприятие 8 через «Загрузка данных из файла».
+      Для 1С под Windows — <b>Windows-1251</b> и разделитель <b>точка с запятой</b>.
+      Кнопка скачивания сохраняет файл напрямую, с уведомлением внизу справа.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="hd"><h3>Настройки выгрузки</h3></div>
+        <div class="bd">
+          <div class="filters">
+            <div><label class="f">С даты</label><input type="date" id="eFrom"></div>
+            <div><label class="f">По дату</label><input type="date" id="eTo"></div>
+            <div><label class="f">Подразделение</label><select id="eGroup"><option value="">все</option></select></div>
+            <div><label class="f">Точка</label><select id="ePoint"><option value="">все точки</option></select></div>
+            <div><label class="f">Вид</label><select id="eView">
+              <option value="detail">По дням (табель)</option>
+              <option value="summary">Свод по сотрудникам</option>
+              <option value="absent">Не приходили</option>
+            </select></div>
+            <div><label class="f">Начало смены</label><input type="time" id="eShiftS" value="08:00"></div>
+            <div><label class="f">Конец смены</label><input type="time" id="eShiftE" value="17:00"></div>
+          </div>
+          <div class="filters" style="margin-top:12px">
+            <div><label class="f">Кодировка</label><select id="eEnc">
+              <option value="cp1251">Windows-1251 (для 1С)</option>
+              <option value="utf-8">UTF-8 (с BOM, для Excel)</option>
+            </select></div>
+            <div><label class="f">Разделитель</label><select id="eSep">
+              <option value="semicolon">точка с запятой ;</option>
+              <option value="comma">запятая ,</option>
+              <option value="tab">табуляция</option>
+            </select></div>
+            <div><label class="f">Дробная часть</label><select id="eDec">
+              <option value=",">запятая (1С, РФ)</option>
+              <option value=".">точка</option>
+            </select></div>
+            <div><label class="f">Строка заголовков</label><select id="eHeader">
+              <option value="1">да</option><option value="0">нет</option>
+            </select></div>
+          </div>
+          <div class="row-actions">
+            <button class="primary" id="eDl">⤓ Скачать файл для 1С</button>
+            <button id="ePreview">Показать предпросмотр</button>
+            <button id="eXls">⤓ Excel (.xls)</button>
+            <button id="ePrint">🖨 Печать / PDF</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd"><h3>Предпросмотр</h3><span class="hint" id="ePrevHint">первые 20 строк</span></div>
+        <div class="bd"><pre class="prev" id="ePrev">Нажмите «Показать предпросмотр».</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">СКУД Gate-IP · источник: суточные журналы <span class="mono">Server\Events\nГГММДД.mdb</span> · отчёты «Ворота»</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== утилиты ===================== */
+const $ = s => document.querySelector(s);
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function shiftISO(n){const d=new Date(Date.now()-n*864e5);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const state = {tab:'mon', day:todayISO()};
+const NUM = v => (v==null?0:v).toLocaleString('ru-RU');
+function fmtHours(v){ return (v==null? '—' : String(v).replace('.',',')); }
+function initials(fio){const p=(fio||'').trim().split(/\s+/);return ((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(msg,isErr){const t=$('#toast');t.textContent=msg;t.classList.toggle('err',!!isErr);t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),5000);}
+async function api(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+function dirBadge(d){ if(d==='in')return '<span class="badge in">▲ вход</span>';
+  if(d==='out')return '<span class="badge out">▼ выход</span>'; return '<span class="badge na">• проход</span>'; }
+
+/* ===================== графики (SVG, без библиотек) ===================== */
+const C = {accent:'#2f6fd0', accent2:'#2559a8', green:'#2e9e5b', red:'#d9534f', amber:'#d99000',
+           cyan:'#2b8fa8', line:'#c9d2dc', grid:'#e3e8ee', muted:'#8b95a1'};
+const WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function svgWrap(w,h,inner){
+  return '<svg viewBox="0 0 '+w+' '+h+'" role="img">'+inner+'</svg>';
+}
+function niceMax(v){ if(v<=5)return 5; const p=Math.pow(10,Math.floor(Math.log10(v))); const n=v/p;
+  return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p; }
+
+/* столбцы: rows=[{label,value}] или [{label,a,b}] (стек) */
+function chartBars(rows, o){
+  o=o||{}; const w=o.w||760, h=o.h||230, pl=o.pl||38, pr=12, pt=14, pb=o.pb||30;
+  const H=h-pt-pb, W=w-pl-pr;
+  const stacked = rows.length && ('a' in rows[0]);
+  const max = niceMax(Math.max(1, ...rows.map(r=> stacked ? (r.a+r.b) : r.value)));
+  let g='';
+  for(let i=0;i<=4;i++){ const y=pt+H*i/4, v=max*(1-i/4);
+    g+='<line x1="'+pl+'" y1="'+y+'" x2="'+(w-pr)+'" y2="'+y+'" stroke="'+C.grid+'"/>';
+    g+='<text x="'+(pl-7)+'" y="'+(y+3)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+Math.round(v)+'</text>'; }
+  const bw=W/rows.length, bar=Math.max(3, Math.min(o.maxBar||26, bw*0.66));
+  const every = Math.ceil(rows.length/(o.ticks||14));
+  rows.forEach((r,i)=>{
+    const x=pl+i*bw+(bw-bar)/2;
+    if(stacked){
+      const hb=(r.b/max)*H, ha=(r.a/max)*H;
+      if(r.b) g+='<rect x="'+x+'" y="'+(pt+H-hb)+'" width="'+bar+'" height="'+hb+'" fill="'+C.red+'" rx="2"/>';
+      if(r.a) g+='<rect x="'+x+'" y="'+(pt+H-hb-ha)+'" width="'+bar+'" height="'+ha+'" fill="'+C.accent+'" rx="2"/>';
+    }else{
+      const bh=Math.max(r.value?2:0,(r.value/max)*H);
+      g+='<rect x="'+x+'" y="'+(pt+H-bh)+'" width="'+bar+'" height="'+bh+'" fill="'+(r.color||o.color||C.accent)+'" rx="3"/>';
+      if(o.showValue && r.value) g+='<text x="'+(x+bar/2)+'" y="'+(pt+H-bh-4)+'" fill="'+C.muted+'" font-size="9.5" text-anchor="middle">'+r.value+'</text>';
+    }
+    if(i%every===0) g+='<text x="'+(pl+i*bw+bw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="10" text-anchor="middle">'+esc(r.label)+'</text>';
+  });
+  return svgWrap(w,h,g);
+}
+
+/* линия/площадь: rows=[{label,value}] , o.second — второй ряд */
+function chartLine(rows, o){
+  o=o||{}; const w=o.w||1200, h=o.h||260, pl=42, pr=14, pt=16, pb=32;
+  const H=h-pt-pb, W=w-pl-pr;
+  const max = niceMax(Math.max(1, ...rows.map(r=>Math.max(r.value||0, r.second||0))));
+  const x = i => pl + (rows.length<2? W/2 : W*i/(rows.length-1));
+  const y = v => pt + H - (v/max)*H;
+  let g='';
+  for(let i=0;i<=4;i++){ const yy=pt+H*i/4, v=max*(1-i/4);
+    g+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(w-pr)+'" y2="'+yy+'" stroke="'+C.grid+'"/>';
+    g+='<text x="'+(pl-7)+'" y="'+(yy+3)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+Math.round(v)+'</text>'; }
+  const path = key => rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r[key]||0)).join(' ');
+  if(o.area!==false){
+    const ar = rows.map((r,i)=>(i?'L':'M')+x(i)+' '+y(r.value||0)).join(' ')
+             + ' L'+x(rows.length-1)+' '+(pt+H)+' L'+x(0)+' '+(pt+H)+' Z';
+    g+='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" stop-color="'+C.accent+'" stop-opacity=".38"/>'
+      +'<stop offset="100%" stop-color="'+C.accent+'" stop-opacity="0"/></linearGradient></defs>';
+    g+='<path d="'+ar+'" fill="url(#ag)"/>';
+  }
+  g+='<path d="'+path('value')+'" fill="none" stroke="'+C.accent+'" stroke-width="2.4" stroke-linejoin="round"/>';
+  if(o.second) g+='<path d="'+path('second')+'" fill="none" stroke="'+C.green+'" stroke-width="2" stroke-dasharray="5 4"/>';
+  const every=Math.ceil(rows.length/12);
+  rows.forEach((r,i)=>{
+    g+='<circle cx="'+x(i)+'" cy="'+y(r.value||0)+'" r="3" fill="#ffffff" stroke="'+C.accent+'" stroke-width="2"/>';
+    if(i%every===0) g+='<text x="'+x(i)+'" y="'+(h-10)+'" fill="'+C.muted+'" font-size="10" text-anchor="middle">'+esc(r.label)+'</text>';
+  });
+  return svgWrap(w,h,g);
+}
+
+/* пончик */
+function chartDonut(parts, o){
+  o=o||{}; const s=o.size||190, r=s/2-14, cx=s/2, cy=s/2;
+  const total = parts.reduce((a,p)=>a+p.value,0)||1;
+  let ang=-Math.PI/2, g='';
+  parts.forEach(p=>{
+    const a2=ang+2*Math.PI*p.value/total;
+    const large=(a2-ang)>Math.PI?1:0;
+    const x1=cx+r*Math.cos(ang), y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+    g+='<path d="M '+x1+' '+y1+' A '+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+'" fill="none" stroke="'+(p.color||C.accent)+'" stroke-width="20" stroke-linecap="butt"/>';
+    ang=a2;
+  });
+  g+='<text x="'+cx+'" y="'+(cy-2)+'" fill="#1f2328" font-size="26" font-weight="700" text-anchor="middle">'+(o.center||total)+'</text>';
+  g+='<text x="'+cx+'" y="'+(cy+17)+'" fill="'+C.muted+'" font-size="11" text-anchor="middle">'+(o.label||'всего')+'</text>';
+  return svgWrap(s,s,g);
+}
+
+/* горизонтальные полосы */
+function chartHBars(rows, o){
+  o=o||{};
+  const w=o.w||560, rh=o.rh||26, pt=6, fs=11.5;
+  // ширина подписей считается по самой длинной строке, чтобы текст не обрезался
+  const maxLen=Math.min(52, Math.max(1,...rows.map(r=>String(r.label).length)));
+  const pl=o.pl||Math.min(w*0.58, Math.max(96, maxLen*6.45+14));
+  const maxVal=Math.max(...rows.map(r=>r.value), 1);
+  const pr=Math.max(46, String(maxVal).length*7.2+16);
+  const h=pt+rows.length*rh+6;
+  const fit=Math.max(3, Math.floor((pl-12)/6.45));
+  let g='';
+  rows.forEach((r,i)=>{
+    const y=pt+i*rh, bw=Math.max(2,((w-pl-pr)*(r.value/maxVal)));
+    const full=String(r.label);
+    const shown=full.length>fit ? full.slice(0,fit-1)+'…' : full;
+    g+='<text x="'+(pl-8)+'" y="'+(y+rh/2+4)+'" fill="#3d4652" font-size="'+fs+'" text-anchor="end">'
+      +'<title>'+esc(full)+'</title>'+esc(shown)+'</text>';
+    g+='<rect x="'+pl+'" y="'+(y+4)+'" width="'+bw+'" height="'+(rh-11)+'" fill="'+(r.color||C.accent)+'" rx="3"><title>'+esc(full)+' — '+r.value+'</title></rect>';
+    g+='<text x="'+(pl+bw+8)+'" y="'+(y+rh/2+4)+'" fill="#4a5560" font-size="11">'+r.value+'</text>';
+  });
+  return svgWrap(w,h,g);
+}
+
+/* тепловая карта 7×24 */
+function chartHeat(matrix, o){
+  o=o||{}; const w=1200, h=210, pl=36, pt=8, pb=26, pr=8;
+  const cw=(w-pl-pr)/24, chh=(h-pt-pb)/7;
+  const max=Math.max(1,...matrix.flat());
+  let g='';
+  for(let d=0;d<7;d++){
+    g+='<text x="'+(pl-8)+'" y="'+(pt+d*chh+chh/2+4)+'" fill="'+C.muted+'" font-size="10" text-anchor="end">'+WD[d]+'</text>';
+    for(let hh=0;hh<24;hh++){
+      const v=matrix[d][hh], t=v/max;
+      const col = v? 'rgba(47,111,208,'+(0.10+0.90*t).toFixed(2)+')' : 'rgba(201,210,220,.6)';
+      g+='<rect x="'+(pl+hh*cw)+'" y="'+(pt+d*chh)+'" width="'+(cw-1.5)+'" height="'+(chh-1.5)+'" rx="3" fill="'+col+'"><title>'+WD[d]+' '+hh+':00 — '+v+'</title></rect>';
+    }
+  }
+  for(let hh=0;hh<24;hh+=2)
+    g+='<text x="'+(pl+hh*cw+cw/2)+'" y="'+(h-9)+'" fill="'+C.muted+'" font-size="9.5" text-anchor="middle">'+hh+'</text>';
+  return svgWrap(w,h,g);
+}
+
+/* ===================== часы ===================== */
+function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
+setInterval(tickClock,1000); tickClock();
+
+/* ===================== вкладки ===================== */
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('section.tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); $('#tab-'+b.dataset.tab).classList.add('active');
+    state.tab=b.dataset.tab;
+    if(state.tab==='mon') loadMon();
+    if(state.tab==='ana') loadAnalytics();
+  };
+});
+
+/* ===================== статус ===================== */
+async function loadStatus(){
+  try{
+    const s=await api('/api/status');
+    const err=s.last_sync&&s.last_sync.error;
+    $('#stDot').className='dot '+(err?'err':'ok');
+    $('#stText').innerHTML = err ? 'ошибка синхронизации'
+      : 'событий: <b>'+NUM(s.events)+'</b> · дней: <b>'+(s.days||0)+'</b> · '+((s.last_sync&&s.last_sync.at)||'').slice(11,19);
+    if(s.shift_start) $('#sShift').textContent='смена с '+s.shift_start+' до '+s.shift_end;
+  }catch(e){ $('#stDot').className='dot err'; $('#stText').textContent='нет связи'; }
+}
+
+/* ===================== мониторинг ===================== */
+async function loadMon(){
+  try{
+    const [k,p]=await Promise.all([api('/api/kpi?day='+state.day), api('/api/presence?day='+state.day)]);
+    $('#kPasses').textContent=NUM(k.passes);
+    $('#kPassesSub').textContent=k.day;
+    $('#kOnSite').textContent=NUM(k.on_site);
+    $('#kInOut').innerHTML='<span style="color:#1a7f37">'+(k.in||0)+'</span> <span class="dim">/</span> <span style="color:#b42318">'+(k.out||0)+'</span>';
+    $('#kPeople').textContent=NUM(k.people);
+    $('#kAlerts').textContent=NUM(k.alerts);
+    const isToday = state.day===todayISO();
+    $('#mNote').textContent = isToday? 'данные обновляются вживую' : 'архив за '+state.day;
+    $('#liveHint').textContent = isToday? 'вживую' : 'архив за '+state.day;
+    $('#kOnSiteSub').textContent = isToday? 'последний проход — вход' : 'были на объекте в конце дня';
+    const hours=[];
+    for(let h=0;h<24;h++){const kk=String(h).padStart(2,'0');const v=(k.by_hour||{})[kk]||0;hours.push({label:h,a:v,b:0});}
+    $('#chHour').innerHTML=chartBars(hours,{h:210,pb:26});
+    $('#chartDay').textContent = isToday? 'сегодня' : state.day;
+    renderPresence(p.people||[]);
+  }catch(e){ toast('Мониторинг: '+e.message,true); }
+}
+function renderPresence(people){
+  $('#presCount').textContent=people.length+' чел.';
+  if(!people.length){$('#presence').innerHTML='<div class="empty">Пока никого — нет проходов «вход»</div>';return;}
+  $('#presence').innerHTML=people.map(p=>
+    '<div class="it"><div class="avatar">'+esc(initials(p.fio))+'</div>'
+    +'<div style="flex:1;min-width:0"><div class="person"><span class="nm">'+esc(p.fio)+'</span></div>'
+    +'<div class="pos">'+esc(p.group||'')+(p.position?' · '+esc(p.position):'')+'</div></div>'
+    +'<span class="tag mono">'+esc(p.since)+'</span></div>').join('');
+}
+
+/* ---- лента: живой поток + запасной опрос ---- */
+let feedItems=[], es=null, kpiTimer=null;
+function feedRow(it, isNew){
+  const pass = it.event_type===1;
+  return '<div class="row'+(isNew?' new':'')+'">'
+    +'<span class="t mono">'+esc(it.time)+'</span>'
+    + (pass
+        ? '<div class="avatar">'+esc(initials(it.fio))+'</div>'
+          +'<div class="who"><div class="n">'+esc(it.fio)+'</div>'
+          +'<div class="d">'+esc(it.group||'')+' · '+esc(it.unit||'')+'</div></div>'+dirBadge(it.direction)
+        : '<div class="who"><div class="n">'+esc(it.unit||'устройство')+'</div>'
+          +'<div class="d">'+esc(it.message||'')+'</div></div><span class="badge na">событие</span>')
+    +'</div>';
+}
+function renderFeed(items, newCount){
+  feedItems=items.slice(0,80);
+  const feed=$('#feed');
+  if(!feedItems.length){feed.innerHTML='<div class="empty">Сегодня проходов ещё нет</div>';return;}
+  feed.innerHTML=feedItems.map((it,i)=>feedRow(it, newCount&&i<newCount)).join('');
+  if(newCount) feed.scrollTop=0;
+}
+function setLive(on, txt){
+  $('#liveDot').className='dot '+(on?'ok':'err');
+  $('#liveState').textContent = txt || (on? 'поток активен':'нет потока');
+}
+function startStream(){
+  if(es){es.close();es=null;}
+  if(!window.EventSource){ setLive(false,'опрос'); pollLive(); return; }
+  es=new EventSource('/api/stream?day='+state.day);
+  es.onopen=()=>setLive(true,'поток активен');
+  es.onerror=()=>setLive(false,'переподключение…');
+  es.onmessage=(ev)=>{
+    let m; try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.type==='init'){ renderFeed(m.items||[],0); setLive(true,'поток активен'); }
+    else if(m.type==='events'){
+      const add=(m.items||[]).slice().reverse();
+      if(add.length){ feedItems=add.concat(feedItems).slice(0,80); renderFeed(feedItems, add.length); }
+      clearTimeout(kpiTimer); kpiTimer=setTimeout(loadMon,900);
+    }
+    else if(m.type==='reload'){ startStream(); }
+  };
+}
+async function pollLive(){
+  try{
+    const all=$('#liveAll').checked?'1':'0';
+    const d=await api('/api/live?day='+state.day+'&limit=80&all='+all);
+    const key=(d.items[0]||{}).ts||'0';
+    if(key!==pollLive._k){pollLive._k=key;renderFeed(d.items||[],0);}
+    setLive(true,'опрос 5 с');
+  }catch(e){ setLive(false,'нет данных'); }
+}
+setInterval(()=>{ if(state.tab==='mon' && !es) pollLive(); },5000);
+$('#liveAll').onchange=()=>{ startStream(); };
+
+/* ===================== аналитика ===================== */
+async function loadAnalytics(){
+  const p=new URLSearchParams();
+  p.set('from',$('#aFrom').value||shiftISO(6)); p.set('to',$('#aTo').value||todayISO());
+  if($('#aGroup').value)p.set('group',$('#aGroup').value);
+  if($('#aPoint').value)p.set('point',$('#aPoint').value);
+  try{
+    const d=await api('/api/analytics?'+p.toString());
+    $('#aPasses').textContent=NUM(d.by_day.reduce((a,x)=>a+x.passes,0));
+    $('#aPeriod').textContent=d.from+' — '+d.to;
+    $('#aPeople').textContent=NUM(d.totals.people);
+    $('#aHours').textContent=fmtHours(d.totals.hours);
+    $('#aLate').textContent=NUM(d.late.late);
+    $('#chDays').innerHTML=chartLine(d.by_day.map(x=>({label:x.day.slice(5),value:x.passes,second:x.people})),{h:250});
+    $('#chHour2').innerHTML=chartBars(d.by_hour.map(x=>({label:x.hour,a:x.in,b:x.out})),{h:230,pb:28});
+    $('#chHeat').innerHTML=chartHeat(d.heatmap);
+    const total=d.late.on_time+d.late.late;
+    $('#chLate').innerHTML='<div style="max-width:220px;margin:2px auto">'+chartDonut(
+      [{value:d.late.on_time,color:C.green},{value:d.late.late,color:C.amber}],
+      {center:(total? Math.round(d.late.late/total*100):0)+'%', label:'с опозданием'})+'</div>';
+    $('#lateHint').textContent='вовремя '+d.late.on_time+' · с опозданием '+d.late.late;
+    $('#chHours').innerHTML=chartBars(d.hours_dist.map(x=>({label:x.label,value:x.count,color:C.cyan})),{h:230,pb:34,showValue:true,maxBar:34});
+    $('#chGroups').innerHTML=chartHBars(d.groups.map(g=>({label:g.group,value:g.days})),{w:900});
+    $('#chTopLate').innerHTML = d.top_late.length
+      ? chartHBars(d.top_late.map(t=>({label:t.fio,value:t.late_total,color:C.amber})),{w:520})
+      : '<div class="empty">Опозданий за период нет</div>';
+  }catch(e){ toast('Аналитика: '+e.message,true); }
+}
+$('#aGo').onclick=loadAnalytics;
+
+/* ---------- журнал событий СКУД: грузится только при раскрытии ---------- */
+const EV_TYPES={1:'Пользователи',2:'Устройства',3:'Связь',4:'Запуск/останов',5:'Операторы',6:'Удаление'};
+let evOpen=false, evLoaded=false, evOffset=0, evTotal=0;
+
+function evToggleBox(){
+  evOpen=!evOpen;
+  $('#evBody').style.display = evOpen?'block':'none';
+  $('#evToggle').textContent = evOpen?'▾ Свернуть':'▸ Развернуть';
+  $('#evHint').textContent = evOpen?'данные загружаются по запросу':'свёрнуто · данные не загружаются';
+  if(evOpen && !evLoaded){ evLoaded=true; loadEvents(true); }
+}
+$('#evHead').onclick=(e)=>{ if(!e.target.closest('#evToggle')) evToggleBox(); };
+$('#evToggle').onclick=(e)=>{ e.stopPropagation(); evToggleBox(); };
+$('#evApply').onclick=()=>loadEvents(true);
+$('#evMore').onclick=()=>loadEvents(false);
+
+function evQuery(reset){
+  const p=new URLSearchParams();
+  p.set('from',$('#aFrom').value||shiftISO(6));
+  p.set('to',$('#aTo').value||todayISO());
+  if($('#evType').value) p.set('type',$('#evType').value);
+  const s=$('#evSearch').value.trim(); if(s) p.set('search',s);
+  if($('#evAlarms').value==='1') p.set('alarms','1');
+  p.set('limit',$('#evLimit').value);
+  p.set('offset',evOffset);
+  return p;
+}
+async function loadEvents(reset){
+  if(reset) evOffset=0;
+  const p=evQuery(reset);
+  try{
+    const d=await api('/api/events/list?'+p.toString());
+    evTotal=d.total;
+    renderEventRows(d.items, reset);
+    evOffset = evOffset + d.items.length;
+    $('#evMore').style.display = evOffset<evTotal?'inline-flex':'none';
+    $('#evShown').textContent='показано '+evOffset+' из '+evTotal.toLocaleString('ru-RU');
+    if(reset) loadEventSummary();
+  }catch(e){ toast('События: '+e.message,true); }
+}
+async function loadEventSummary(){
+  const p=new URLSearchParams();
+  p.set('from',$('#aFrom').value||shiftISO(6));
+  p.set('to',$('#aTo').value||todayISO());
+  try{
+    const s=await api('/api/events/summary?'+p.toString());
+    $('#evTotal').textContent=NUM(s.total);
+    $('#evPeriod').textContent=s.from+' — '+s.to;
+    $('#evAlarmCnt').textContent=NUM(s.alarms);
+    $('#evTypesCnt').textContent=s.types.length;
+    const days=s.by_day.length||1;
+    $('#evAvg').textContent=NUM(Math.round(s.total/days));
+    const sel=$('#evType'), cur=sel.value;
+    sel.innerHTML='<option value="">все типы</option>'+s.types.map(t=>
+      '<option value="'+t.type+'">'+esc(t.title)+' ('+NUM(t.count)+')</option>').join('');
+    sel.value=cur;
+    $('#evDayChart').innerHTML=chartBars(s.by_day.map(x=>({label:x.day.slice(5),value:x.count})),{h:190,maxBar:34});
+    $('#evTypeChart').innerHTML=chartHBars(s.types.map(t=>({label:t.title,value:t.count})),{w:520,rh:24});
+  }catch(e){ /* тихо */ }
+}
+function renderEventRows(items, reset){
+  const wrap=$('#evList');
+  if(reset) wrap.innerHTML='';
+  if(!items.length && reset){ wrap.innerHTML='<div class="empty">Событий не найдено</div>'; return; }
+  if(reset) wrap.innerHTML='<table><thead><tr><th>Дата</th><th>Время</th><th>Тип</th><th>Точка</th><th>Событие</th><th>Сотрудник / карта</th></tr></thead><tbody></tbody></table>';
+  const tb=wrap.querySelector('tbody');
+  tb.insertAdjacentHTML('beforeend', items.map(it=>{
+    const alarm = it.alarm ? ' style="color:#b42318;font-weight:600"' : '';
+    const badge = it.alarm ? '<span class="badge out">тревога</span>'
+                           : '<span class="badge na">'+esc(EV_TYPES[it.type]||it.type_title)+'</span>';
+    return '<tr><td class="mono tag">'+esc(it.day)+'</td><td class="mono">'+esc(it.time)+'</td>'
+      +'<td>'+badge+'</td><td class="tag">'+esc(it.unit||'—')+'</td>'
+      +'<td'+alarm+'>'+esc(it.message)+'</td><td class="tag">'+esc(it.name||'—')+'</td></tr>';
+  }).join(''));
+}
+
+
+$('#aPrint').onclick=()=>window.open('/print?from='+($('#aFrom').value||shiftISO(6))+'&to='+($('#aTo').value||todayISO())+'&view=summary','_blank');
+
+/* ===================== отчёт ===================== */
+function reportQS(prefix){
+  const g=id=>{const el=$(id);return el?el.value:'';};
+  const p=new URLSearchParams();
+  p.set('from',g(prefix+'From')); p.set('to',g(prefix+'To'));
+  if(g(prefix+'Group'))p.set('group',g(prefix+'Group'));
+  if(g(prefix+'Point'))p.set('point',g(prefix+'Point'));
+  if(g(prefix+'ShiftS'))p.set('shift_start',g(prefix+'ShiftS'));
+  if(g(prefix+'ShiftE'))p.set('shift_end',g(prefix+'ShiftE'));
+  return p;
+}
+async function loadReport(){
+  const p=reportQS('#r'); const view=$('#rView').value; p.set('view',view);
+  const q=$('#rSearch').value.trim(); if(q)p.set('search',q);
+  $('#repWrap').innerHTML='<div class="empty"><span class="spin"></span> Считаю…</div>';
+  try{
+    const d=await api('/api/report?'+p.toString());
+    $('#sRows').textContent=NUM(d.count);
+    $('#sPeople').textContent=NUM(d.people);
+    $('#sHours').textContent=fmtHours(d.total_hours);
+    $('#sLate').textContent=NUM(d.late_days);
+    $('#repTitle').textContent = view==='detail'?'Посещаемость по дням'
+      : view==='absent'?'Сотрудники без проходов за период':'Свод по сотрудникам';
+    $('#repHint').textContent=(d.from===d.to?d.from:d.from+' — '+d.to);
+    renderReport(d,view);
+  }catch(e){ $('#repWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+function renderReport(d,view){
+  const rows = view==='detail'?(d.rows||[]):(d.summary||[]);
+  if(!rows.length){$('#repWrap').innerHTML='<div class="empty">Нет данных за выбранный период</div>';return;}
+  let head,body;
+  if(view==='absent'){
+    head=['Сотрудник','Табельный','Подразделение','Должность','Дней в периоде','Проходов'];
+    body=rows.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
+      +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div></div></div></td>'
+      +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
+      +'<td class="tag">'+esc(r.position||'')+'</td><td class="num mono">'+r.days+'</td>'
+      +'<td class="num"><span class="badge out">0</span></td></tr>').join('');
+  }else if(view==='detail'){
+    head=['Дата','Сотрудник','Подразделение','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Точки'];
+    body=rows.map(r=>{
+      const open=r.open?' <span class="badge live">на объекте</span>':'';
+      const late=r.late?'<span class="badge late">+'+r.late+' мин</span>':'<span class="dim">—</span>';
+      const early=(r.early===null||r.early===undefined)?'<span class="dim">—</span>':(r.early?r.early+' мин':'<span class="dim">—</span>');
+      return '<tr><td class="mono">'+esc(r.day)+'</td>'
+      +'<td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div><div style="min-width:0">'
+      +'<div class="nm">'+esc(r.fio)+open+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
+      +'<td class="tag">'+esc(r.group)+'</td>'
+      +'<td class="num mono" style="color:#1a7f37">'+esc(r.enter)+'</td>'
+      +'<td class="num mono" style="color:#b42318">'+esc(r.exit)+'</td>'
+      +'<td class="num mono"><b>'+fmtHours(r.hours)+'</b></td><td class="num mono">'+r.passes+'</td>'
+      +'<td class="num">'+late+'</td><td class="num mono">'+early+'</td>'
+      +'<td class="tag">'+esc(r.points||'')+'</td></tr>';}).join('');
+  }else{
+    head=['Сотрудник','Табельный','Подразделение','Дней','Часов','Средне/день','Проходов','Опозданий'];
+    body=rows.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
+      +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
+      +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
+      +'<td class="num mono">'+r.days+'</td><td class="num mono"><b>'+fmtHours(r.hours)+'</b></td>'
+      +'<td class="num mono">'+fmtHours(r.avg_hours)+'</td><td class="num mono">'+r.passes+'</td>'
+      +'<td class="num">'+(r.late_days?'<span class="badge late">'+r.late_days+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('');
+  }
+  const NUMH=new Set(['Дата','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Дней','Средне/день','Опозданий','Дней в периоде','Табельный']);
+  $('#repWrap').innerHTML='<table><thead><tr>'+head.map(h=>'<th'+(NUMH.has(h)?' class="num"':'')+'>'+h+'</th>').join('')
+    +'</tr></thead><tbody>'+body+'</tbody></table>';
+}
+$('#rGo').onclick=loadReport;
+$('#rPrint').onclick=()=>window.open('/print?'+reportQS('#r').toString(),'_blank');
+
+/* ---- надёжное скачивание файлов ---- */
+async function download(url, fallbackName){
+  try{
+    toast('Формирую файл…');
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const blob=await r.blob();
+    if(blob.size<20) throw new Error('пустой файл');
+    let name=fallbackName;
+    const cd=r.headers.get('Content-Disposition')||'';
+    const m=/filename\*=UTF-8''([^;]+)/i.exec(cd);
+    if(m){ try{ name=decodeURIComponent(m[1]); }catch(e){} }
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=name; a.rel='noopener';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},3000);
+    toast('Файл сохранён: '+name+' ('+Math.round(blob.size/1024)+' КБ)');
+  }catch(e){
+    toast('Прямое сохранение не сработало ('+e.message+'), открываю файл в новой вкладке…', true);
+    try{ window.open(url,'_blank','noopener'); }catch(e2){}
+  }
+}
+$('#rXls').onclick=()=>{const p=reportQS('#r');p.set('view',$('#rView').value);
+  download('/export/report.xls?'+p.toString(),'poseshchaemost.xls');};
+$('#rCsv').onclick=()=>{const p=reportQS('#r');p.set('view',$('#rView').value);
+  p.set('enc','utf-8');p.set('sep','semicolon');p.set('dec',',');p.set('header','1');
+  download('/export/1c.csv?'+p.toString(),'poseshchaemost.csv');};
+
+/* ===================== выгрузка ===================== */
+function exportQS(){
+  const p=reportQS('#e');
+  p.set('enc',$('#eEnc').value); p.set('sep',$('#eSep').value); p.set('dec',$('#eDec').value);
+  p.set('header',$('#eHeader').value); p.set('view',$('#eView').value);
+  return p;
+}
+$('#eDl').onclick=()=>download('/export/1c.csv?'+exportQS().toString(),'skud_gate.csv');
+$('#eXls').onclick=()=>{const p=reportQS('#e');p.set('view',$('#eView').value);
+  download('/export/report.xls?'+p.toString(),'poseshchaemost.xls');};
+$('#ePrint').onclick=()=>window.open('/print?'+reportQS('#e').toString(),'_blank');
+$('#ePreview').onclick=async()=>{
+  const p=exportQS();p.set('header','1');p.set('enc','utf-8');p.set('sep','semicolon');p.set('dec',',');
+  try{
+    const r=await fetch('/export/1c.csv?'+p.toString());
+    const t=await r.text();
+    const lines=t.split(/\r?\n/).slice(0,21);
+    $('#ePrev').textContent=lines.join('\n');
+    $('#ePrevHint').textContent='первые '+Math.max(0,lines.length-1)+' строк';
+  }catch(e){ toast('Предпросмотр: '+e.message,true); }
+};
+
+/* ===================== синхронизация ===================== */
+$('#btnSync').onclick=async()=>{
+  const b=$('#btnSync');b.disabled=true;b.innerHTML='<span class="spin"></span> Загружаю…';
+  try{
+    const r=await api('/api/sync?days=3');
+    toast(r.error?('Ошибка: '+r.error):('Загружено дней: '+(r.downloaded??0)+', из кэша: '+(r.cached??0)),!!r.error);
+    await loadStatus(); loadMon(); startStream(); if(state.tab==='ana') loadAnalytics();
+  }catch(e){ toast('Синхронизация: '+e.message,true); }
+  b.disabled=false;b.innerHTML='⟳ Обновить';
+};
+
+/* ===================== старт ===================== */
+async function loadRefs(){
+  try{
+    const [g,pts]=await Promise.all([api('/api/groups'),api('/api/points')]);
+    const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
+    const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
+    ['#rGroup','#eGroup','#aGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+    ['#rPoint','#ePoint','#aPoint'].forEach(s=>$(s).innerHTML='<option value="">все точки</option>'+popts);
+  }catch(e){}
+}
+function initDates(){
+  const t=todayISO(), week=shiftISO(6);
+  ['#rFrom','#eFrom','#aFrom'].forEach(s=>$(s).value=week);
+  ['#rTo','#eTo','#aTo'].forEach(s=>$(s).value=t);
+  $('#mDay').value=t;
+  $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
+  $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
+}
+(async function start(){
+  initDates();
+  await loadStatus();
+  await loadRefs();
+  await loadMon();
+  startStream();
+  loadReport();
+  loadAnalytics();
+  setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
+  setInterval(loadStatus,30000);
+})();
+</script>
+</body>
+</html>

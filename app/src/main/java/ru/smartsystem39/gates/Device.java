@@ -40,6 +40,13 @@ public class Device {
     public String statusUrl = "";
     public String statusField = "";
     public String onValue = "ON";
+    public boolean favorite = false;
+
+    // Дверь Gate-IP (мост): id устройства и доступные направления
+    public String gateId = "";
+    public String gateToken = "";
+    public boolean dirIn = false;
+    public boolean dirOut = false;
 
     public Device() {}
 
@@ -47,6 +54,10 @@ public class Device {
         this.id = id;
         this.name = name;
         this.type = type;
+    }
+
+    public boolean isGate() {
+        return gateId != null && !gateId.isEmpty();
     }
 
     public boolean isConfigured() {
@@ -96,6 +107,11 @@ public class Device {
             o.put("statusUrl", statusUrl);
             o.put("statusField", statusField);
             o.put("onValue", onValue);
+            o.put("favorite", favorite);
+            o.put("gateId", gateId);
+            o.put("gateToken", gateToken);
+            o.put("dirIn", dirIn);
+            o.put("dirOut", dirOut);
         } catch (JSONException ignored) {
         }
         return o;
@@ -118,6 +134,11 @@ public class Device {
         d.statusUrl = o.optString("statusUrl", "");
         d.statusField = o.optString("statusField", "");
         d.onValue = o.optString("onValue", "ON");
+        d.favorite = o.optBoolean("favorite", false);
+        d.gateId = o.optString("gateId", "");
+        d.gateToken = o.optString("gateToken", "");
+        d.dirIn = o.optBoolean("dirIn", false);
+        d.dirOut = o.optBoolean("dirOut", false);
         if (d.onValue.isEmpty()) d.onValue = "ON";
         if (d.id.isEmpty()) d.id = newId();
         return d;

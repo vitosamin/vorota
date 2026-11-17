@@ -1,0 +1,7 @@
+﻿start 11:17:32.746 session=1
+access=1049372 exitBtn=393452
+foreground before=393352 text=[C:\Users\Public\GateExit.exe]
+foreground after=1049372 text=[Управление точками доступа]
+clicking Выход at 915,590
+access window still present=False at 11:17:35.027
+done

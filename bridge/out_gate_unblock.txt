@@ -1,0 +1,11 @@
+﻿grid=283,198,836,556
+row=1 unlock_enabled=False
+row=2 unlock_enabled=False
+row=3 unlock_enabled=False
+row=4 unlock_enabled=False
+row=5 unlock_enabled=False
+row=6 unlock_enabled=False
+row=7 unlock_enabled=True
+unblocking row=7 at 11:37:37.147
+after click unlock_enabled=True
+done

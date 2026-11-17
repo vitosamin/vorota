@@ -63,6 +63,7 @@ public class DeviceEditActivity extends Activity {
     private LinearLayout objectIdBox;
     private LinearLayout customBox;
     private CheckBox pulseCheck;
+    private CheckBox favoriteCheck;
     private Spinner protocolSpinner;
     private TextView entityValue;
     private TextView protoHint;
@@ -120,6 +121,7 @@ public class DeviceEditActivity extends Activity {
         objectIdBox = findViewById(R.id.objectIdBox);
         customBox = findViewById(R.id.customBox);
         pulseCheck = findViewById(R.id.pulseCheck);
+        favoriteCheck = findViewById(R.id.favoriteCheck);
         protocolSpinner = findViewById(R.id.protocolSpinner);
         entityValue = findViewById(R.id.entityValue);
         protoHint = findViewById(R.id.protoHint);
@@ -138,6 +140,7 @@ public class DeviceEditActivity extends Activity {
         channelInput.setText(String.valueOf(device.channel));
         objectIdInput.setText(device.objectId);
         pulseCheck.setChecked(device.pulse);
+        favoriteCheck.setChecked(device.favorite);
         openUrlInput.setText(device.openUrl);
         closeUrlInput.setText(device.closeUrl);
         statusUrlInput.setText(device.statusUrl);
@@ -268,6 +271,7 @@ public class DeviceEditActivity extends Activity {
             return;
         }
         device.name = name;
+        device.favorite = favoriteCheck.isChecked();
 
         if (Device.SRC_HA.equals(device.source)) {
             if (selectedEntity.isEmpty()) {

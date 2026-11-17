@@ -1,0 +1,26 @@
+start 17.11.2026 11:00:09
+inserted for DevPtr2 Addr=2 Port=2
+queued Ptr=189 Code=208 Addr=2 Port=2 P1=1
+t=5s count=1
+t=10s count=1
+t=15s count=1
+t=20s count=1
+t=25s count=1
+t=30s count=1
+t=35s count=1
+t=40s count=1
+t=45s count=1
+leftover deleted
+EV 17.11.2026 11:00:38 type=2 code=119 dev=9 rdr=18 user=0 op=0 msg=Тревога по входу 2
+EV 17.11.2026 11:00:37 type=1 code=8 dev=9 rdr=17 user=1739 op=0 msg=Проход совершен
+EV 17.11.2026 11:00:37 type=1 code=2 dev=9 rdr=17 user=1739 op=0 msg=Проход по ключу разрешен
+EV 17.11.2026 11:00:12 type=1 code=8 dev=13 rdr=25 user=1442 op=0 msg=Проход совершен
+EV 17.11.2026 11:00:12 type=1 code=2 dev=13 rdr=25 user=1442 op=0 msg=Проход по ключу разрешен
+EV 17.11.2026 10:59:51 type=2 code=6 dev=1 rdr=1 user=0 op=0 msg=Взлом двери
+EV 17.11.2026 10:59:50 type=2 code=21 dev=1 rdr=1 user=0 op=0 msg=Дверь закрыта
+EV 17.11.2026 10:59:49 type=1 code=8 dev=1 rdr=1 user=1366 op=0 msg=Проход совершен
+EV 17.11.2026 10:59:49 type=1 code=2 dev=1 rdr=1 user=1366 op=0 msg=Проход по ключу разрешен
+EV 17.11.2026 10:59:42 type=1 code=8 dev=13 rdr=25 user=832 op=0 msg=Проход совершен
+EV 17.11.2026 10:59:42 type=1 code=2 dev=13 rdr=25 user=832 op=0 msg=Проход по ключу разрешен
+EV 17.11.2026 10:59:33 type=1 code=8 dev=13 rdr=25 user=1512 op=0 msg=Проход совершен
+done

@@ -1,0 +1,5 @@
+﻿start 17.11.2026 10:56:42
+grid hwnd=328052
+AccessibleObjectFromWindow hr=0 acc=System.__ComObject
+role= name=[] value=[]
+done

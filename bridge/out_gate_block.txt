@@ -1,0 +1,7 @@
+﻿start 11:29:51.372 row=7
+selected row=7 y=352
+click Заблокировать enabled=True
+after lock: unlock enabled=False at 11:29:53.565
+click Разблокировать enabled=False
+after unlock: unlock enabled=False at 11:29:54.767
+done

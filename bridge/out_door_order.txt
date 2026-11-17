@@ -1,0 +1,17 @@
+1	rdr=25	num=1	dev=13	addr=1	port=15	ip=192.168.9.100	online=Истина	Вход из Зала
+2	rdr=26	num=2	dev=13	addr=1	port=15	ip=192.168.9.100	online=Истина	Вход из СЛ.ПОМ
+3	rdr=22	num=2	dev=11	addr=3	port=11	ip=192.168.9.52	online=Истина	Досмотровая - ВХОД
+4	rdr=21	num=1	dev=11	addr=3	port=11	ip=192.168.9.52	online=Истина	Досмотровая - ВыХОД
+5	rdr=15	num=1	dev=8	addr=4	port=8	ip=192.168.9.53	online=Истина	Кадры вход
+6	rdr=16	num=2	dev=8	addr=4	port=8	ip=192.168.9.53	online=Истина	Кадры выход
+7	rdr=17	num=1	dev=9	addr=7	port=9	ip=192.168.9.56	online=Истина	Кпп произ-во вход
+8	rdr=18	num=2	dev=9	addr=7	port=9	ip=192.168.9.56	online=Истина	Кпп произ-во выход
+9	rdr=12	num=2	dev=6	addr=6	port=6	ip=192.168.9.55	online=Истина	КПП1 - Вход
+10	rdr=11	num=1	dev=6	addr=6	port=6	ip=192.168.9.55	online=Истина	КПП1 - Выход
+11	rdr=9	num=1	dev=5	addr=5	port=5	ip=192.168.9.54	online=Истина	КПП2 - Вход
+12	rdr=10	num=2	dev=5	addr=5	port=5	ip=192.168.9.54	online=Истина	КПП2 - Выход
+13	rdr=3	num=1	dev=2	addr=2	port=2	ip=192.168.9.51	online=Ложь	Магазин - Вход
+14	rdr=4	num=2	dev=2	addr=2	port=2	ip=192.168.9.51	online=Ложь	Магазин - Выход
+15	rdr=1	num=1	dev=1	addr=8	port=1	ip=192.168.9.50	online=Истина	Сан пропускник - Вход
+16	rdr=2	num=2	dev=1	addr=8	port=1	ip=192.168.9.50	online=Истина	Сан пропускник - Выход
+rows=16

@@ -1,0 +1,2 @@
+c:\Users\Public\GateBridge.cs(252,19): warning CS0414: Поле "GateBridge.lastStamp" назначено, однако его значение никогда не используется
+rc=0 

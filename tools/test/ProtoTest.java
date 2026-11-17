@@ -125,8 +125,10 @@ public class ProtoTest {
         check("update found for 0.9",
                 older.error == null && older.newer && older.apkUrl.endsWith(".apk"),
                 older.error + " tag=" + older.tag);
-        UpdateChecker.Info current = UpdateChecker.check("1.0");
-        check("no update for 1.0",
+        String current_version = System.getenv("VOROTA_VERSION");
+        if (current_version == null || current_version.isEmpty()) current_version = "1.2";
+        UpdateChecker.Info current = UpdateChecker.check(current_version);
+        check("no update for current " + current_version,
                 current.error == null && !current.newer,
                 current.error + " tag=" + current.tag);
         if (older.error == null && !older.apkUrl.isEmpty()) {
@@ -153,6 +155,7 @@ public class ProtoTest {
         d.openUrl = "http://192.168.1.50/open";
         d.statusField = "state";
         d.onValue = "OPEN";
+        d.favorite = true;
 
         Device e = Device.fromJson(d.toJson());
         boolean ok = e.id.equals(d.id) && e.name.equals(d.name) && e.type.equals(d.type)
@@ -160,7 +163,7 @@ public class ProtoTest {
                 && e.address.equals(d.address) && e.channel == d.channel
                 && e.pulse == d.pulse && e.objectId.equals(d.objectId)
                 && e.openUrl.equals(d.openUrl) && e.statusField.equals(d.statusField)
-                && e.onValue.equals(d.onValue);
+                && e.onValue.equals(d.onValue) && e.favorite == d.favorite;
         check("device json roundtrip", ok, "fields differ");
         check("device configured", e.isConfigured(), "must be configured");
     }

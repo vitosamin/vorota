@@ -1,0 +1,24 @@
+﻿pid=876 foreground=0
+top h=1049372 class=ThunderRT6FormDC text=[Управление точками доступа] enabled=True visible=True rect=426,152,1175,614 foreground=False
+top h=7078068 class=ThunderRT6FormDC text=[GATE Terminal.  Версия 1.22.112] enabled=False visible=True rect=448,150,1152,617 foreground=False
+top h=6815864 class=ThunderRT6Main text=[GateTerm] enabled=True visible=True rect=800,384,800,384 foreground=False
+top h=918414 class=NMNotifyWindowClass text=[Notification Window] enabled=False visible=False rect=0,0,136,39 foreground=False
+top h=2360086 class=VBMsoStdCompMgr text=[] enabled=False visible=False rect=0,0,0,0 foreground=False
+top h=6554274 class=MSCTFIME UI text=[MSCTFIME UI] enabled=False visible=False rect=0,0,0,0 foreground=False
+top h=2687764 class=IME text=[Default IME] enabled=False visible=False rect=0,0,0,0 foreground=False
+--- access children ---
+   child h=1901232 class=ThunderRT6Frame text=[] enabled=True
+   child h=1508110 class=ThunderRT6Frame text=[Проверка пож.кнопок] enabled=True
+   child h=1639192 class=ThunderRT6CommandButton text=[Включить] enabled=True
+   child h=1049370 class=ThunderRT6CommandButton text=[Отключить] enabled=True
+   child h=197488 class=ThunderRT6Frame text=[Режим Пост-Открыто] enabled=True
+   child h=197448 class=ThunderRT6CommandButton text=[Отключить] enabled=True
+   child h=197442 class=ThunderRT6CommandButton text=[Включить] enabled=True
+   child h=328054 class=ThunderRT6Frame text=[Команды управления] enabled=True
+   child h=2228900 class=ThunderRT6CommandButton text=[Заблокировать] enabled=True
+   child h=263056 class=ThunderRT6CommandButton text=[Разблокировать] enabled=False
+   child h=2556638 class=ThunderRT6CommandButton text=[Открыть дверь] enabled=True
+   child h=328052 class=MSFlexGridWndClass text=[] enabled=True
+   child h=393452 class=ThunderRT6CommandButton text=[Выход] enabled=True
+   child h=197408 class=ThunderRT6Timer text=[] enabled=True
+done

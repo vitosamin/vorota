@@ -1,0 +1,15 @@
+17.11.2026 09:55:45.810	Client 192.168.2.72:43108	Connection accepted
+17.11.2026 09:55:45.810	Client 192.168.2.72:43108	Connection closed
+17.11.2026 09:55:57.357	Client 192.168.2.72:37794	Connection accepted
+17.11.2026 09:55:57.357	DataArrival error 101: Client 192.168.2.72:37794	Wrong json data: GET / HTTP/1.0
+Host: 192.168.2.160
+
+
+17.11.2026 09:55:59.387	Client 192.168.2.72:37794	Connection closed
+17.11.2026 09:55:59.387	Client 192.168.2.72:37800	Connection accepted
+17.11.2026 09:56:00.953	Client 192.168.2.72:37800	Connection closed
+17.11.2026 09:56:00.953	Client 192.168.2.72:37816	Connection accepted
+17.11.2026 09:56:00.953	DataArrival error 101: Client 192.168.2.72:37816	Wrong json data: ø
+17.11.2026 09:56:03.904	Client 192.168.2.72:37816	Connection closed
+17.11.2026 10:24:14.567	Client 127.0.0.1:50961	Connection accepted
+17.11.2026 10:24:14.585	Client 127.0.0.1:50961	Event monitoring started

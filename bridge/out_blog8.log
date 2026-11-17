@@ -1,0 +1,82 @@
+﻿2026-11-17T10:42:50 bridge start
+2026-11-17T10:42:51 listening 8099
+2026-11-17T10:42:59 open id=3
+2026-11-17T10:45:24 open id=3
+2026-11-17T10:52:36 open id=3
+2026-11-17T11:20:51 bridge 2.0 start, doors=8
+2026-11-17T11:20:51 listening 8099
+2026-11-17T11:21:00 verify row=7 rgb=63,153,225 blue=True
+2026-11-17T11:21:01 open row=7
+2026-11-17T11:21:02 verify row=8 rgb=63,123,171 blue=True
+2026-11-17T11:21:03 open row=8
+2026-11-17T11:27:10 bridge 2.0 start, doors=8
+2026-11-17T11:27:10 listening 8099
+2026-11-17T11:27:17 verify row=11 rgb=0,120,215 blue=True
+2026-11-17T11:27:18 open row=11
+2026-11-17T11:28:46 bridge 2.0 start, doors=8
+2026-11-17T11:28:46 listening 8099
+2026-11-17T11:28:56 form reset, fresh=True
+2026-11-17T11:28:57 verify row=11 rgb=0,120,215 blue=True
+2026-11-17T11:28:58 open row=11
+2026-11-17T11:31:29 bridge 2.0 start, doors=8
+2026-11-17T11:31:29 listening 8099
+2026-11-17T11:35:39 bridge 3.0 start, mapped rows=0
+2026-11-17T11:35:39 listening 8099
+2026-11-17T11:36:02 calibrate row=1 dev=9 rdr=18
+2026-11-17T11:36:05 calibrate row=2 dev=9 rdr=18
+2026-11-17T11:36:08 calibrate row=3 dev=6 rdr=11
+2026-11-17T11:36:11 calibrate row=4 dev=5 rdr=9
+2026-11-17T11:36:14 calibrate row=5 dev=8 rdr=15
+2026-11-17T11:36:17 calibrate row=6 dev=8 rdr=15
+2026-11-17T11:36:20 calibrate row=7 dev=8 rdr=15
+2026-11-17T11:36:22 calibrate row=8 dev=11 rdr=21
+2026-11-17T11:36:25 calibrate row=9 dev=11 rdr=21
+2026-11-17T11:36:28 calibrate row=10 dev=13 rdr=25
+2026-11-17T11:36:31 calibrate row=11 dev=13 rdr=25
+2026-11-17T11:36:33 select failed row=12
+2026-11-17T11:37:06 bridge 3.0 start, mapped rows=0
+2026-11-17T11:37:06 listening 8099
+2026-11-17T11:39:07 bridge 3.0 start, mapped rows=0
+2026-11-17T11:39:07 listening 8099
+2026-11-17T11:39:28 calibrate row=1 dev=13 rdr=26
+2026-11-17T11:39:32 calibrate row=2 dev=5 rdr=9
+2026-11-17T11:39:38 calibrate row=3 dev=6 rdr=11
+2026-11-17T11:39:43 calibrate row=4 dev=6 rdr=12
+2026-11-17T11:39:48 calibrate row=5 dev=8 rdr=15
+2026-11-17T11:39:56 calibrate row=6 dev=9 rdr=17
+2026-11-17T11:40:06 calibrate row=7 dev=9 rdr=18
+2026-11-17T11:40:11 calibrate row=8 dev=9 rdr=18
+2026-11-17T11:40:13 calibrate row=9 dev=11 rdr=21
+2026-11-17T11:40:18 calibrate row=10 dev=11 rdr=22
+2026-11-17T11:40:20 calibrate row=11 dev=13 rdr=25
+2026-11-17T11:40:22 select failed row=12
+2026-11-17T11:40:57 bridge 3.0 start, mapped rows=0
+2026-11-17T11:40:57 listening 8099
+2026-11-17T11:41:07 calibrate row=1 dev=13 rdr=26
+2026-11-17T11:41:14 calibrate row=2 dev=5 rdr=9
+2026-11-17T11:41:18 calibrate row=3 dev=6 rdr=11
+2026-11-17T11:41:23 calibrate row=4 dev=6 rdr=12
+2026-11-17T11:41:28 calibrate row=5 dev=8 rdr=15
+2026-11-17T11:41:35 calibrate row=6 dev=9 rdr=17
+2026-11-17T11:41:41 calibrate row=7 dev=9 rdr=18
+2026-11-17T11:41:48 calibrate row=8 dev=11 rdr=21
+2026-11-17T11:41:53 calibrate row=9 dev=11 rdr=22
+2026-11-17T11:41:58 calibrate row=10 dev=13 rdr=25
+2026-11-17T11:42:04 calibrate row=11 dev=13 rdr=26
+2026-11-17T11:42:06 select failed row=12
+2026-11-17T11:42:44 map loaded rows=11
+2026-11-17T11:42:44 bridge 3.0 start, mapped rows=11
+2026-11-17T11:42:44 listening 8099
+2026-11-17T11:42:57 calibrate row=11 dev=13 rdr=26
+2026-11-17T11:43:00 select failed row=12
+2026-11-17T11:43:45 map loaded rows=11
+2026-11-17T11:43:45 bridge 3.0 start, mapped rows=11
+2026-11-17T11:43:45 listening 8099
+2026-11-17T11:44:11 map loaded rows=11
+2026-11-17T11:44:11 bridge 3.0 start, mapped rows=11
+2026-11-17T11:44:11 listening 8099
+2026-11-17T11:44:39 map loaded rows=11
+2026-11-17T11:44:39 bridge 3.0 start, mapped rows=11
+2026-11-17T11:44:39 listening 8099
+2026-11-17T11:45:00 open row=6
+2026-11-17T11:45:05 open row=7
