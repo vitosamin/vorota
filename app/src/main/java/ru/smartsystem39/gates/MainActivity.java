@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.TypedValue;
@@ -79,6 +80,7 @@ public class MainActivity extends Activity {
     private boolean checkingUpdates = false;
     private boolean downloadingUpdate = false;
     private boolean importingGate = false;
+    private boolean gateKeyPromptShown = false;
     private View statusDot;
     private static final long PULSE_PERIOD = 4200;
     private ObjectAnimator pulse;
@@ -142,6 +144,7 @@ public class MainActivity extends Activity {
         selectTab(0);
         ui.postDelayed(() -> checkUpdates(true), 1500);
         ui.postDelayed(this::autoImportGate, 900);
+        ui.postDelayed(this::askGateKeyIfNeeded, 600);
     }
 
     private void bind() {
@@ -761,9 +764,15 @@ public class MainActivity extends Activity {
     private void onTapDir(Device d, String dir) {
         final String base = HaClient.normalizeBase(d.address);
         if (base.isEmpty()) { toast("Укажите адрес моста"); return; }
+        final String token = cfg.getGateToken();
+        if (token.isEmpty()) { askGateKey(null); return; }
         runCommand(() -> {
             Http.Response r = Http.get(base + "/open?id=" + Uri.encode(d.gateId) + "&dir=" + dir
-                    + "&token=" + Uri.encode(d.gateToken), null, false);
+                    + "&token=" + Uri.encode(token), null, false);
+            if (authFailed(r)) {
+                ui.post(() -> askGateKey(getString(R.string.gate_key_bad)));
+                return getString(R.string.gate_key_bad);
+            }
             String error = GateResponse.commandError(r);
             return error == null ? getString(R.string.cmd_sent) : error;
         });
@@ -912,6 +921,12 @@ public class MainActivity extends Activity {
         final String rawUrl = gateUrl.getText().toString().trim();
         final String token = gateToken.getText().toString().trim();
         cfg.setGateUrl(rawUrl);
+        if (token.isEmpty()) {
+            // Без ключа мост ответит отказом — спрашиваем его сразу.
+            importingGate = false;
+            askGateKey(null);
+            return;
+        }
         cfg.setGateToken(token);
         final String base = HaClient.normalizeBase(rawUrl);
         if (base.isEmpty()) {
@@ -938,6 +953,10 @@ public class MainActivity extends Activity {
                 int added = 0;
                 if (!rawUrl.equals(cfg.getGateUrl()) || !token.equals(cfg.getGateToken())) {
                     error = "настройки моста изменились, повторите загрузку";
+                } else if (authFailed(r)) {
+                    error = "ключ не принят";
+                    gateKeyPromptShown = false;
+                    askGateKey(getString(R.string.gate_key_bad));
                 } else if (!r.ok()) {
                     error = r.error == null ? "HTTP " + r.code : r.error;
                 } else {
@@ -1279,6 +1298,7 @@ public class MainActivity extends Activity {
         final int revision = devicesRevision;
         final String haUrl = cfg.getHaUrl().trim();
         final String haToken = cfg.getHaToken().trim();
+        final String gateToken = cfg.getGateToken();
         final boolean insecure = cfg.haInsecure();
         try {
             io.execute(() -> {
@@ -1311,24 +1331,36 @@ public class MainActivity extends Activity {
                         }
                     }
                 }
-                boolean gateFailed = false;
+                boolean gateFailed = false, gateAuth = false, gateKeyMissing = false;
                 Map<String, Boolean> gateBases = new HashMap<>();
+                Map<String, Boolean> gateAuthBases = new HashMap<>();
                 for (Device d : snapshot) {
                     if (!d.isGate()) continue;
                     String base = HaClient.normalizeBase(d.address);
                     if (base.isEmpty()) { results.put(d.id, new Status(Status.UNKNOWN, "Не настроено")); continue; }
-                    String cacheKey = base + "\n" + d.gateToken;
+                    if (gateToken.isEmpty()) {
+                        // Ключ ещё не введён: мост ответит отказом, поэтому спрашиваем один раз.
+                        gateKeyMissing = true;
+                        results.put(d.id, new Status(Status.OFFLINE, getString(R.string.gate_key_needed)));
+                        continue;
+                    }
+                    String cacheKey = base + "\n" + gateToken;
                     Boolean ok = gateBases.get(cacheKey);
+                    boolean auth = Boolean.TRUE.equals(gateAuthBases.get(cacheKey));
                     if (ok == null) {
-                        Http.Response r = Http.get(base + "/status?token=" + Uri.encode(d.gateToken), null, false);
+                        Http.Response r = Http.get(base + "/status?token=" + Uri.encode(gateToken), null, false);
                         ok = r.ok();
+                        auth = !ok && authFailed(r);
                         gateBases.put(cacheKey, ok);
+                        gateAuthBases.put(cacheKey, auth);
+                        if (auth) gateAuth = true;
                     }
                     if (ok) {
                         results.put(d.id, new Status(Status.READY, "Мост доступен"));
                     } else {
                         gateFailed = true;
-                        results.put(d.id, new Status(Status.OFFLINE, "Нет связи"));
+                        results.put(d.id, new Status(Status.OFFLINE,
+                                auth ? getString(R.string.gate_key_bad_short) : "Нет связи"));
                     }
                 }
                 for (Device d : snapshot) {
@@ -1344,6 +1376,8 @@ public class MainActivity extends Activity {
                 }
                 final boolean fFailed = failed;
                 final boolean fGateFailed = gateFailed;
+                final boolean fGateAuth = gateAuth;
+                final boolean fGateKeyMissing = gateKeyMissing;
                 ui.post(() -> {
                     inFlight.set(false);
                     if (revision != devicesRevision) {
@@ -1359,6 +1393,8 @@ public class MainActivity extends Activity {
                         }
                     }
                     updateHeader(hasHa, fFailed, fGateFailed);
+                    if (fGateAuth) askGateKey(getString(R.string.gate_key_bad));
+                    else if (fGateKeyMissing) askGateKey(null);
                 });
             });
         } catch (Exception e) {
@@ -1570,6 +1606,73 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, DeviceEditActivity.class);
         if (id != null) intent.putExtra("device_id", id);
         startActivity(intent);
+    }
+
+    /** Ключ доступа спрашиваем один раз: дальше он лежит в приватных prefs. */
+    private void askGateKeyIfNeeded() {
+        if (!cfg.hasGateToken()) askGateKey(null);
+    }
+
+    private void askGateKey(String reason) {
+        if (isFinishing() || isDestroyed() || gateKeyPromptShown) return;
+        gateKeyPromptShown = true;
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(20);
+        box.setPadding(pad, dp(6), pad, dp(4));
+
+        TextView hint = new TextView(this);
+        hint.setText(reason == null || reason.isEmpty()
+                ? getString(R.string.gate_key_hint)
+                : reason);
+        hint.setTextSize(14);
+        hint.setTextColor(getColor(R.color.text_muted));
+        box.addView(hint);
+
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(cfg.getGateToken());
+        input.setHint(R.string.gate_key_placeholder);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setTextSize(15);
+        input.setTextColor(getColor(R.color.text_primary));
+        input.setHintTextColor(getColor(R.color.text_muted));
+        input.setBackgroundResource(R.drawable.bg_field);
+        int ip = dp(14);
+        input.setPadding(ip, dp(10), ip, dp(10));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = dp(12);
+        box.addView(input, lp);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.gate_key_title)
+                .setView(box)
+                .setPositiveButton(R.string.gate_key_save, (dialog, which) -> {
+                    String key = input.getText().toString().trim();
+                    if (key.isEmpty()) {
+                        toast(getString(R.string.gate_key_empty));
+                        gateKeyPromptShown = false;
+                        askGateKeyIfNeeded();
+                        return;
+                    }
+                    cfg.setGateToken(key);
+                    if (gateToken != null) gateToken.setText(key);
+                    gateKeyPromptShown = false;
+                    toast(getString(R.string.gate_key_saved));
+                    if (!hasGateDevices()) autoImportGate();
+                    pollOnce();
+                })
+                .setNegativeButton(R.string.update_later, null)
+                .show();
+    }
+
+    /** Мост отвечает 401/403 и {"error":"auth"}, если ключ неверный или отозван. */
+    private static boolean authFailed(Http.Response r) {
+        if (r == null) return false;
+        if (r.code == 401 || r.code == 403) return true;
+        return r.body != null && r.body.contains("\"auth\"");
     }
 
     private void runIo(Runnable r) {

@@ -16,7 +16,11 @@ using System.Threading;
 /// </summary>
 class GateBridge
 {
-    const string TOKEN = "5f3a9c7e2b8d4610a7c3e9f1b5d8246c";
+    // Ключ доступа больше не зашит в exe: до 3.15 он лежал прямо в коде и в
+    // открытых релизах APK. Теперь exe читает его из файла на шаре C:\GATE
+    // на каждый запрос — смена ключа не требует пересборки и перезапуска.
+    const string TOKEN_FILE = @"C:\GATE\gate_token.txt";
+    const string TOKEN_FILE_FALLBACK = @"C:\Users\Public\gate_token.txt";
     const int PORT = 8099;
     const int ROW_BASE = 42;      // центр строки данных 1: 42 + 16*1
     const int ROW_H = 16;
@@ -935,6 +939,25 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
     class Pending { public string Login; public DateTime Expires; public bool Remember; }
     static readonly Dictionary<string, Pending> pendingLogins = new Dictionary<string, Pending>();
 
+    /// <summary>Ключ доступа из файла на шаре; null — ключа нет, тогда API закрыт.</summary>
+    static string AccessToken()
+    {
+        try
+        {
+            string[] paths = { TOKEN_FILE, TOKEN_FILE_FALLBACK };
+            foreach (string p in paths)
+            {
+                if (File.Exists(p))
+                {
+                    string t = File.ReadAllText(p).Trim();
+                    if (t.Length > 0) return t;
+                }
+            }
+        }
+        catch { }
+        return null;
+    }
+
     /// <summary>Токен API разрешаем только при прямом подключении из локальной сети.
     /// Запрос через прокси приходит с localhost — там нужен реальный IP в X-Forwarded-For.</summary>
     static bool TokenAllowed(HttpListenerContext ctx, string ip)
@@ -1083,6 +1106,8 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
             var q = ctx.Request.QueryString;
             string path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
             string ip = WebAuth.ClientIp(ctx);
+            // Ключ читаем из файла на каждый запрос — смена без пересборки и перезапуска.
+            string accessToken = AccessToken();
             SecurityHeaders(ctx);
 
             if (path == "/login")
@@ -1160,7 +1185,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
 
             string dummy3 = null;
             var session = WebAuth.Get(ctx, out dummy3);
-            bool lanToken = q["token"] == TOKEN && TokenAllowed(ctx, ip);
+            bool lanToken = accessToken != null && q["token"] == accessToken && TokenAllowed(ctx, ip);
 
             if (path == "" || path == "/index.html")
             {
@@ -1395,7 +1420,7 @@ pre{white-space:pre-wrap;font-size:12px;color:var(--mut);background:#e7eaee;bord
                 return;
             }
 
-            if (q["token"] != TOKEN || !WebAuth.IsPrivate(ip))
+            if (accessToken == null || q["token"] != accessToken || !WebAuth.IsPrivate(ip))
             {
                 Respond(ctx, 401, "{\"ok\":false,\"error\":\"auth\"}");
                 return;

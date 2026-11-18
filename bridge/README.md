@@ -14,7 +14,12 @@ GateTerm в простой HTTP API для приложения «Ворота»
 
 ## API
 
-Токен по умолчанию: `vorota-2026`.
+Ключ доступа **не зашит в exe**: мост читает его из файла
+`C:\GATE\gate_token.txt` на каждый запрос (запасной путь —
+`C:\Users\Public\gate_token.txt`). Нет файла — API закрыт (`401 auth`).
+Поэтому смена ключа — это запись новой строки в файл, без пересборки и
+перезапуска. Администратор выдаёт ключ людям; в приложении он вводится один раз
+и запоминается.
 
 | Запрос | Действие |
 |---|---|
@@ -26,8 +31,16 @@ GateTerm в простой HTTP API для приложения «Ворота»
 
 ## Сборка
 
-`csc.exe /nologo /out:GateBridge.exe GateBridge.cs` (Windows .NET Framework 4.x),
-`GateCtl.cs` — вход в GateTerm.
+`csc.exe /nologo /target:winexe /out:GateBridge.exe GateBridge.cs WebAuth.cs`
+(Windows .NET Framework 4.x), `GateCtl.cs` — вход в GateTerm.
+
+Развёртывание без прямого доступа к `C:\Users\Public` — через очередь
+`C:\GATE\_skud_queue` (агент выполняет `.cmd` построчно). Готовые шаги лежат в
+`C:\GATE\deploy\`: `compile.bat` (собирает `GateBridge.new.exe` и пишет
+`compile.log`), `swap.bat` (бэкап → подмена → перезапуск), `restore.bat` (откат
+на `GateBridge.bak.exe`). `.bat` вызывается строкой
+`C:\Windows\System32\cmd.exe /c C:\GATE\deploy\compile.bat` — перенаправление
+вывода внутри `.cmd`-задания очереди не работает, внутри `.bat` работает.
 
 ## Ограничения
 
@@ -35,3 +48,6 @@ GateTerm в простой HTTP API для приложения «Ворота»
   при обновлении GateTerm список/координаты могут измениться.
 - Работает, пока в сессии 1 запущен GateTerm и пользователь не вышел из системы.
 - Токен передаётся в URL; не публиковать мост в интернет.
+- Ключ лежит в `C:\GATE\gate_token.txt` — на шаре GATE, доступ только у СКУД.
+- Ещё есть вход в веб-интерфейс моста (логин/пароль, `C:\Users\Public\gate_users.json`)
+  — он не зависит от ключа API.

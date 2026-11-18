@@ -14,8 +14,6 @@ public class Config {
 
     /** Адрес моста по умолчанию (публичный домен). */
     public static final String GATE_URL_DEFAULT = "https://kp.almak.ru";
-    /** Токен моста по умолчанию. */
-    public static final String GATE_TOKEN_DEFAULT = "5f3a9c7e2b8d4610a7c3e9f1b5d8246c";
     private static final String PREFS = "gates_prefs";
     private static final String K_URL = "ha_url";
     private static final String K_TOKEN = "ha_token";
@@ -60,17 +58,18 @@ public class Config {
         sp.edit().putString("gate_url", v == null ? "" : v).apply();
     }
 
+    /** Ключ доступа к воротам. Пусто — человек его ещё не вводил. */
     public String getGateToken() {
         String v = sp.getString("gate_token", "");
-        if (v == null || v.trim().isEmpty() || "vorota-2026".equals(v.trim())) {
-            sp.edit().putString("gate_token", GATE_TOKEN_DEFAULT).apply();
-            return GATE_TOKEN_DEFAULT;
-        }
-        return v.trim();
+        return v == null ? "" : v.trim();
+    }
+
+    public boolean hasGateToken() {
+        return !getGateToken().isEmpty();
     }
 
     public void setGateToken(String v) {
-        sp.edit().putString("gate_token", v == null ? "" : v).apply();
+        sp.edit().putString("gate_token", v == null ? "" : v.trim()).apply();
     }
 
     public int getThemeMode() {

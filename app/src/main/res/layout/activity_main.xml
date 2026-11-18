@@ -278,7 +278,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:hint="vorota-2026"
+                            android:hint="ключ доступа от администратора"
                             android:importantForAutofill="no"
                             android:inputType="textPassword" />
 
