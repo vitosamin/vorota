@@ -486,12 +486,6 @@ public class MainActivity extends Activity {
         source.setLayoutParams(slp);
         card.addView(source);
 
-        // Распорка: кнопки держатся низа плитки, поэтому в ряду они на одной линии.
-        View push = new View(this);
-        push.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
-        card.addView(push);
-
         // У двери с двумя направлениями кнопки стоят друг под другом: «Вход» сверху,
         // «Выход» снизу, одного размера. Так подписи и значки не теснятся в узкой
         // плитке, а разный оттенок подложки подсказывает направление.
