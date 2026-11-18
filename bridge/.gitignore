@@ -1,1 +1,5 @@
 build/
+
+# дампы разведки интерфейса Gate — генерируются инструментами
+research*/gate_*.txt
+research*/now.txt
