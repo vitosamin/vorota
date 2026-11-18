@@ -111,6 +111,7 @@ public class MainActivity extends Activity {
         Button action;
         ImageView icon;
         boolean live;
+        boolean stacked;
     }
 
     @Override
@@ -302,35 +303,45 @@ public class MainActivity extends Activity {
 
     /** Раскладывает устройства компактными плитками по две в ряд. */
     private void addTiles(List<Device> list) {
-        LinearLayout row = null;
-        for (int i = 0; i < list.size(); i++) {
-            if (i % 2 == 0) {
-                row = new LinearLayout(this);
-                row.setOrientation(LinearLayout.HORIZONTAL);
-                LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                rlp.bottomMargin = dp(10);
-                row.setLayoutParams(rlp);
-                listMain.addView(row);
+        for (int i = 0; i < list.size(); i += 2) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            rlp.bottomMargin = dp(10);
+            row.setLayoutParams(rlp);
+            listMain.addView(row);
+
+            int count = Math.min(2, list.size() - i);
+            List<Card> built = new ArrayList<>();
+            boolean tall = false;
+            for (int j = 0; j < count; j++) {
+                Card c = buildCard(list.get(i + j));
+                if (!cards.containsKey(c.id)) cards.put(c.id, new ArrayList<>());
+                cards.get(c.id).add(c);
+                built.add(c);
+                tall |= c.stacked;
             }
-            Card c = buildCard(list.get(i));
-            if (!cards.containsKey(c.id)) cards.put(c.id, new ArrayList<>());
-            cards.get(c.id).add(c);
-            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, dp(158), 1f);
-            if (i % 2 == 0) clp.rightMargin = dp(5); else clp.leftMargin = dp(5);
-            c.root.setLayoutParams(clp);
-            row.addView(c.root);
-            Status known = lastStatus.get(c.id);
-            if (known != null) applyStatus(c, known);
-        }
-        // Нечётное число: пустая плитка, чтобы последняя не растягивалась на весь ряд.
-        if (list.size() % 2 == 1 && row != null) {
-            View gap = new View(this);
-            LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0,
-                    ViewGroup.LayoutParams.MATCH_PARENT, 1f);
-            glp.leftMargin = dp(5);
-            gap.setLayoutParams(glp);
-            row.addView(gap);
+            // Плитка с двумя дверями выше: кнопки стоят столбиком.
+            int height = tall ? 204 : 158;
+            for (int j = 0; j < count; j++) {
+                Card c = built.get(j);
+                LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, dp(height), 1f);
+                if (j == 0) clp.rightMargin = dp(5); else clp.leftMargin = dp(5);
+                c.root.setLayoutParams(clp);
+                row.addView(c.root);
+                Status known = lastStatus.get(c.id);
+                if (known != null) applyStatus(c, known);
+            }
+            // Нечётное число: пустая плитка, чтобы последняя не растягивалась на весь ряд.
+            if (count == 1) {
+                View gap = new View(this);
+                LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0,
+                        ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+                glp.leftMargin = dp(5);
+                gap.setLayoutParams(glp);
+                row.addView(gap);
+            }
         }
     }
 
@@ -475,17 +486,26 @@ public class MainActivity extends Activity {
         source.setLayoutParams(slp);
         card.addView(source);
 
+        // Распорка: кнопки держатся низа плитки, поэтому в ряду они на одной линии.
+        View push = new View(this);
+        push.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        card.addView(push);
+
+        // У двери с двумя направлениями кнопки стоят друг под другом: «Вход» сверху,
+        // «Выход» снизу, одного размера. Так подписи и значки не теснятся в узкой
+        // плитке, а разный оттенок подложки подсказывает направление.
+        boolean stacked = d.isGate() && d.dirIn && d.dirOut;
         LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setOrientation(stacked ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         alp.topMargin = dp(8);
         actions.setLayoutParams(alp);
 
         if (d.isGate()) {
-            boolean both = d.dirIn && d.dirOut;
-            if (d.dirIn) actions.addView(dirButton(d, "in", getString(R.string.dir_in), 1f, both));
-            if (d.dirOut) actions.addView(dirButton(d, "out", getString(R.string.dir_out), 1f, false));
+            if (d.dirIn) actions.addView(dirButton(d, "in", getString(R.string.dir_in), stacked, false));
+            if (d.dirOut) actions.addView(dirButton(d, "out", getString(R.string.dir_out), stacked, false));
             c.action = null;
         } else {
             Button action = new Button(this);
@@ -694,12 +714,14 @@ public class MainActivity extends Activity {
         c.action.setAlpha(online ? 1f : 0.6f);
     }
 
-    private Button dirButton(Device d, String dir, String label, float weight, boolean marginRight) {
+    private Button dirButton(Device d, String dir, String label, boolean stacked, boolean marginRight) {
         boolean out = "out".equals(dir);
         Button b = new Button(this);
-        LinearLayout.LayoutParams lp = weight > 0
-                ? new LinearLayout.LayoutParams(0, dp(34), weight)
-                : new LinearLayout.LayoutParams(dp(84), dp(34));
+        // Обе кнопки одного размера: в столбике — во всю ширину, в строке — поровну.
+        LinearLayout.LayoutParams lp = stacked
+                ? new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(34))
+                : new LinearLayout.LayoutParams(0, dp(34), 1f);
+        if (stacked && !out) lp.bottomMargin = dp(6);
         if (marginRight) lp.rightMargin = dp(6);
         b.setLayoutParams(lp);
         b.setText(label);
@@ -714,8 +736,8 @@ public class MainActivity extends Activity {
         b.setCompoundDrawablePadding(dp(5));
         b.setPadding(dp(6), 0, dp(6), 0);
         b.setEllipsize(TextUtils.TruncateAt.END);
-        Ui.styleButton(this, b, R.drawable.btn_secondary,
-                out ? R.color.text_primary : R.color.accent,
+        Ui.styleButton(this, b, out ? R.drawable.btn_out : R.drawable.btn_in,
+                out ? R.color.danger : R.color.accent,
                 out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
         b.setOnClickListener(v -> onTapDir(d, dir));
         return b;
