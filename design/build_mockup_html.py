@@ -191,7 +191,8 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
                color: #fff; box-shadow: var(--shadow-accent); }
 .btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
             color: var(--warn); }
-.btn:disabled { opacity: .5; }
+.btn.disabled { background: rgba(128,128,128,0.06); border-color: var(--border);
+                color: var(--text-dim); opacity: .55; cursor: default; }
 
 .srow { display: flex; align-items: center; justify-content: space-between;
         min-height: 42px; padding: 0 14px; font-size: var(--fs-l);
@@ -224,7 +225,7 @@ def build():
         tile("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen", "tint-gate",
              [("Стоп", "warn", "Square")]),
         tile("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed", "tint-wide",
-             [("Вход", "in", "LogIn")]),
+             [("Вход", "in", "LogIn"), ("Выход", "disabled", "LogOut")], stack=True),
         tile("Ворота", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-wide",
              [("Вход", "in", "LogIn"), ("Выход", "out", "LogOut")], stack=True),
         tile("Реле освещения", "Tasmota · реле 1", "Выключено", "dim", "Power", "tint-relay",

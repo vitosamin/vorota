@@ -489,7 +489,7 @@ public class MainActivity extends Activity {
         // У двери с двумя направлениями кнопки стоят друг под другом: «Вход» сверху,
         // «Выход» снизу, одного размера. Так подписи и значки не теснятся в узкой
         // плитке, а разный оттенок подложки подсказывает направление.
-        boolean stacked = d.isGate() && d.dirIn && d.dirOut;
+        boolean stacked = d.isGate();
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(stacked ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
@@ -498,8 +498,10 @@ public class MainActivity extends Activity {
         actions.setLayoutParams(alp);
 
         if (d.isGate()) {
-            if (d.dirIn) actions.addView(dirButton(d, "in", getString(R.string.dir_in), stacked, false));
-            if (d.dirOut) actions.addView(dirButton(d, "out", getString(R.string.dir_out), stacked, false));
+            // Обе плашки на месте всегда: если направления нет, плашка неактивна,
+            // поэтому «Вход» у всех дверей на одной высоте.
+            actions.addView(dirButton(d, "in", getString(R.string.dir_in), stacked, d.dirIn));
+            actions.addView(dirButton(d, "out", getString(R.string.dir_out), stacked, d.dirOut));
             c.action = null;
             c.stacked = stacked;   // от этого зависит высота плитки в ряду
         } else {
@@ -709,15 +711,14 @@ public class MainActivity extends Activity {
         c.action.setAlpha(online ? 1f : 0.6f);
     }
 
-    private Button dirButton(Device d, String dir, String label, boolean stacked, boolean marginRight) {
+    private Button dirButton(Device d, String dir, String label, boolean stacked, boolean enabled) {
         boolean out = "out".equals(dir);
         Button b = new Button(this);
-        // Обе кнопки одного размера: в столбике — во всю ширину, в строке — поровну.
+        // Обе плашки одного размера: в столбике — во всю ширину, в строке — поровну.
         LinearLayout.LayoutParams lp = stacked
                 ? new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(34))
                 : new LinearLayout.LayoutParams(0, dp(34), 1f);
         if (stacked && !out) lp.bottomMargin = dp(6);
-        if (marginRight) lp.rightMargin = dp(6);
         b.setLayoutParams(lp);
         b.setText(label);
         b.setAllCaps(false);
@@ -731,10 +732,19 @@ public class MainActivity extends Activity {
         b.setCompoundDrawablePadding(dp(5));
         b.setPadding(dp(6), 0, dp(6), 0);
         b.setEllipsize(TextUtils.TruncateAt.END);
-        Ui.styleButton(this, b, out ? R.drawable.btn_out : R.drawable.btn_in,
-                out ? R.color.danger : R.color.accent,
-                out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
-        b.setOnClickListener(v -> onTapDir(d, dir));
+        if (enabled) {
+            // «Вход» с зеленоватой подложкой, «Выход» — с красноватой.
+            Ui.styleButton(this, b, out ? R.drawable.btn_out : R.drawable.btn_in,
+                    out ? R.color.danger : R.color.accent,
+                    out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
+            b.setOnClickListener(v -> onTapDir(d, dir));
+        } else {
+            // Направление у двери не настроено: плашка на месте, но неактивная.
+            Ui.styleButton(this, b, R.drawable.btn_secondary, R.color.text_muted,
+                    out ? R.drawable.ic_log_out : R.drawable.ic_log_in);
+            b.setEnabled(false);
+            b.setAlpha(0.55f);
+        }
         return b;
     }
 
