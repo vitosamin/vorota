@@ -1043,7 +1043,8 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <style>
  @page{{size:A4 {orient};margin:10mm 8mm}}
  body{{font:11px/1.35 "Segoe UI",Arial,sans-serif;color:#111;margin:0;padding:0}}
- .toolbar{{position:fixed;top:10px;right:12px;z-index:10}}
+ .toolbar{{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 0 8px}}
+ .toolbar .hint{{color:#667;font-size:10.5px}}
  .toolbar button{{font:13px "Segoe UI",Arial;padding:7px 16px;border:1px solid #2f6fd0;border-radius:3px;
    background:#2f6fd0;color:#fff;cursor:pointer}}
  @media print{{.toolbar{{display:none}}}}
@@ -1069,7 +1070,7 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
  .foot{{margin-top:8px;padding-top:5px;border-top:1px solid #d7dee6;color:#777;font-size:9px;
    display:flex;justify-content:space-between}}
 </style></head><body>
-<div class="toolbar"><button onclick="window.print()">Печать</button></div>
+<div class="toolbar"><span class="hint">Проверьте форму и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <div class="doc-head">
   <div class="l"><h1>{title}</h1><div class="sub">{subtitle}</div></div>
   <div class="r">Период: <b>{period}</b><br>Записей: <b>{n}</b><br>Сформировано: {stamp}<br>СКУД Gate-IP</div>
@@ -1079,7 +1080,6 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 {rows}
 </tbody></table>
 <div class="foot"><span>СКУД Gate-IP</span></div>
-<script>window.addEventListener('load',function(){{setTimeout(function(){{window.print();}},400);}});</script>
 </body></html>"""
 
 
