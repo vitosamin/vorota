@@ -1193,7 +1193,7 @@ let EMP_ITEMS=[];
 
 function empUid(sel){
   const el=$(sel);
-  return (el && el.dataset)? (el.dataset.uid||'') : '';
+  return el ? (el._uid || '') : '';
 }
 function buildCombo(inputSel, listSel){
   const inp=$(inputSel), list=$(listSel);
@@ -1202,28 +1202,28 @@ function buildCombo(inputSel, listSel){
   function render(){
     const q=(inp.value||'').trim().toLowerCase();
     // если человек уже выбран — показываем полный список, чтобы можно было выбрать другого
-    const filtering = !inp.dataset.uid && q && q!=='все сотрудники';
+    const filtering = !inp._uid && q && q!=='все сотрудники';
     const base = filtering ? EMP_ITEMS.filter(x=>x.fio.toLowerCase().includes(q)) : EMP_ITEMS;
     if(base.length===0 && filtering){
       list.innerHTML='<div class="none">ничего не найдено</div>';
       list.classList.add('open');
       return;
     }
-    let html='<div class="ci all'+(inp.dataset.uid?'':' sel')+'" data-uid="">все сотрудники</div>';
+    let html='<div class="ci all'+(inp._uid?'':' sel')+'" data-uid="">все сотрудники</div>';
     let last='';
     base.forEach(x=>{
       if(!filtering){
         const ch=(x.fio||'').charAt(0).toUpperCase();
         if(ch!==last){ html+='<div class="ch">'+esc(ch)+'</div>'; last=ch; }
       }
-      html+='<div class="ci'+(String(x.user_ptr)===String(inp.dataset.uid||'')?' sel':'')+'" data-uid="'+x.user_ptr+'">'
+      html+='<div class="ci'+(String(x.user_ptr)===String(inp._uid||'')?' sel':'')+'" data-uid="'+x.user_ptr+'">'
         +esc(x.fio)+(x.group?' <span class="g">· '+esc(x.group)+'</span>':'')+'</div>';
     });
     list.innerHTML=html;
     list.classList.add('open');
   }
   inp.addEventListener('focus', ()=>{ render(); try{inp.select();}catch(e){} });
-  inp.addEventListener('input', ()=>{ inp.dataset.uid=''; render(); });
+  inp.addEventListener('input', ()=>{ inp._uid=''; render(); });
   inp.addEventListener('keydown',(e)=>{
     if(e.key==='Escape'){ list.classList.remove('open'); inp.blur(); }
     if(e.key==='Enter'){ list.classList.remove('open'); }
@@ -1232,7 +1232,7 @@ function buildCombo(inputSel, listSel){
     const it=e.target.closest('.ci'); if(!it) return;
     e.preventDefault();
     const uid=it.dataset.uid||'';
-    inp.dataset.uid=uid;
+    inp._uid=uid;
     if(uid){
       const emp=EMP_ITEMS.find(x=>String(x.user_ptr)===uid);
       inp.value=emp?emp.fio:'';
@@ -1670,7 +1670,8 @@ document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePerson(); }
 document.addEventListener('click',(e)=>{
   // выпадающий список сотрудников — это выбор, а не открытие карточки:
   // его пункты тоже помечены data-uid, и без этой проверки клик открывал карточку
-  if(e.target.closest('.combo-list')) return;
+  // поле поиска сотрудника и его список — это выбор, а не открытие карточки
+  if(e.target.closest('.combo-list') || e.target.closest('.combo')) return;
   const el=e.target.closest('[data-uid]');
   if(el && el.dataset.uid && !e.target.closest('.modal')){ e.preventDefault(); openPerson(el.dataset.uid); }
 });

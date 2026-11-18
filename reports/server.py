@@ -211,6 +211,49 @@ COLS_ABS = [
     ("passes", "Проходов"),
 ]
 
+# Заголовки для печати и Excel — человеческие, с пробелами.
+# В CSV для 1С остаются «слитные» имена: это формат обмена, его не трогаем.
+PRETTY_COLS = {
+    "ТабельныйНомер": "Табельный номер",
+    "ФИО": "ФИО",
+    "Подразделение": "Подразделение",
+    "Должность": "Должность",
+    "Дата": "Дата",
+    "Время": "Время",
+    "Приход": "Приход",
+    "Уход": "Уход",
+    "Часов": "Часов",
+    "Проходов": "Проходов",
+    "ОпозданиеМин": "Опоздание, мин",
+    "РаннийУходМин": "Ранний уход, мин",
+    "КонтрольныеТочки": "Контрольные точки",
+    "Дней": "Дней",
+    "СреднеВДень": "Средне в день",
+    "ДнейСОпозданием": "Дней с опозданием",
+    "ОпозданиеМинВсего": "Минут опозданий",
+    "СреднееОпозданиеМин": "Среднее опоздание, мин",
+    "МаксимальноеОпозданиеМин": "Максимум за раз, мин",
+    "ХудшийДень": "Худший день",
+    "ПриходВХудшийДень": "Приход в худший день",
+    "ПоследнийПроходДата": "Последний проход",
+    "ПоследнийПроходВремя": "Время",
+    "Точка": "Точка",
+    "Статус": "Статус",
+    "Тип": "Тип",
+    "Событие": "Событие",
+    "Сотрудник": "Сотрудник",
+    "Тревога": "Тревога",
+    "ДнейВПериоде": "Дней в периоде",
+}
+
+NUM_KEYS = {"enter", "exit", "hours", "passes", "late", "early", "day", "days",
+            "avg_hours", "late_days", "late_total", "avg_late", "max_late",
+            "time", "alarm_flag"}
+
+
+def col_title(t):
+    return PRETTY_COLS.get(t, t)
+
 
 def rows_to_delimited(rows, cols, sep=";", enc="cp1251", dec=",", header=True, quotes=True):
     buf = io.StringIO()
@@ -250,7 +293,8 @@ def rows_to_xls(rows, cols, title):
         "h3{font-family:'Segoe UI',Arial;font-size:14px}"
         "</style>"
     )
-    head = "".join("<th>%s</th>" % esc(t) for _, t in cols)
+    head = "".join('<th%s>%s</th>' % (' class="n"' if k in NUM_KEYS else "", esc(col_title(t)))
+                   for k, t in cols)
     body = []
     for i, r in enumerate(rows):
         tds = []
@@ -984,7 +1028,8 @@ class Handler(BaseHTTPRequestHandler):
         def esc(v):
             return (str(v if v is not None else "")
                     .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-        head = "".join("<th>%s</th>" % esc(t) for _, t in cols)
+        head = "".join('<th%s>%s</th>' % (' class="num"' if k in NUM_KEYS else "", esc(col_title(t)))
+                       for k, t in cols)
         trs = []
         for r in rows:
             tds = []
