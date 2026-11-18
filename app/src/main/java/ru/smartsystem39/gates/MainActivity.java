@@ -303,6 +303,7 @@ public class MainActivity extends Activity {
 
     /** Раскладывает устройства компактными плитками по две в ряд. */
     private void addTiles(List<Device> list) {
+        int tileWidth = tileWidthPx();
         for (int i = 0; i < list.size(); i += 2) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -314,19 +315,20 @@ public class MainActivity extends Activity {
 
             int count = Math.min(2, list.size() - i);
             List<Card> built = new ArrayList<>();
-            boolean tall = false;
+            int height = 0;
             for (int j = 0; j < count; j++) {
                 Card c = buildCard(list.get(i + j));
                 if (!cards.containsKey(c.id)) cards.put(c.id, new ArrayList<>());
                 cards.get(c.id).add(c);
+                // Высоту берём по содержимому: фиксированная оставляла пустоту снизу.
+                c.root.measure(View.MeasureSpec.makeMeasureSpec(tileWidth, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                height = Math.max(height, c.root.getMeasuredHeight());
                 built.add(c);
-                tall |= c.stacked;
             }
-            // Плитка с двумя дверями выше: кнопки стоят столбиком.
-            int height = tall ? 204 : 158;
             for (int j = 0; j < count; j++) {
                 Card c = built.get(j);
-                LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, dp(height), 1f);
+                LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, height, 1f);
                 if (j == 0) clp.rightMargin = dp(5); else clp.leftMargin = dp(5);
                 c.root.setLayoutParams(clp);
                 row.addView(c.root);
@@ -343,6 +345,14 @@ public class MainActivity extends Activity {
                 row.addView(gap);
             }
         }
+    }
+
+    /** Ширина одной плитки в ряду — нужна, чтобы измерить высоту по содержимому.
+     *  Берём чуть меньше настоящей: лучше небольшой запас, чем обрезанный текст. */
+    private int tileWidthPx() {
+        int screen = getResources().getDisplayMetrics().widthPixels;
+        int used = dp(20) * 2 + dp(5) * 2 + dp(8);
+        return Math.max(dp(120), (screen - used) / 2);
     }
 
     private TextView buildSection(String text) {
