@@ -989,6 +989,14 @@ def build_add_user_sql(con, data, user_ptr):
     last = fio[0] if fio else "Гость"
     first = fio[1] if len(fio) > 1 else ""
     father = fio[2] if len(fio) > 2 else ""
+    # «Попов П.П» и «Попов П.П.» — это инициалы: разносим имя и отчество,
+    # иначе отчество остаётся пустым (ФИО делится по пробелам)
+    if len(fio) == 2 and not father:
+        t = fio[1]
+        if "." in t or (len(t) == 2 and t.isupper()):
+            ini = re.findall(r"[А-ЯЁA-Zа-яёa-z]", t)
+            if len(ini) == 2:
+                first, father = ini[0].upper() + ".", ini[1].upper() + "."
     cols = ["UserPtr", "KeyType", "Number", "NumberU", "NumberMifare", "LastName", "FirstName",
             "FatherName", "GroupPtr", "Deleted", "UseExpiry", "ExpiryDate", "ExpiryTime",
             "IdleNotLimited", "NoFacility", "Details1", "Status", "Visitor", "SendSms", "Phone",
