@@ -1,23 +1,32 @@
-' СКУД Gate: агент очереди. Запускается сторожем (bridge_watchdog.bat) каждые 2 минуты.
-' Выполняет *.sql (по одной команде в строке) и *.cmd/*.bat из C:\GATE\_skud_queue.
-' Рядом пишет <имя>.result: строки ok=N / err=N:текст
+' SKUD Gate: queue agent. Started by bridge_watchdog.bat every 2 minutes.
+'   *.sql        - one statement per line, '#' starts a comment (file in cp1251).
+'   *.cmd/*.bat  - executed LINE BY LINE through cmd.exe; running a .cmd file
+'                  directly on this host fails with rc=1.
+' Result is written next to the job as <name>.result (ok=N / err=N:text).
+' SQL runs in the first pass and commands in the second, so a broken command can
+' never block writing to the database. Every file is processed under
+' "On Error Resume Next": one bad job must not stop the whole queue.
 Option Explicit
 Dim fso, qdir, f, ts, conn, line, n, res, outName, sh, rc, ext
 Set fso = CreateObject("Scripting.FileSystemObject")
 qdir = "C:\GATE\_skud_queue\"
 If Not fso.FolderExists(qdir) Then WScript.Quit
 
+Sub SafeMove(f, qdir)
+  Dim dst
+  dst = qdir & "done\" & f.Name
+  On Error Resume Next
+  If fso.FileExists(dst) Then fso.DeleteFile dst, True
+  f.Move dst
+  Err.Clear
+  On Error Goto 0
+End Sub
+
+' ---- 1) SQL ----
 For Each f In fso.GetFolder(qdir).Files
   ext = LCase(fso.GetExtensionName(f.Name))
-  outName = qdir & fso.GetBaseName(f.Name) & ".result"
-
-  If ext = "cmd" Or ext = "bat" Then
-    Set sh = CreateObject("WScript.Shell")
-    rc = sh.Run("cmd /c """ & f.Path & """ > """ & outName & """ 2>&1", 0, True)
-    f.Move qdir & "done\" & f.Name
-  End If
-
   If ext = "sql" Then
+    outName = qdir & fso.GetBaseName(f.Name) & ".result"
     res = ""
     On Error Resume Next
     Set conn = CreateObject("ADODB.Connection")
@@ -44,10 +53,32 @@ For Each f In fso.GetFolder(qdir).Files
       ts.Close
       conn.Close
     End If
-    On Error Goto 0
     Set ts = fso.CreateTextFile(outName, True)
     ts.Write res
     ts.Close
-    f.Move qdir & "done\" & f.Name
+    Err.Clear
+    On Error Goto 0
+    SafeMove f, qdir
+  End If
+Next
+
+' ---- 2) commands ----
+For Each f In fso.GetFolder(qdir).Files
+  ext = LCase(fso.GetExtensionName(f.Name))
+  If ext = "cmd" Or ext = "bat" Then
+    outName = qdir & fso.GetBaseName(f.Name) & ".result"
+    Set sh = CreateObject("WScript.Shell")
+    On Error Resume Next
+    Set ts = fso.OpenTextFile(f.Path, 1)
+    Do Until ts.AtEndOfStream
+      line = Trim(ts.ReadLine)
+      If Len(line) > 0 And Left(line, 1) <> "@" And Left(line, 1) <> ":" Then
+        rc = sh.Run("cmd.exe /c " & line & " >> """ & outName & """ 2>&1", 0, True)
+      End If
+    Loop
+    ts.Close
+    Err.Clear
+    On Error Goto 0
+    SafeMove f, qdir
   End If
 Next

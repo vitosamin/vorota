@@ -5,3 +5,9 @@ __pycache__/
 *.pyc
 users.json
 *.log
+
+# превью и черновики макетов — только для просмотра, не в репозиторий
+*-preview.png
+panel-style.png
+p[0-9]*.html
+panel.html

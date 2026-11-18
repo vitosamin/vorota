@@ -947,13 +947,37 @@ def build_add_user_sql(con, data, user_ptr):
     dev_by_name = {}
     for d in devices:
         dev_by_name.setdefault((d.get("Name") or "").strip().lower(), set()).add(_int(d.get("DevPtr")))
-    rdrs = []
+    # Память ключей у контроллера одна на устройство, поэтому слот (InnerNum)
+    # должен быть один и тот же для всех считывателей устройства и свободный
+    # на самом устройстве. Если выделять слот отдельно каждому считывателю,
+    # ключ попадает в занятый слот и контроллер его не принимает
+    # («Нет доступа. Неразрешенный ключ»).
+    # Строки доступа Gate держит на «считывателе доступа» — том, где уже есть
+    # картотека (обычно Num=1); на служебных считывателях строк нет.
+    dev_ptrs = set()
     for name in (data.get("doors") or []):
-        for r in readers:
-            if _int(r.get("DevPtr")) in dev_by_name.get(str(name).strip().lower(), set()):
-                rdrs.append(_int(r.get("RdrPtr")))
-    rdrs = sorted(set(rdrs))
-    if not rdrs:
+        dev_ptrs |= dev_by_name.get(str(name).strip().lower(), set())
+    access_by_rdr = {}
+    for a in access:
+        access_by_rdr.setdefault(_int(a.get("RdrPtr")), []).append(a)
+    rdrs_slots = []
+    for dev in sorted(dev_ptrs):
+        dev_rdrs = [r for r in readers if _int(r.get("DevPtr")) == dev]
+        if not dev_rdrs:
+            continue
+        counts = {_int(r.get("RdrPtr")): len(access_by_rdr.get(_int(r.get("RdrPtr")), []))
+                  for r in dev_rdrs}
+        top = max(counts.values()) if counts else 0
+        active = [r for r in dev_rdrs
+                  if counts[_int(r.get("RdrPtr"))] >= max(1, top // 2)] if top else []
+        if not active:                       # новое устройство — берём первый считыватель
+            active = [r for r in dev_rdrs if _int(r.get("Num")) == 1] or dev_rdrs[:1]
+        used = [_int(a.get("InnerNum"))
+                for r in active for a in access_by_rdr.get(_int(r.get("RdrPtr")), [])]
+        slot = (max(used) + 1) if used else 1
+        for r in active:
+            rdrs_slots.append((_int(r.get("RdrPtr")), slot))
+    if not rdrs_slots:
         raise ValueError("не найдены считыватели выбранных дверей")
 
     def q(v):
@@ -969,20 +993,25 @@ def build_add_user_sql(con, data, user_ptr):
             "FatherName", "GroupPtr", "Deleted", "UseExpiry", "ExpiryDate", "ExpiryTime",
             "IdleNotLimited", "NoFacility", "Details1", "Status", "Visitor", "SendSms", "Phone",
             "SendMail", "Mail", "UniPassMode", "FormatW26"]
-    expiry = data.get("valid_to") or data.get("visit_date") or ""
-    exp_sql = "NULL"
-    if expiry:
-        y, m, d = expiry.split("-")
-        exp_sql = "#%s/%s/%s#" % (m, d, y)
+    # Срок действия в записи Gate НЕ выставляем: у всех 288 сотрудников он пуст,
+    # а пользователя с заполненным сроком Gate не сопоставляет с событием —
+    # проход в журнале остаётся без имени. Срок пропуска ведёт наше приложение,
+    # а ключ из Gate убирается при отзыве и по истечении (queue_remove_card).
+    # подразделение берём у реальных сотрудников: у наших гостевых записей его нет
+    groups = {}
+    for u in users:
+        if u.get("Deleted") == "0" and (u.get("LastName") or "").strip():
+            g = (u.get("GroupPtr") or "").strip()
+            if g:
+                groups[g] = groups.get(g, 0) + 1
+    group_ptr = max(groups, key=groups.get) if groups else (tpl.get("GroupPtr") or "2")
     vals = [str(user_ptr), tpl.get("KeyType") or "1", q(number), q(number_u), "NULL",
-            q(last), q(first), q(father), tpl.get("GroupPtr") or "2", "0",
-            "1" if exp_sql != "NULL" else "0", exp_sql, exp_sql or "NULL", "0", "0",
+            q(last), q(first), q(father), group_ptr, "0",
+            "0", "NULL", "NULL", "0", "0",
             q("Водитель"), "0", "0", "0", "NULL", "0", "NULL", "0", "0"]
     lines = ["# СКУД Gate: новый пользователь из приложения",
              "INSERT INTO [Users] (%s) VALUES (%s)" % (", ".join("[%s]" % c for c in cols), ", ".join(vals))]
-    for rdr in rdrs:
-        vals_inner = [_int(a.get("InnerNum")) for a in access if _int(a.get("RdrPtr")) == rdr]
-        inner = (max(vals_inner) + 1) if vals_inner else 1
+    for rdr, inner in rdrs_slots:
         lines.append(
             "INSERT INTO [AccessTable] ([RdrPtr],[UserPtr],[InnerNum],[Always],[Schedule1],[Schedule2],"
             "[Schedule3],[Schedule4],[Schedule5],[Schedule6],[Schedule7],[RecordState],[APB],[Inside],"
@@ -999,6 +1028,85 @@ def queue_put(name, sql_text):
         fh.write(sql_text.encode("cp1251", "replace"))
     smb_put(QUEUE_DIR, local, name)
     return name
+
+
+RESTART_JOB = "zz_gateserv_restart.cmd"
+
+
+def queue_restart():
+    """Поставить в очередь перезапуск GateServ.
+
+    Картотеку GateServ читает при старте: пока службу не перезапустить, карта
+    лежит в базе, но контроллер её не знает и отвечает «Неразрешенный ключ».
+    Агент выполняет .cmd построчно, поэтому здесь только простые команды.
+    Имя файла постоянное — несколько пропусков подряд дают один перезапуск.
+    """
+    user = CFG.get("user") or ""
+    pwd = CFG.get("password") or ""
+    lines = [
+        "taskkill /F /IM GateServ.exe",
+        "ping -n 4 127.0.0.1",
+        'C:\\Users\\Public\\PsExec64.exe -accepteula -nobanner -i 1 -u "%s" -p "%s"'
+        ' -d "C:\\GATE\\Server\\GateServ.exe"' % (user, pwd),
+        "ping -n 12 127.0.0.1",
+    ]
+    os.makedirs(DATA, exist_ok=True)
+    local = os.path.join(DATA, RESTART_JOB)
+    with open(local, "wb") as fh:
+        fh.write(("\r\n".join(lines) + "\r\n").encode("cp1251", "replace"))
+    smb_put(QUEUE_DIR, local, RESTART_JOB)
+    return RESTART_JOB
+
+
+def build_remove_card_sql(card):
+    """SQL: убрать карту из Gate — доступы и саму запись пользователя."""
+    parsed = card_to_gate(card)
+    if not parsed:
+        raise ValueError("номер карты должен быть в виде 140/39939")
+    fac, num, _ = parsed
+    number = ("%03d/%05d" % (fac, num)).replace("'", "''")
+    return ("DELETE FROM [AccessTable] WHERE [UserPtr] IN"
+            " (SELECT [UserPtr] FROM [Users] WHERE [Number]='%s')\r\n"
+            "DELETE FROM [Users] WHERE [Number]='%s'\r\n" % (number, number))
+
+
+def queue_remove_card(card):
+    """Убрать карту из Gate и перезапустить службу, чтобы её забыли контроллеры."""
+    name = "rm_%s.sql" % re.sub(r"\W+", "", card)
+    queue_put(name, build_remove_card_sql(card))
+    queue_restart()
+    return name
+
+
+def expire_passes(con):
+    """Истёкшие пропуска: убрать ключ из Gate и пометить пропуск истёкшим.
+
+    Ключ в Gate записан без срока действия, поэтому убирать его нужно самим —
+    иначе карта посетителя продолжит открывать двери после окончания пропуска.
+    """
+    today = dt.date.today().isoformat()
+    rows = con.execute(
+        "SELECT id, card FROM passes WHERE status='active'"
+        " AND valid_to IS NOT NULL AND valid_to <> '' AND valid_to < ?"
+        " AND card IS NOT NULL AND card <> ''", (today,)).fetchall()
+    done = 0
+    for r in rows:
+        # карту убираем, только если она не нужна другому действующему пропуску
+        busy = con.execute(
+            "SELECT COUNT(*) c FROM passes WHERE card=? AND id<>? AND status='active'"
+            " AND (valid_to IS NULL OR valid_to='' OR valid_to>=?)",
+            (r["card"], r["id"], today)).fetchone()["c"]
+        if not busy:
+            try:
+                if card_to_gate(r["card"]):
+                    queue_remove_card(r["card"])
+                    done += 1
+            except Exception:                 # noqa: BLE001
+                pass
+        with _lock:
+            con.execute("UPDATE passes SET status='expired' WHERE id=?", (r["id"],))
+            con.commit()
+    return done
 
 
 def queue_result(name):
@@ -1584,6 +1692,7 @@ def pass_create(con, data, created_by=""):
             job = "pass_%s" % pid
             sql = build_add_user_sql(con, dict(data, card=card, visitor=visitor, valid_to=valid_to), next_ptr)
             queue_put(job + ".sql", sql)
+            queue_restart()          # GateServ разошлёт новый ключ по контроллерам
             with _lock:
                 con.execute("UPDATE passes SET gate_job=?, gate_state='sent' WHERE id=?", (job, pid))
                 con.commit()
@@ -1605,16 +1714,28 @@ def pass_create(con, data, created_by=""):
 
 
 def pass_revoke(con, pid):
+    p = pass_get(con, pid)
     with _lock:
         con.execute("UPDATE passes SET status='revoked' WHERE id=?", (int(pid),))
         con.commit()
+    if p and (p.get("card") or "").strip():
+        try:
+            queue_remove_card(p["card"])      # ключ должен исчезнуть и в контроллерах
+        except Exception:                     # noqa: BLE001
+            pass
     return pass_get(con, pid)
 
 
 def pass_delete(con, pid):
+    p = pass_get(con, pid)
     with _lock:
         con.execute("DELETE FROM passes WHERE id=?", (int(pid),))
         con.commit()
+    if p and (p.get("card") or "").strip():
+        try:
+            queue_remove_card(p["card"])
+        except Exception:                     # noqa: BLE001
+            pass
     return True
 
 

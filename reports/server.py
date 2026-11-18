@@ -120,6 +120,10 @@ def do_sync(days=None):
             gate.sync_config(con=con)
             start = today - dt.timedelta(days=max(0, int(days)))
             res = gate.sync_events(start.isoformat(), today.isoformat(), con=con)
+        try:
+            gate.expire_passes(con)              # истёкшие пропуска — убрать ключи
+        except Exception:                        # noqa: BLE001
+            pass
         con.close()
         last_sync.update({"at": dt.datetime.now().isoformat(timespec="seconds"),
                           "result": res, "error": None})
@@ -1074,7 +1078,7 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <table><thead><tr>{head}</tr></thead><tbody>
 {rows}
 </tbody></table>
-<div class="foot"><span>Источник: {src} · отчёты «Ворота»</span><span>Сформировано {stamp}</span></div>
+<div class="foot"><span>СКУД Gate-IP</span></div>
 <script>window.addEventListener('load',function(){{setTimeout(function(){{window.print();}},400);}});</script>
 </body></html>"""
 
