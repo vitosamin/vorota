@@ -8,7 +8,8 @@ import ru.smartsystem39.gates.Http;
 public class ImportTest {
     public static void main(String[] args) {
         String base = args.length > 0 ? args[0] : "http://192.168.2.160:8099";
-        String token = args.length > 1 ? args[1] : "vorota-2026";
+        String token = args.length > 1 ? args[1] : "";
+        if (token.isEmpty()) { System.out.println("Укажите ключ доступа вторым аргументом"); System.exit(2); }
         Http.Response r = Http.get(base + "/doors?token=" + java.net.URLEncoder.encode(token), null, false);
         System.out.println("code=" + r.code + " error=" + r.error);
         if (!r.ok()) { System.out.println("FAIL " + r.error); System.exit(1); }

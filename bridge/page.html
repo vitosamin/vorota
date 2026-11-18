@@ -28,21 +28,31 @@ button:disabled{opacity:.5}
 </div>
 <div id='toast'></div>
 <script>
-var TOKEN='vorota-2026';
+var TOKEN=localStorage.getItem('gate_key')||'';
+function askKey(){
+  var k=prompt('Ключ доступа к воротам (выдаёт администратор)');
+  if(k){TOKEN=k.trim();if(TOKEN)localStorage.setItem('gate_key',TOKEN);}
+  return TOKEN;
+}
+function keyReady(){return TOKEN?true:(!!askKey());}
 function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},2200);}
 function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;}
 async function openDoor(id,dir,name,btn){
+  if(!keyReady())return;
   btn.disabled=true;
   try{
-    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+TOKEN);
+    var x=await fetch('/open?id='+id+'&dir='+dir+'&token='+encodeURIComponent(TOKEN));
     var o=await x.json();
+    if(!o.ok&&o.error==='auth'){localStorage.removeItem('gate_key');TOKEN='';toast('Ключ не принят');askKey();return;}
     toast(o.ok?'Открыто: '+name:'Ошибка: '+(o.error||'нет ответа'));
   }catch(e){toast('Ошибка сети');}
   setTimeout(function(){btn.disabled=false;},1200);
 }
 async function load(){
+  if(!keyReady())return;
   try{
-    var r=await fetch('/doors?token='+TOKEN);
+    var r=await fetch('/doors?token='+encodeURIComponent(TOKEN));
+    if(r.status===401){localStorage.removeItem('gate_key');TOKEN='';if(askKey())load();return;}
     var j=await r.json();
     var list=document.getElementById('list');
     list.innerHTML='';
