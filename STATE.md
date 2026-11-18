@@ -58,6 +58,8 @@ vector drawable), `design/build_mockup_html.py`, `design/check_panel_colors.py` 
   `releases/latest/download/Vorota.apk` работает.
 - В истории git старый ключ остался, но он мёртв: мост его не принимает.
 - Тесты: 86 офлайн-проверок прошли. На телефоне 3.15 не запускалась (ADB-устройств нет).
+- APK 3.15: `303252ec663c755c8a9d50235e69ac63fade534ebe313b3f406d533e595ec2c3`, подпись та же
+  (`829d2871…`), поэтому обновление встаёт поверх 3.14.
 
 ## Веб-отчёты `reports/` — СКУД Gate-IP
 Мониторинг и отчёты посещаемости: `server.py` (порт 8110 на LXC 192.168.2.193, вход `vitosamin`), `gate.py` (данные и SQL для Gate), `web/index.html`. Подробности — `reports/README.md`, механизм ключей — `reports/KEYS.md`.
