@@ -3,6 +3,8 @@ package ru.smartsystem39.gates;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
@@ -127,7 +129,11 @@ public final class Ui {
             Drawable d = c.getResources().getDrawable(icon, c.getTheme()).mutate();
             int size = dp(c, 13);
             d.setBounds(0, 0, size, size);
-            b.setCompoundDrawables(d, null, null, null);
+            // Прозрачная распорка справа той же ширины: подпись остаётся ровно
+            // по центру кнопки, хотя слева от неё стоит значок.
+            Drawable pad = new ColorDrawable(Color.TRANSPARENT);
+            pad.setBounds(0, 0, size, size);
+            b.setCompoundDrawables(d, null, pad, null);
             b.setCompoundDrawableTintList(ColorStateList.valueOf(color));
         } else {
             b.setCompoundDrawables(null, null, null, null);

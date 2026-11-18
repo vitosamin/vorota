@@ -507,6 +507,7 @@ public class MainActivity extends Activity {
             if (d.dirIn) actions.addView(dirButton(d, "in", getString(R.string.dir_in), stacked, false));
             if (d.dirOut) actions.addView(dirButton(d, "out", getString(R.string.dir_out), stacked, false));
             c.action = null;
+            c.stacked = stacked;   // от этого зависит высота плитки в ряду
         } else {
             Button action = new Button(this);
             action.setLayoutParams(new LinearLayout.LayoutParams(0, dp(34), 1f));
