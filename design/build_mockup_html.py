@@ -23,7 +23,7 @@ def icon(name, size=16, stroke=2):
     return lucide.svg(lucide.load()[name], size=size, stroke=stroke)
 
 
-def tile(name, sub, status, status_class, icon_name, tint, buttons):
+def tile(name, sub, status, status_class, icon_name, tint, buttons, stack=False):
     """Компактная плитка: значок, имя в две строки, огонёк состояния и кнопки."""
     dot_class = {"ok": "", "warn": " warn", "err": " err", "dim": " dim"}[status_class]
     parts = [f'''        <div class="tile">
@@ -33,7 +33,7 @@ def tile(name, sub, status, status_class, icon_name, tint, buttons):
           </div>
           <div class="tname">{name}</div>
           <div class="tsub">{sub}</div>
-          <div class="btns">''']
+          <div class="btns{" stack" if stack else ""}">''']
     for label, kind, ic in buttons:
         ic_html = icon(ic, 14) if ic else ""
         parts.append(f'            <button class="btn {kind}">{ic_html}<span>{label}</span></button>')
@@ -91,6 +91,7 @@ CSS = """
   --accent:#57b98c; --accent-hi:#6bc79c; --accent-fill:#1b5e3a; --accent-fill-hi:#23734a;
   --success:#4ade80; --danger:#f87171; --warn:#fbbf24; --purple:#a78bfa; --cyan:#b0b6be;
   --accent-soft:rgba(87,185,140,0.14); --accent-soft-2:rgba(87,185,140,0.22);
+  --danger-soft:rgba(248,113,113,0.14);
   --shadow-accent:0 2px 10px rgba(74,158,255,0.3);
   --radius-xs:6px; --radius-s:8px; --radius-m:10px; --radius-l:12px; --radius-xl:16px;
   --control-h:34px; --fs-xs:11px; --fs-s:12px; --fs-m:13px; --fs-l:15px;
@@ -103,6 +104,7 @@ CSS = """
   --accent:#1b5e3a; --accent-hi:#23734a; --accent-fill:#1b5e3a; --accent-fill-hi:#23734a;
   --success:#15803d; --danger:#c0342a; --warn:#9a5909; --purple:#7154cc; --cyan:#5a626d;
   --accent-soft:rgba(27,94,58,0.08); --accent-soft-2:rgba(27,94,58,0.16);
+  --danger-soft:rgba(192,52,42,0.10);
   --shadow-accent:0 2px 10px rgba(43,98,217,0.22);
 }
 * { box-sizing: border-box; }
@@ -180,7 +182,11 @@ h1 { font-size: var(--fs-xxl); font-weight: 600; margin: 0 0 6px; }
        border: 1px solid var(--border); background: rgba(128,128,128,0.08);
        color: var(--text); font-family: inherit; font-size: var(--fs-s);
        font-weight: 500; cursor: pointer; padding: 0 6px; }
-.btn.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.btn.accent, .btn.in { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.btn.out { background: var(--danger-soft); border-color: transparent; color: var(--danger); }
+/* Столбиком: «Вход» сверху, «Выход» снизу, обе во всю ширину */
+.btns.stack { flex-direction: column; }
+.btns.stack .btn { width: 100%; flex: 0 0 auto; }
 .btn.primary { background: var(--accent-fill); border-color: var(--accent-fill);
                color: #fff; box-shadow: var(--shadow-accent); }
 .btn.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35);
@@ -212,15 +218,15 @@ def build():
     icons = lucide.load()
     main = grid([
         tile("Калитка", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-gate",
-             [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
+             [("Вход", "in", "LogIn"), ("Выход", "out", "LogOut")], stack=True),
         tile("Шлагбаум", "Home Assistant · cover", "Открыто", "ok", "Fence", "tint-barrier",
              [("Закрыть", "", None)]),
         tile("КПП производство", "Gate-IP · 6 дверей", "Открывается…", "warn", "DoorOpen", "tint-gate",
              [("Стоп", "warn", "Square")]),
         tile("Северные ворота склад №3", "Gate-IP · только вход", "Нет связи", "err", "DoorClosed", "tint-wide",
-             [("Вход", "", "LogIn")]),
+             [("Вход", "in", "LogIn")]),
         tile("Ворота", "Gate-IP · вход и выход", "Готов", "ok", "DoorOpen", "tint-wide",
-             [("Вход", "accent", "LogIn"), ("Выход", "", "LogOut")]),
+             [("Вход", "in", "LogIn"), ("Выход", "out", "LogOut")], stack=True),
         tile("Реле освещения", "Tasmota · реле 1", "Выключено", "dim", "Power", "tint-relay",
              [("Включить", "accent", "Power")]),
     ])
