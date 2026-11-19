@@ -1008,12 +1008,12 @@ class Handler(BaseHTTPRequestHandler):
             "summary": [{
                 "fio": r["fio"], "number": r["number"], "group": r["group"],
                 "position": r["position"], "count": r["count"],
-                "total": gate.hm(r["minutes"]), "avg": gate.hm(r["avg_minutes"]),
-                "max": gate.hm(r["max_minutes"]),
+                "total": gate.hm(r["minutes"]), "avg_min": r["avg_minutes"],
+                "max_min": r["max_minutes"],
             } for r in d["summary"]],
             "rows": [{
                 "day": r["day"], "fio": r["fio"], "group": r["group"],
-                "out": r["out"], "in": r["in"], "total": gate.hm(r["minutes"]),
+                "out": r["out"], "in": r["in"], "min": r["minutes"],
             } for r in d["rows"][-300:]],
         })
 
@@ -1023,17 +1023,17 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_bytes("<h1 style='font-family:Arial'>Перекуров за период нет</h1>"
                                    .encode("utf-8"), "text/html; charset=utf-8")
         head = ("<th>Сотрудник</th><th>Подразделение</th><th>Должность</th><th>Перекуров</th>"
-                "<th>Всего</th><th>Средний</th><th>Максимум</th>")
+                "<th>Всего, ч:мм</th><th>Средний, мин</th><th>Максимум, мин</th>")
         trs = []
         for r in d["summary"]:
             trs.append("<tr><td>%s</td><td>%s</td><td>%s</td><td class='num'>%d</td>"
-                       "<td class='num'>%s</td><td class='num'>%s</td><td class='num'>%s</td></tr>" % (
+                       "<td class='num'>%s</td><td class='num'>%d</td><td class='num'>%d</td></tr>" % (
                            _esc(r["fio"]), _esc(r["group"]), _esc(r["position"]),
-                           r["count"], gate.hm(r["minutes"]), gate.hm(r["avg_minutes"]),
-                           gate.hm(r["max_minutes"])))
+                           r["count"], gate.hm(r["minutes"]), r["avg_minutes"],
+                           r["max_minutes"]))
         stats = [("Перекуров", d["total_count"]), ("Сотрудников", d["count"]),
-                 ("Всего времени", gate.hm(d["total_minutes"])),
-                 ("Средний", gate.hm(int(d["total_minutes"] / max(1, d["total_count"]))))]
+                 ("Всего, ч:мм", gate.hm(d["total_minutes"])),
+                 ("Средний, мин", int(d["total_minutes"] / max(1, d["total_count"])))]
         stats_html = "".join('<div class="stat"><span>%s</span><b>%s</b></div>' % (_esc(a), _esc(b))
                              for a, b in stats)
         period = first.isoformat() if first == last else "%s — %s" % (first, last)
@@ -1048,8 +1048,10 @@ class Handler(BaseHTTPRequestHandler):
     def export_breaks_xls(self, q):
         d, first, last, group, points, mins = self._breaks(q)
         cols = [("fio", "Сотрудник"), ("group", "Подразделение"), ("position", "Должность"),
-                ("count", "Перекуров"), ("minutes", "Всего, мин"), ("avg_minutes", "Средний, мин"),
-                ("max_minutes", "Максимум, мин")]
+                ("count", "Перекуров"), ("hm_total", "Всего, ч:мм"),
+                ("avg_minutes", "Средний, мин"), ("max_minutes", "Максимум, мин")]
+        for r in d["summary"]:
+            r["hm_total"] = gate.hm(r["minutes"])
         data = rows_to_xls(d["summary"], cols, "Перекуры · %s — %s" % (first, last))
         return self.send_bytes(data, "application/vnd.ms-excel; charset=utf-8",
                                filename="Перекуры_%s.xls" % first.isoformat(),

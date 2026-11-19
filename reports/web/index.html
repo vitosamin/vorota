@@ -1560,19 +1560,19 @@ async function loadBreaks(){
   $('#bWrap').innerHTML='<div class="empty"><span class="spin"></span> Считаю…</div>';
   try{
     const d=await api('/api/breaks?'+brkQS().toString());
-    $('#bCount').textContent=d.total_count+' перекуров · '+d.total;
+    $('#bCount').textContent=d.total_count+' перекуров · '+d.total+' ч:мм';
     if(!d.summary.length){ $('#bWrap').innerHTML='<div class="empty">За этот период перекуров нет</div>'; $('#bDetail').innerHTML=''; return; }
-    let head='<th>Сотрудник</th><th>Подразделение</th><th>Должность</th><th>Перекуров</th><th>Всего</th><th>Средний</th><th>Максимум</th>';
+    let head='<th>Сотрудник</th><th>Подразделение</th><th>Должность</th><th>Перекуров</th><th>Всего, ч:мм</th><th>Средний, мин</th><th>Максимум, мин</th>';
     const body=d.summary.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div></div></div></td>'
       +'<td class="tag">'+esc(r.group)+'</td><td class="tag">'+esc(r.position)+'</td>'
       +'<td class="num">'+r.count+'</td><td class="num mono"><b>'+r.total+'</b></td>'
-      +'<td class="num mono">'+r.avg+'</td><td class="num mono">'+r.max+'</td></tr>').join('');
+      +'<td class="num mono">'+r.avg_min+'</td><td class="num mono">'+r.max_min+'</td></tr>').join('');
     $('#bWrap').innerHTML='<table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
-    let dhead='<th>Дата</th><th>Сотрудник</th><th>Ушёл</th><th>Вернулся</th><th>Время</th>';
+    let dhead='<th>Дата</th><th>Сотрудник</th><th>Ушёл</th><th>Вернулся</th><th>Длительность, мин</th>';
     const dbody=(d.rows||[]).slice().reverse().map(r=>'<tr><td class="mono">'+esc(r.day)+'</td><td>'+esc(r.fio)+'</td>'
       +'<td class="num mono">'+esc(r.out)+'</td><td class="num mono">'+esc(r.in)+'</td>'
-      +'<td class="num mono">'+esc(r.total)+'</td></tr>').join('');
+      +'<td class="num mono">'+r.min+'</td></tr>').join('');
     $('#bDetail').innerHTML='<table><thead><tr>'+dhead+'</tr></thead><tbody>'+dbody+'</tbody></table>';
   }catch(e){ $('#bWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
 }
