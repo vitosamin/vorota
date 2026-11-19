@@ -770,6 +770,49 @@ def attendance_summary(rows):
     return out
 
 
+MONTHS_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+             "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+
+
+def hm(minutes):
+    """480 → «8:00»."""
+    minutes = int(minutes or 0)
+    return "%d:%02d" % (minutes // 60, minutes % 60)
+
+
+def timesheet(con, month, group=None, user_ptr=None):
+    """Табель за месяц: сотрудники × дни, часы в минутах (формат — в шаблоне)."""
+    first = dt.date.fromisoformat(month + "-01")
+    last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    rows = attendance(con, first.isoformat(), last.isoformat(),
+                      group=group, user_ptr=user_ptr)
+    ndays = last.day
+    weekend = [first.replace(day=d).weekday() >= 5 for d in range(1, ndays + 1)]
+    per, day_tot = {}, [0] * ndays
+    for r in rows:
+        u = per.setdefault(r["user_ptr"], {
+            "user_ptr": r["user_ptr"], "number": r["number"], "fio": r["fio"],
+            "position": r["position"], "group": r["group"],
+            "cells": {}, "total": 0, "days": 0})
+        day = int(r["day"][8:10])
+        minutes = int(round((r["hours"] or 0) * 60))
+        u["cells"][day] = minutes
+        u["total"] += minutes
+        u["days"] += 1
+        day_tot[day - 1] += minutes
+    out = sorted(per.values(), key=lambda x: (x["group"], x["fio"]))
+    return {
+        "month": month,
+        "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
+        "days": ndays,
+        "weekend": weekend,
+        "rows": out,
+        "day_totals": day_tot,
+        "total": sum(day_tot),
+        "count": len(out),
+    }
+
+
 _SERVICE_NAME = re.compile(r"^(ID \d+|\d+|[A-Za-z_\-\.]{0,3})$")
 
 

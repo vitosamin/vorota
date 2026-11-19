@@ -316,6 +316,11 @@ def rows_to_xls(rows, cols, title):
 # HTTP
 # --------------------------------------------------------------------------
 
+
+def _esc(v):
+    return (str(v if v is not None else "")
+            .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "GateSkud/2.0"
     protocol_version = "HTTP/1.1"
@@ -406,6 +411,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(gate.doors_list(gate.connect()))
             if path == "/print/pass":
                 return self.print_pass(q)
+            if path == "/print/timesheet":
+                return self.print_timesheet(q)
             if path == "/api/me":
                 return self.api_me()
             if path == "/api/accounts":
@@ -428,6 +435,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_groups()
             if path == "/api/report":
                 return self.api_report(q)
+            if path == "/api/timesheet":
+                return self.api_timesheet(q)
             if path == "/api/analytics":
                 return self.api_analytics(q)
             if path == "/api/events/summary":
@@ -456,6 +465,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.export_1c(q)
             if path == "/export/report.xls":
                 return self.export_xls(q)
+            if path == "/export/timesheet.xls":
+                return self.export_timesheet_xls(q)
             if path == "/print":
                 return self.export_print(q)
             return self.send_bytes(b"not found", "text/plain; charset=utf-8", code=404)
@@ -963,6 +974,92 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_bytes(data, "application/vnd.ms-excel; charset=utf-8", filename=name,
                                ascii_name="poseshchaemost_%s_%s.xls" % (frm, to))
 
+    def _timesheet(self, q):
+        month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
+        try:
+            dt.date.fromisoformat(month + "-01")
+        except ValueError:
+            month = dt.date.today().strftime("%Y-%m")
+        group = (q.get("group") or "").strip() or None
+        user_ptr = q.get("user_ptr") or None
+        return gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr), month, group
+
+    def _ts_head(self, d, print_mode=True):
+        cols = ['<col style="width:3%"><col style="width:19%"><col style="width:14%">']
+        for i in range(d["days"]):
+            cols.append('<col style="width:%.2f%%">' % (58.0 / d["days"]))
+        cols.append('<col style="width:6%">')
+        head = "<th>№</th><th>Сотрудник</th><th>Должность</th>"
+        for i, we in enumerate(d["weekend"], 1):
+            head += '<th%s>%02d</th>' % (' class="we"' if we else "", i)
+        head += '<th class="tot">Итого</th>'
+        return "".join(cols), head
+
+    def _ts_body(self, d):
+        out = []
+        for n, r in enumerate(d["rows"], 1):
+            tds = ['<td>%d</td>' % n,
+                   '<td class="name">%s</td>' % _esc(r["fio"]),
+                   '<td class="pos">%s</td>' % _esc(r["position"] or "")]
+            for day in range(1, d["days"] + 1):
+                v = r["cells"].get(day)
+                we = d["weekend"][day - 1]
+                tds.append('<td%s>%s</td>' % (' class="we"' if we else "",
+                                               gate.hm(v) if v else ""))
+            tds.append('<td class="tot">%s</td>' % gate.hm(r["total"]))
+            out.append("<tr>%s</tr>" % "".join(tds))
+        foot = ['<td colspan="3">Итого по дням</td>']
+        for i, v in enumerate(d["day_totals"]):
+            foot.append('<td%s>%s</td>' % (' class="we"' if d["weekend"][i] else "",
+                                            gate.hm(v) if v else ""))
+        foot.append('<td class="tot">%s</td>' % gate.hm(d["total"]))
+        return "".join(out), "<tr>%s</tr>" % "".join(foot)
+
+    def api_timesheet(self, q):
+        d, month, group = self._timesheet(q)
+        out = {
+            "month": d["month"], "title": d["title"], "days": d["days"],
+            "weekend": d["weekend"], "count": d["count"], "group": group or "",
+            "total": gate.hm(d["total"]),
+            "day_totals": [gate.hm(x) if x else "" for x in d["day_totals"]],
+            "rows": [{
+                "fio": r["fio"], "position": r["position"] or "", "group": r["group"] or "",
+                "days": r["days"], "total": gate.hm(r["total"]),
+                "cells": {str(k): gate.hm(v) for k, v in r["cells"].items()},
+            } for r in d["rows"]],
+        }
+        return self.send_json(out)
+
+    def print_timesheet(self, q):
+        d, month, group = self._timesheet(q)
+        colgroup, head = self._ts_head(d)
+        rows, foot = self._ts_body(d)
+        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b>" % (
+            _esc(d["title"]),
+            "подразделение: " + _esc(group) if group else "все подразделения",
+            d["count"])
+        html = TIMESHEET_TEMPLATE.format(
+            title=_esc(d["title"]), sub=sub, colgroup=colgroup, head=head,
+            rows=rows, foot=foot,
+            stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
+    def export_timesheet_xls(self, q):
+        d, month, group = self._timesheet(q)
+        colgroup, head = self._ts_head(d)
+        rows, foot = self._ts_body(d)
+        html = ("<html><head><meta charset='utf-8'><style>"
+                "table{border-collapse:collapse;font-family:'Segoe UI',Arial;font-size:11px}"
+                "th,td{border:1px solid #b6c2cf;padding:3px 5px;text-align:center}"
+                "th{background:#1f6feb;color:#fff}td.name,td.pos{text-align:left}"
+                ".we{background:#f1f4f8}td.tot{font-weight:700}</style></head><body>"
+                "<h3>Табель учёта рабочего времени · %s</h3>"
+                "<table><thead><tr>%s</tr></thead><tbody>%s</tbody><tfoot>%s</tfoot></table>"
+                "</body></html>") % (_esc(d["title"]), head, rows, foot)
+        name = "Табель_%s.xls" % d["title"].replace(" ", "_")
+        return self.send_bytes(html.encode("utf-8"), "application/vnd.ms-excel; charset=utf-8",
+                               filename=name, ascii_name="tabel_%s.xls" % month)
+
     def export_print(self, q):
         view = q.get("view") or "detail"
         frm = q.get("from") or (dt.date.today() - dt.timedelta(days=6)).isoformat()
@@ -1193,6 +1290,38 @@ PASS_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
   <div class="foot"><span>Выдал: {author} · {created}</span><span>Подпись ________</span></div>
 </div>
 <script>window.addEventListener('load',function(){{setTimeout(function(){{window.print();}},350);}});</script>
+</body></html>"""
+
+
+TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<title>Табель · {title}</title>
+<style>
+ @page{{size:A4 landscape;margin:8mm 6mm}}
+ body{{font:10px/1.25 "Segoe UI",Arial,sans-serif;color:#111;margin:0}}
+ .toolbar{{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 0 6px}}
+ .toolbar .hint{{color:#667;font-size:10.5px}}
+ .toolbar button{{font:13px "Segoe UI",Arial;padding:6px 14px;border:1px solid #2f6fd0;
+   border-radius:3px;background:#2f6fd0;color:#fff;cursor:pointer}}
+ @media print{{.toolbar{{display:none}}}}
+ h1{{font-size:15px;margin:0 0 2px;font-weight:600}}
+ .sub{{color:#555;font-size:10.5px;margin-bottom:8px}}
+ table{{width:100%;border-collapse:collapse;table-layout:fixed}}
+ th,td{{border:1px solid #c6cfd9;padding:2px 3px;text-align:center;font-size:8.5px}}
+ th{{background:#eef2f6;font-weight:600}}
+ td.name,td.pos{{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+ th.we,td.we{{background:#f3f5f8}}
+ th.tot,td.tot{{background:#f7f9fb;font-weight:700}}
+ tfoot td{{background:#eef2f6;font-weight:600}}
+</style></head><body>
+<div class="toolbar"><span class="hint">Проверьте табель и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
+<h1>Табель учёта рабочего времени</h1>
+<div class="sub">{sub} · сформировано {stamp}</div>
+<table>
+<colgroup>{colgroup}</colgroup>
+<thead><tr>{head}</tr></thead>
+<tbody>{rows}</tbody>
+<tfoot>{foot}</tfoot>
+</table>
 </body></html>"""
 
 

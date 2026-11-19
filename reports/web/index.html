@@ -102,6 +102,12 @@ section.tab.active{display:block}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;align-items:start}
 @media(max-width:1080px){.grid2{grid-template-columns:1fr} .mon-grid{height:auto} .mon-grid .feed{max-height:520px} .pres-card .presence-list{max-height:420px}}
 .tblwrap{overflow:auto;max-height:640px}
+table.tsh{width:100%;border-collapse:collapse;font-size:var(--fs-s)}
+table.tsh th,table.tsh td{border:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap}
+table.tsh td.name,table.tsh td.pos{text-align:left}
+table.tsh .we{background:#f3f5f8}
+table.tsh td.tot,table.tsh th.tot{font-weight:700;background:#f7f9fb}
+table.tsh tfoot td{background:#eef2f6;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:var(--fs-m)}
 thead th{position:sticky;top:0;z-index:2;background:var(--head);color:var(--muted);text-align:left;
   font-weight:600;font-size:var(--fs-s);padding:10px 12px;border:1px solid var(--line);white-space:nowrap}
@@ -336,6 +342,7 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="rep">Посещаемость</button>
     <button data-tab="pas">Пропуска</button>
     <button data-tab="rpt">Отчёты</button>
+    <button data-tab="tsh">Табель</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
   </nav>
@@ -626,6 +633,28 @@ button .ic,a.btn .ic{opacity:.9}
       </div>
     </div>
     <div class="grid3" id="rptGrid"></div>
+  </section>
+
+  <!-- ================= ТАБЕЛЬ ================= -->
+  <section class="tab" id="tab-tsh">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Месяц</label><input type="month" id="tMonth"></div>
+          <div><label class="f">Подразделение</label><select id="tGroup"><option value="">все</option></select></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="tGo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></svg> Показать табель</button>
+          <button id="tPrint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></svg> Печать</button>
+          <button id="tXls"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></svg> Excel</button>
+          <span class="muted" id="tHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3 id="tTitle">Табель учёта рабочего времени</h3><span class="hint" id="tCount">—</span></div>
+      <div class="bd"><div class="tblwrap" id="tWrap"><div class="empty">Выберите месяц и нажмите «Показать табель»</div></div></div>
+    </div>
   </section>
 
   <!-- ================= ВЫГРУЗКА ================= -->
@@ -1055,6 +1084,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
     if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
     if(state.tab==='set'){ ROLES_CACHE=[]; loadAccounts(); }
     if(state.tab==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
+    if(state.tab==='tsh') loadTimesheet();
   };
 });
 
@@ -1397,6 +1427,44 @@ async function loadReportCounts(){
   }catch(e){ $('#pNote').textContent='ошибка: '+e.message; }
 }
 $('#pGo').onclick=loadReportCounts;
+
+/* ---------- табель за месяц ---------- */
+function tshQS(){
+  const p=new URLSearchParams();
+  p.set('month', ($('#tMonth').value||todayISO().slice(0,7)));
+  if($('#tGroup').value) p.set('group',$('#tGroup').value);
+  return p;
+}
+async function loadTimesheet(){
+  const p=tshQS();
+  $('#tWrap').innerHTML='<div class="empty"><span class="spin"></span> Считаю…</div>';
+  $('#tHint').textContent='';
+  try{
+    const d=await api('/api/timesheet?'+p.toString());
+    $('#tTitle').textContent='Табель за '+d.title;
+    $('#tCount').textContent=d.count+' чел.';
+    if(!d.rows.length){ $('#tWrap').innerHTML='<div class="empty">За этот месяц проходов нет</div>'; return; }
+    let head='<th>№</th><th>Сотрудник</th><th>Должность</th>';
+    d.weekend.forEach((we,i)=>{ head+='<th'+(we?' class="we"':'')+'>'+String(i+1).padStart(2,'0')+'</th>'; });
+    head+='<th class="tot">Итого</th>';
+    const body=d.rows.map((r,i)=>{
+      let tds='<td>'+(i+1)+'</td><td class="name">'+esc(r.fio)+'</td><td class="pos">'+esc(r.position)+'</td>';
+      for(let day=1; day<=d.days; day++){
+        const v=r.cells[String(day)]||'';
+        tds+='<td'+(d.weekend[day-1]?' class="we"':'')+'>'+v+'</td>';
+      }
+      tds+='<td class="tot">'+r.total+'</td>';
+      return '<tr>'+tds+'</tr>';
+    }).join('');
+    let foot='<tr><td colspan="3">Итого по дням</td>';
+    d.day_totals.forEach((v,i)=>{ foot+='<td'+(d.weekend[i]?' class="we"':'')+'>'+(v||'')+'</td>'; });
+    foot+='<td class="tot">'+d.total+'</td></tr>';
+    $('#tWrap').innerHTML='<table class="tsh"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
+  }catch(e){ $('#tWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+$('#tGo').onclick=loadTimesheet;
+$('#tPrint').onclick=()=>window.open('/print/timesheet?'+tshQS().toString(),'_blank');
+$('#tXls').onclick=()=>download('/export/timesheet.xls?'+tshQS().toString(),'tabel.xls');
 
 
 let _rsz=null;
@@ -2160,7 +2228,7 @@ async function loadRefs(){
     if(Array.isArray(g) && Array.isArray(pts)){
       const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
-      ['#rGroup','#eGroup','#aGroup','#pGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+      ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
       ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>buildMsel(s, POINTS));
       okGroups=true;
@@ -2186,6 +2254,7 @@ function initDates(){
   ['#rFrom','#eFrom','#aFrom','#pFrom'].forEach(s=>$(s).value=week);
   ['#rTo','#eTo','#aTo','#pTo'].forEach(s=>$(s).value=t);
   $('#mDay').value=t;
+  $('#tMonth').value=t.slice(0,7);
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
 }
