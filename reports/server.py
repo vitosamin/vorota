@@ -985,9 +985,9 @@ class Handler(BaseHTTPRequestHandler):
         return gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr), month, group
 
     def _ts_head(self, d, print_mode=True):
-        cols = ['<col style="width:3%"><col style="width:19%"><col style="width:14%">']
+        cols = ['<col style="width:3%"><col style="width:14%"><col style="width:9%">']
         for i in range(d["days"]):
-            cols.append('<col style="width:%.2f%%">' % (58.0 / d["days"]))
+            cols.append('<col style="width:%.3f%%">' % (71.0 / d["days"]))
         cols.append('<col style="width:6%">')
         head = "<th>№</th><th>Сотрудник</th><th>Должность</th>"
         today = d.get("today") or 0
@@ -1019,10 +1019,11 @@ class Handler(BaseHTTPRequestHandler):
                                                gate.hm(v) if v else ""))
             tds.append('<td class="tot">%s</td>' % gate.hm(r["total"]))
             out.append("<tr>%s</tr>" % "".join(tds))
-        foot = ['<td colspan="3">Итого по дням</td>']
+        foot = ['<td colspan="3">Итого по дням, ч</td>']
         for i, v in enumerate(d["day_totals"]):
-            foot.append('<td%s>%s</td>' % (' class="we"' if d["weekend"][i] else "",
-                                            gate.hm(v) if v else ""))
+            # за день суммарно сотни часов — в узкой клетке H:MM не влезает
+            cell = str(int(round(v / 60.0))) if v else ""
+            foot.append('<td%s>%s</td>' % (' class="we"' if d["weekend"][i] else "", cell))
         foot.append('<td class="tot">%s</td>' % gate.hm(d["total"]))
         return "".join(out), "<tr>%s</tr>" % "".join(foot)
 
@@ -1318,7 +1319,8 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
  h1{{font-size:15px;margin:0 0 2px;font-weight:600}}
  .sub{{color:#555;font-size:10.5px;margin-bottom:8px}}
  table{{width:100%;border-collapse:collapse;table-layout:fixed}}
- th,td{{border:1px solid #c6cfd9;padding:2px 3px;text-align:center;font-size:8.5px}}
+ th,td{{border:1px solid #c6cfd9;padding:1px 0;text-align:center;font-size:9.5px;
+   font-family:"Arial Narrow","Liberation Sans Narrow","Segoe UI",Arial,sans-serif}}
  th{{background:#eef2f6;font-weight:600}}
  td.name,td.pos{{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
  th.we,td.we{{background:#edf1f6}}
@@ -1328,7 +1330,7 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
  th.today,td.today{{background:#e8f1ff}}
  th.today{{box-shadow:inset 0 -2px 0 #2f6fd0}}
  th.tot,td.tot{{background:#f7f9fb;font-weight:700}}
- tfoot td{{background:#eef2f6;font-weight:600}}
+ tfoot td{{background:#eef2f6;font-weight:600;font-size:7.5px;padding:1px 0}}
 </style></head><body>
 <div class="toolbar"><span class="hint">Проверьте табель и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <h1>Табель учёта рабочего времени</h1>
