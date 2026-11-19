@@ -413,6 +413,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.print_pass(q)
             if path == "/print/timesheet":
                 return self.print_timesheet(q)
+            if path == "/print/breaks":
+                return self.print_breaks(q)
             if path == "/api/me":
                 return self.api_me()
             if path == "/api/accounts":
@@ -437,6 +439,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_report(q)
             if path == "/api/timesheet":
                 return self.api_timesheet(q)
+            if path == "/api/breaks":
+                return self.api_breaks(q)
             if path == "/api/analytics":
                 return self.api_analytics(q)
             if path == "/api/events/summary":
@@ -467,6 +471,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.export_xls(q)
             if path == "/export/timesheet.xls":
                 return self.export_timesheet_xls(q)
+            if path == "/export/breaks.xls":
+                return self.export_breaks_xls(q)
             if path == "/print":
                 return self.export_print(q)
             return self.send_bytes(b"not found", "text/plain; charset=utf-8", code=404)
@@ -973,6 +979,81 @@ class Handler(BaseHTTPRequestHandler):
         name = "Посещаемость_%s_%s.xls" % (frm, to)
         return self.send_bytes(data, "application/vnd.ms-excel; charset=utf-8", filename=name,
                                ascii_name="poseshchaemost_%s_%s.xls" % (frm, to))
+
+    def _breaks(self, q):
+        month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
+        try:
+            first = dt.date.fromisoformat(month + "-01")
+        except ValueError:
+            first = dt.date.today().replace(day=1)
+        last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+        group = (q.get("group") or "").strip() or None
+        user_ptr = q.get("user_ptr") or None
+        points = (q.get("points") or "").strip() or None
+        try:
+            mins = max(1, int(q.get("min") or 1))
+        except (TypeError, ValueError):
+            mins = 1
+        d = gate.breaks_report(gate.connect(), first.isoformat(), last.isoformat(),
+                               group=group, user_ptr=user_ptr, points=points,
+                               min_minutes=mins)
+        return d, first, last, group, points, mins
+
+    def api_breaks(self, q):
+        d, first, last, group, points, mins = self._breaks(q)
+        return self.send_json({
+            "from": first.isoformat(), "to": last.isoformat(),
+            "count": d["count"], "total_count": d["total_count"],
+            "total": gate.hm(d["total_minutes"]),
+            "summary": [{
+                "fio": r["fio"], "number": r["number"], "group": r["group"],
+                "position": r["position"], "count": r["count"],
+                "total": gate.hm(r["minutes"]), "avg": gate.hm(r["avg_minutes"]),
+                "max": gate.hm(r["max_minutes"]),
+            } for r in d["summary"]],
+            "rows": [{
+                "day": r["day"], "fio": r["fio"], "group": r["group"],
+                "out": r["out"], "in": r["in"], "total": gate.hm(r["minutes"]),
+            } for r in d["rows"][-300:]],
+        })
+
+    def print_breaks(self, q):
+        d, first, last, group, points, mins = self._breaks(q)
+        if not d["summary"]:
+            return self.send_bytes("<h1 style='font-family:Arial'>Перекуров за период нет</h1>"
+                                   .encode("utf-8"), "text/html; charset=utf-8")
+        head = ("<th>Сотрудник</th><th>Подразделение</th><th>Должность</th><th>Перекуров</th>"
+                "<th>Всего</th><th>Средний</th><th>Максимум</th>")
+        trs = []
+        for r in d["summary"]:
+            trs.append("<tr><td>%s</td><td>%s</td><td>%s</td><td class='num'>%d</td>"
+                       "<td class='num'>%s</td><td class='num'>%s</td><td class='num'>%s</td></tr>" % (
+                           _esc(r["fio"]), _esc(r["group"]), _esc(r["position"]),
+                           r["count"], gate.hm(r["minutes"]), gate.hm(r["avg_minutes"]),
+                           gate.hm(r["max_minutes"])))
+        stats = [("Перекуров", d["total_count"]), ("Сотрудников", d["count"]),
+                 ("Всего времени", gate.hm(d["total_minutes"])),
+                 ("Средний", gate.hm(int(d["total_minutes"] / max(1, d["total_count"]))))]
+        stats_html = "".join('<div class="stat"><span>%s</span><b>%s</b></div>' % (_esc(a), _esc(b))
+                             for a, b in stats)
+        period = first.isoformat() if first == last else "%s — %s" % (first, last)
+        subtitle = "Выходы и возвращения через выбранные точки" + (
+            " · " + _esc(points) if points else " · все точки")
+        html = PRINT_TEMPLATE.format(
+            title="Перекуры", period=period, orient="portrait", subtitle=subtitle,
+            n=d["total_count"], stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"),
+            stats=stats_html, head=head, rows="".join(trs))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
+    def export_breaks_xls(self, q):
+        d, first, last, group, points, mins = self._breaks(q)
+        cols = [("fio", "Сотрудник"), ("group", "Подразделение"), ("position", "Должность"),
+                ("count", "Перекуров"), ("minutes", "Всего, мин"), ("avg_minutes", "Средний, мин"),
+                ("max_minutes", "Максимум, мин")]
+        data = rows_to_xls(d["summary"], cols, "Перекуры · %s — %s" % (first, last))
+        return self.send_bytes(data, "application/vnd.ms-excel; charset=utf-8",
+                               filename="Перекуры_%s.xls" % first.isoformat(),
+                               ascii_name="perekury_%s.xls" % first.isoformat())
 
     def _timesheet(self, q):
         month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]

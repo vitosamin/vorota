@@ -346,6 +346,7 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="pas">Пропуска</button>
     <button data-tab="rpt">Отчёты</button>
     <button data-tab="tsh">Табель</button>
+    <button data-tab="brk">Перекуры</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
   </nav>
@@ -676,6 +677,40 @@ button .ic,a.btn .ic{opacity:.9}
     <div class="card">
       <div class="hd"><h3 id="tTitle">Табель учёта рабочего времени</h3><span class="hint" id="tCount">—</span></div>
       <div class="bd"><div class="tblwrap" id="tWrap"><div class="empty">Выберите месяц и нажмите «Показать табель»</div></div></div>
+    </div>
+  </section>
+
+  <!-- ================= ПЕРЕКУРЫ ================= -->
+  <section class="tab" id="tab-brk">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters f5">
+          <div><label class="f">Месяц</label><input type="month" id="bMonth"></div>
+          <div><label class="f">Подразделение</label><select id="bGroup"><option value="">все</option></select></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="bEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="bEmpList"></div></div></div>
+          <div><label class="f">Точки перекуров</label>
+            <div class="msel" id="bPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+              <div class="msel-list"></div>
+            </div></div>
+          <div><label class="f">Минимум, мин</label><input type="number" id="bMin" min="1" max="600" value="1"></div>
+        </div>
+        <div class="row-actions" style="margin-top:12px">
+          <label style="display:flex;align-items:center;gap:7px;font-size:var(--fs-m)"><input type="checkbox" id="bOn" checked> Формировать отчёт</label>
+          <button id="bGo">Обновить</button>
+          <button id="bPrint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></svg> Печать</button>
+          <button id="bXls"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></svg> Excel</button>
+          <span class="muted" id="bHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>Перекуры по сотрудникам</h3><span class="hint" id="bCount">—</span></div>
+      <div class="bd"><div class="tblwrap" id="bWrap"><div class="empty">Загрузка…</div></div></div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>Последние выходы</h3><span class="hint">до 300 записей</span></div>
+      <div class="bd"><div class="tblwrap" id="bDetail"></div></div>
     </div>
   </section>
 
@@ -1363,6 +1398,7 @@ function mselAdd(p, sel){
 buildCombo('#rEmp','#rEmpList');
 buildCombo('#eEmp','#eEmpList');
 buildCombo('#tEmp','#tEmpList');
+buildCombo('#bEmp','#bEmpList');
 buildCombo('#pEmp','#pEmpList');
 
 /* ---------- вкладка «Отчёты» ---------- */
@@ -1505,6 +1541,45 @@ $('#tMode').onchange=()=>{ $('#tStart').disabled=$('#tMode').value!=='first_last
 $('#tGo').onclick=loadTimesheet;
 $('#tPrint').onclick=()=>window.open('/print/timesheet?'+tshQS().toString(),'_blank');
 $('#tXls').onclick=()=>download('/export/timesheet.xls?'+tshQS().toString(),'tabel.xls');
+
+/* ---------- перекуры ---------- */
+function brkQS(){
+  const p=new URLSearchParams();
+  p.set('month', ($('#bMonth').value||todayISO().slice(0,7)));
+  if($('#bGroup').value) p.set('group',$('#bGroup').value);
+  const e=empUid('#bEmp'); if(e) p.set('user_ptr',e);
+  const pts=mselValues('#bPoint'); if(pts.length) p.set('points',pts.join('|'));
+  p.set('min', $('#bMin').value||1);
+  return p;
+}
+async function loadBreaks(){
+  if(!$('#bOn').checked){
+    $('#bWrap').innerHTML='<div class="empty">Отчёт не формируется — поставьте галочку «Формировать отчёт»</div>';
+    $('#bDetail').innerHTML=''; $('#bCount').textContent='—'; return;
+  }
+  $('#bWrap').innerHTML='<div class="empty"><span class="spin"></span> Считаю…</div>';
+  try{
+    const d=await api('/api/breaks?'+brkQS().toString());
+    $('#bCount').textContent=d.total_count+' перекуров · '+d.total;
+    if(!d.summary.length){ $('#bWrap').innerHTML='<div class="empty">За этот период перекуров нет</div>'; $('#bDetail').innerHTML=''; return; }
+    let head='<th>Сотрудник</th><th>Подразделение</th><th>Должность</th><th>Перекуров</th><th>Всего</th><th>Средний</th><th>Максимум</th>';
+    const body=d.summary.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
+      +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div></div></div></td>'
+      +'<td class="tag">'+esc(r.group)+'</td><td class="tag">'+esc(r.position)+'</td>'
+      +'<td class="num">'+r.count+'</td><td class="num mono"><b>'+r.total+'</b></td>'
+      +'<td class="num mono">'+r.avg+'</td><td class="num mono">'+r.max+'</td></tr>').join('');
+    $('#bWrap').innerHTML='<table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+    let dhead='<th>Дата</th><th>Сотрудник</th><th>Ушёл</th><th>Вернулся</th><th>Время</th>';
+    const dbody=(d.rows||[]).slice().reverse().map(r=>'<tr><td class="mono">'+esc(r.day)+'</td><td>'+esc(r.fio)+'</td>'
+      +'<td class="num mono">'+esc(r.out)+'</td><td class="num mono">'+esc(r.in)+'</td>'
+      +'<td class="num mono">'+esc(r.total)+'</td></tr>').join('');
+    $('#bDetail').innerHTML='<table><thead><tr>'+dhead+'</tr></thead><tbody>'+dbody+'</tbody></table>';
+  }catch(e){ $('#bWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+$('#bGo').onclick=loadBreaks;
+$('#bOn').onchange=loadBreaks;
+$('#bPrint').onclick=()=>window.open('/print/breaks?'+brkQS().toString(),'_blank');
+$('#bXls').onclick=()=>download('/export/breaks.xls?'+brkQS().toString(),'perekury.xls');
 
 
 let _rsz=null;
@@ -2268,9 +2343,15 @@ async function loadRefs(){
     if(Array.isArray(g) && Array.isArray(pts)){
       const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
-      ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+      ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup','#bGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
-      ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint'].forEach(s=>buildMsel(s, POINTS));
+      ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint','#bPoint'].forEach(s=>buildMsel(s, POINTS));
+      if(!window._bPointInit && MSEL['#bPoint'] && !MSEL['#bPoint'].size){
+        // по умолчанию — проходная производства: там и курят
+        POINTS.filter(p=>/произ/i.test(p.unit)).forEach(p=>MSEL['#bPoint'].add(p.unit));
+        mselUpdate('#bPoint');
+        window._bPointInit=true;
+      }
       okGroups=true;
     }
   }catch(e){ /* повторим позже */ }
@@ -2282,6 +2363,7 @@ async function loadRefs(){
   buildCombo('#rEmp','#rEmpList');
   buildCombo('#eEmp','#eEmpList');
   buildCombo('#tEmp','#tEmpList');
+  buildCombo('#bEmp','#bEmpList');
   buildCombo('#pEmp','#pEmpList');
   REFS_OK = okGroups && okEmp;
   if(!REFS_OK && !loadRefs._warned){
@@ -2296,6 +2378,7 @@ function initDates(){
   ['#rTo','#eTo','#aTo','#pTo'].forEach(s=>$(s).value=t);
   $('#mDay').value=t;
   $('#tMonth').value=t.slice(0,7);
+  $('#bMonth').value=t.slice(0,7);
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
 }

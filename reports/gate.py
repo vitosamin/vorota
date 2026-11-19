@@ -792,6 +792,64 @@ def hm(minutes):
     return "%d:%02d" % (minutes // 60, minutes % 60)
 
 
+def breaks_report(con, from_day, to_day, group=None, user_ptr=None, points=None,
+                  min_minutes=1):
+    """Перекуры: пары «вышел — вернулся» через выбранные точки (по умолчанию все)."""
+    users = _user_names(con)
+    frag, pparams = _point_sql(points) if points else ("", [])
+    cur = con.execute(
+        "SELECT ts, user_ptr, unit FROM events"
+        " WHERE day BETWEEN ? AND ? AND event_type=? AND event_code=? AND user_ptr>0"
+        + frag + " ORDER BY user_ptr, ts",
+        [from_day, to_day, PASS_TYPE, PASS_CODE] + pparams)
+    opened = {}
+    pairs = []
+    for ts, pid, unit in cur:
+        u = users.get(pid)
+        if u is None or u["deleted"] or u["visitor"]:
+            continue
+        if user_ptr and pid != int(user_ptr):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        d = direction(unit)
+        key = (pid, ts[:10])               # пара ищется только внутри одних суток
+        if d == "out":
+            opened.setdefault(key, ts)     # первую «вышел» и считаем началом
+        elif d == "in" and key in opened:
+            a = dt.datetime.fromisoformat(opened.pop(key))
+            b = dt.datetime.fromisoformat(ts)
+            minutes = int((b - a).total_seconds() // 60)
+            if minutes < min_minutes:
+                continue
+            pairs.append({
+                "user_ptr": pid, "fio": u["fio"], "number": u["number"],
+                "group": u["group"], "position": u["position"],
+                "day": a.date().isoformat(), "out": a.strftime("%H:%M"),
+                "in": b.strftime("%H:%M"), "minutes": minutes,
+            })
+    pairs.sort(key=lambda r: (r["day"], r["out"], r["fio"]))
+    agg = {}
+    for r in pairs:
+        a = agg.setdefault(r["user_ptr"], {
+            "user_ptr": r["user_ptr"], "fio": r["fio"], "number": r["number"],
+            "group": r["group"], "position": r["position"],
+            "count": 0, "minutes": 0, "max_minutes": 0})
+        a["count"] += 1
+        a["minutes"] += r["minutes"]
+        a["max_minutes"] = max(a["max_minutes"], r["minutes"])
+    summary = sorted(agg.values(), key=lambda a: (-a["minutes"], a["fio"]))
+    for a in summary:
+        a["avg_minutes"] = int(round(a["minutes"] / a["count"])) if a["count"] else 0
+    return {
+        "rows": pairs,
+        "summary": summary,
+        "total_count": len(pairs),
+        "total_minutes": sum(p["minutes"] for p in pairs),
+        "count": len(summary),
+    }
+
+
 def _first_last_rows(con, first, last, group, user_ptr, start_hour):
     """Первое и последнее предъявление ключа за «сутки», начинающиеся с start_hour."""
     users = _user_names(con)
