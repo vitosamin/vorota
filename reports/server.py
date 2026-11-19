@@ -982,7 +982,10 @@ class Handler(BaseHTTPRequestHandler):
             month = dt.date.today().strftime("%Y-%m")
         group = (q.get("group") or "").strip() or None
         user_ptr = q.get("user_ptr") or None
-        return gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr), month, group
+        in_points = (q.get("in_points") or "").strip() or None
+        out_points = (q.get("out_points") or "").strip() or None
+        return gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr,
+                              in_points=in_points, out_points=out_points), month, group
 
     def _ts_head(self, d, print_mode=True):
         cols = ['<col style="width:3%"><col style="width:14%"><col style="width:9%">']

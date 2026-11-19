@@ -644,7 +644,8 @@ def _point_sql(point, column="unit"):
 
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
-               shift_start=None, shift_end=None, user_ptr=None):
+               shift_start=None, shift_end=None, user_ptr=None,
+               in_points=None, out_points=None):
     """Свод посещаемости по сотрудникам и дням.
 
     Приход — первый проход дня, уход — последний проход дня.
@@ -670,6 +671,9 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     sh_s = dt.time.fromisoformat(shift_start)
     sh_e = dt.time.fromisoformat(shift_end)
 
+    in_needles = [x.lower() for x in _points(in_points)]
+    out_needles = [x.lower() for x in _points(out_points)]
+
     per = {}
     for p in passes:
         pid = p["user_ptr"]
@@ -692,33 +696,41 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             "in_unit": "", "out_unit": "", "points": set(), "last_dir": "",
         })
         t = p["ts"]
+        unit = p["unit"] or ""
+        low = unit.lower()
+        in_ok = (not in_needles) or any(n in low for n in in_needles)
+        out_ok = (not out_needles) or any(n in low for n in out_needles)
         rec["passes"] += 1
-        if rec["enter"] is None or t < rec["enter"]:
+        if in_ok and (rec["enter"] is None or t < rec["enter"]):
             rec["enter"] = t
-        if rec["exit"] is None or t > rec["exit"]:
+        if out_ok and (rec["exit"] is None or t > rec["exit"]):
             rec["exit"] = t
-            rec["last_dir"] = direction(p["unit"])
-        d = direction(p["unit"])
-        if d == "in" and (rec["first_in"] is None or t < rec["first_in"]):
+            rec["last_dir"] = direction(unit)
+        d = direction(unit)
+        if d == "in" and in_ok and (rec["first_in"] is None or t < rec["first_in"]):
             rec["first_in"] = t
-            rec["in_unit"] = p["unit"]
-        if d == "out" and (rec["last_out"] is None or t > rec["last_out"]):
+            rec["in_unit"] = unit
+        if d == "out" and out_ok and (rec["last_out"] is None or t > rec["last_out"]):
             rec["last_out"] = t
-            rec["out_unit"] = p["unit"]
-        rec["points"].add(p["unit"])
+            rec["out_unit"] = unit
+        rec["points"].add(unit)
 
     rows = []
     for (pid, day), rec in per.items():
         enter, exit_ = rec["enter"], rec["exit"]
-        t1 = dt.datetime.fromisoformat(enter)
-        t2 = dt.datetime.fromisoformat(exit_)
         open_now = (day == today) and rec["last_dir"] == "in"
-        end = now if open_now else t2
-        hours = round(max(0.0, (end - t1).total_seconds() / 3600.0), 2)
-        late = max(0, int((dt.datetime.combine(t1.date(), t1.time())
-                           - dt.datetime.combine(t1.date(), sh_s)).total_seconds() // 60))
+        if enter and (exit_ or open_now):
+            t1 = dt.datetime.fromisoformat(enter)
+            t2 = dt.datetime.fromisoformat(exit_) if exit_ else now
+            end = now if open_now else t2
+            hours = round(max(0.0, (end - t1).total_seconds() / 3600.0), 2)
+            late = max(0, int((dt.datetime.combine(t1.date(), t1.time())
+                               - dt.datetime.combine(t1.date(), sh_s)).total_seconds() // 60))
+        else:
+            hours, late = 0.0, 0
         early = None
-        if not open_now:
+        if exit_ and not open_now:
+            t2 = dt.datetime.fromisoformat(exit_)
             early = max(0, int((dt.datetime.combine(t2.date(), sh_e)
                                 - dt.datetime.combine(t2.date(), t2.time())).total_seconds() // 60))
         rows.append({
@@ -728,8 +740,8 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             "group": rec["user"]["group"],
             "position": rec["user"]["position"],
             "day": day,
-            "enter": enter[11:19],
-            "exit": exit_[11:19],
+            "enter": enter[11:19] if enter else "",
+            "exit": exit_[11:19] if exit_ else "",
             "first_in": rec["first_in"][11:19] if rec["first_in"] else "",
             "last_out": rec["last_out"][11:19] if rec["last_out"] else "",
             "hours": hours,
@@ -780,12 +792,13 @@ def hm(minutes):
     return "%d:%02d" % (minutes // 60, minutes % 60)
 
 
-def timesheet(con, month, group=None, user_ptr=None):
+def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=None):
     """Табель за месяц: сотрудники × дни, часы в минутах (формат — в шаблоне)."""
     first = dt.date.fromisoformat(month + "-01")
     last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
     rows = attendance(con, first.isoformat(), last.isoformat(),
-                      group=group, user_ptr=user_ptr)
+                      group=group, user_ptr=user_ptr,
+                      in_points=in_points, out_points=out_points)
     ndays = last.day
     wd_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     weekend = [first.replace(day=d).weekday() >= 5 for d in range(1, ndays + 1)]
@@ -794,12 +807,14 @@ def timesheet(con, month, group=None, user_ptr=None):
     today_day = today.day if (today.year, today.month) == (first.year, first.month) else 0
     per, day_tot = {}, [0] * ndays
     for r in rows:
+        minutes = int(round((r["hours"] or 0) * 60))
+        if minutes <= 0:            # фильтр по точкам не дал пары «вход-выход»
+            continue
         u = per.setdefault(r["user_ptr"], {
             "user_ptr": r["user_ptr"], "number": r["number"], "fio": r["fio"],
             "position": r["position"], "group": r["group"],
             "cells": {}, "total": 0, "days": 0})
         day = int(r["day"][8:10])
-        minutes = int(round((r["hours"] or 0) * 60))
         u["cells"][day] = minutes
         u["total"] += minutes
         u["days"] += 1

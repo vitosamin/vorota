@@ -642,9 +642,20 @@ button .ic,a.btn .ic{opacity:.9}
   <section class="tab" id="tab-tsh">
     <div class="card" style="margin-bottom:12px">
       <div class="bd">
-        <div class="filters">
+        <div class="filters f5">
           <div><label class="f">Месяц</label><input type="month" id="tMonth"></div>
           <div><label class="f">Подразделение</label><select id="tGroup"><option value="">все</option></select></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="tEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="tEmpList"></div></div></div>
+          <div><label class="f">Точки входа</label>
+            <div class="msel" id="tInPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+              <div class="msel-list"></div>
+            </div></div>
+          <div><label class="f">Точки выхода</label>
+            <div class="msel" id="tOutPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+              <div class="msel-list"></div>
+            </div></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="tGo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></svg> Показать табель</button>
@@ -1338,6 +1349,7 @@ function mselAdd(p, sel){
 /* комбобоксы сотрудников можно открыть ещё до загрузки справочника */
 buildCombo('#rEmp','#rEmpList');
 buildCombo('#eEmp','#eEmpList');
+buildCombo('#tEmp','#tEmpList');
 buildCombo('#pEmp','#pEmpList');
 
 /* ---------- вкладка «Отчёты» ---------- */
@@ -1436,6 +1448,9 @@ function tshQS(){
   const p=new URLSearchParams();
   p.set('month', ($('#tMonth').value||todayISO().slice(0,7)));
   if($('#tGroup').value) p.set('group',$('#tGroup').value);
+  const emp=empUid('#tEmp'); if(emp) p.set('user_ptr',emp);
+  const ip=mselValues('#tInPoint'); if(ip.length) p.set('in_points',ip.join('|'));
+  const op=mselValues('#tOutPoint'); if(op.length) p.set('out_points',op.join('|'));
   return p;
 }
 async function loadTimesheet(){
@@ -2239,7 +2254,7 @@ async function loadRefs(){
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
       ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
-      ['#rPoint','#ePoint','#aPoint','#pPoint'].forEach(s=>buildMsel(s, POINTS));
+      ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint'].forEach(s=>buildMsel(s, POINTS));
       okGroups=true;
     }
   }catch(e){ /* повторим позже */ }
@@ -2250,6 +2265,7 @@ async function loadRefs(){
   }catch(e){ /* повторим позже */ }
   buildCombo('#rEmp','#rEmpList');
   buildCombo('#eEmp','#eEmpList');
+  buildCombo('#tEmp','#tEmpList');
   buildCombo('#pEmp','#pEmpList');
   REFS_OK = okGroups && okEmp;
   if(!REFS_OK && !loadRefs._warned){
