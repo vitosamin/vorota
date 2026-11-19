@@ -787,7 +787,11 @@ def timesheet(con, month, group=None, user_ptr=None):
     rows = attendance(con, first.isoformat(), last.isoformat(),
                       group=group, user_ptr=user_ptr)
     ndays = last.day
+    wd_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     weekend = [first.replace(day=d).weekday() >= 5 for d in range(1, ndays + 1)]
+    weekday = [wd_ru[first.replace(day=d).weekday()] for d in range(1, ndays + 1)]
+    today = dt.date.today()
+    today_day = today.day if (today.year, today.month) == (first.year, first.month) else 0
     per, day_tot = {}, [0] * ndays
     for r in rows:
         u = per.setdefault(r["user_ptr"], {
@@ -806,6 +810,8 @@ def timesheet(con, month, group=None, user_ptr=None):
         "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
         "days": ndays,
         "weekend": weekend,
+        "weekday": weekday,
+        "today": today_day,
         "rows": out,
         "day_totals": day_tot,
         "total": sum(day_tot),

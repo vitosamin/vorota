@@ -990,8 +990,15 @@ class Handler(BaseHTTPRequestHandler):
             cols.append('<col style="width:%.2f%%">' % (58.0 / d["days"]))
         cols.append('<col style="width:6%">')
         head = "<th>№</th><th>Сотрудник</th><th>Должность</th>"
+        today = d.get("today") or 0
         for i, we in enumerate(d["weekend"], 1):
-            head += '<th%s>%02d</th>' % (' class="we"' if we else "", i)
+            cls = []
+            if we:
+                cls.append("we")
+            if i == today:
+                cls.append("today")
+            head += '<th%s><div>%02d</div><div class="wd">%s</div></th>' % (
+                (' class="%s"' % " ".join(cls)) if cls else "", i, d["weekday"][i - 1])
         head += '<th class="tot">Итого</th>'
         return "".join(cols), head
 
@@ -1003,8 +1010,12 @@ class Handler(BaseHTTPRequestHandler):
                    '<td class="pos">%s</td>' % _esc(r["position"] or "")]
             for day in range(1, d["days"] + 1):
                 v = r["cells"].get(day)
-                we = d["weekend"][day - 1]
-                tds.append('<td%s>%s</td>' % (' class="we"' if we else "",
+                cls = []
+                if d["weekend"][day - 1]:
+                    cls.append("we")
+                if day == (d.get("today") or 0):
+                    cls.append("today")
+                tds.append('<td%s>%s</td>' % ((' class="%s"' % " ".join(cls)) if cls else "",
                                                gate.hm(v) if v else ""))
             tds.append('<td class="tot">%s</td>' % gate.hm(r["total"]))
             out.append("<tr>%s</tr>" % "".join(tds))
@@ -1019,7 +1030,8 @@ class Handler(BaseHTTPRequestHandler):
         d, month, group = self._timesheet(q)
         out = {
             "month": d["month"], "title": d["title"], "days": d["days"],
-            "weekend": d["weekend"], "count": d["count"], "group": group or "",
+            "weekend": d["weekend"], "weekday": d["weekday"], "today": d["today"],
+            "count": d["count"], "group": group or "",
             "total": gate.hm(d["total"]),
             "day_totals": [gate.hm(x) if x else "" for x in d["day_totals"]],
             "rows": [{
@@ -1309,7 +1321,12 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
  th,td{{border:1px solid #c6cfd9;padding:2px 3px;text-align:center;font-size:8.5px}}
  th{{background:#eef2f6;font-weight:600}}
  td.name,td.pos{{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
- th.we,td.we{{background:#f3f5f8}}
+ th.we,td.we{{background:#edf1f6}}
+ th.we>div:first-child{{color:#b42318}}
+ th .wd{{font-weight:400;color:#78828f;font-size:8px;line-height:1.15}}
+ th.we .wd{{color:#b42318}}
+ th.today,td.today{{background:#e8f1ff}}
+ th.today{{box-shadow:inset 0 -2px 0 #2f6fd0}}
  th.tot,td.tot{{background:#f7f9fb;font-weight:700}}
  tfoot td{{background:#eef2f6;font-weight:600}}
 </style></head><body>

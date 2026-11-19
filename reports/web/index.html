@@ -105,7 +105,10 @@ section.tab.active{display:block}
 table.tsh{width:100%;border-collapse:collapse;font-size:var(--fs-s)}
 table.tsh th,table.tsh td{border:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap}
 table.tsh td.name,table.tsh td.pos{text-align:left}
-table.tsh .we{background:#f3f5f8}
+table.tsh .we{background:#edf1f6}
+table.tsh th.we .d,table.tsh th.we .w{color:#b42318}
+table.tsh th .w{display:block;font-weight:400;font-size:10px;color:var(--muted)}
+table.tsh .today{background:#e8f1ff}
 table.tsh td.tot,table.tsh th.tot{font-weight:700;background:#f7f9fb}
 table.tsh tfoot td{background:#eef2f6;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:var(--fs-m)}
@@ -1444,14 +1447,20 @@ async function loadTimesheet(){
     $('#tTitle').textContent='Табель за '+d.title;
     $('#tCount').textContent=d.count+' чел.';
     if(!d.rows.length){ $('#tWrap').innerHTML='<div class="empty">За этот месяц проходов нет</div>'; return; }
+    const today=d.today||0;
     let head='<th>№</th><th>Сотрудник</th><th>Должность</th>';
-    d.weekend.forEach((we,i)=>{ head+='<th'+(we?' class="we"':'')+'>'+String(i+1).padStart(2,'0')+'</th>'; });
+    d.weekend.forEach((we,i)=>{
+      const cls=[we?'we':'',(i+1)===today?'today':''].filter(Boolean).join(' ');
+      head+='<th'+(cls?' class="'+cls+'"':'')+'><span class="d">'+String(i+1).padStart(2,'0')
+        +'</span><span class="w">'+((d.weekday&&d.weekday[i])||'')+'</span></th>';
+    });
     head+='<th class="tot">Итого</th>';
     const body=d.rows.map((r,i)=>{
       let tds='<td>'+(i+1)+'</td><td class="name">'+esc(r.fio)+'</td><td class="pos">'+esc(r.position)+'</td>';
       for(let day=1; day<=d.days; day++){
         const v=r.cells[String(day)]||'';
-        tds+='<td'+(d.weekend[day-1]?' class="we"':'')+'>'+v+'</td>';
+        const cls=[d.weekend[day-1]?'we':'',day===today?'today':''].filter(Boolean).join(' ');
+        tds+='<td'+(cls?' class="'+cls+'"':'')+'>'+v+'</td>';
       }
       tds+='<td class="tot">'+r.total+'</td>';
       return '<tr>'+tds+'</tr>';
