@@ -1086,20 +1086,25 @@ function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-R
 setInterval(tickClock,1000); tickClock();
 
 /* ===================== вкладки ===================== */
+function openTab(name, remember){
+  if(name==='set' && $('#tabBtnSet').style.display==='none') name='mon';
+  const btn=Array.from(document.querySelectorAll('nav.tabs button')).find(x=>x.dataset.tab===name);
+  if(!btn) return;
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('section.tab').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active'); $('#tab-'+name).classList.add('active');
+  state.tab=name;
+  if(remember!==false){ try{ localStorage.setItem('skud_tab', name); }catch(e){} }
+  if(!REFS_OK) loadRefs();
+  if(name==='mon') loadMon();
+  if(name==='ana') loadAnalytics();
+  if(name==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
+  if(name==='set'){ ROLES_CACHE=[]; loadAccounts(); }
+  if(name==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
+  if(name==='tsh') loadTimesheet();
+}
 document.querySelectorAll('nav.tabs button').forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('section.tab').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active'); $('#tab-'+b.dataset.tab).classList.add('active');
-    state.tab=b.dataset.tab;
-    if(!REFS_OK) loadRefs();
-    if(state.tab==='mon') loadMon();
-    if(state.tab==='ana') loadAnalytics();
-    if(state.tab==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
-    if(state.tab==='set'){ ROLES_CACHE=[]; loadAccounts(); }
-    if(state.tab==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
-    if(state.tab==='tsh') loadTimesheet();
-  };
+  b.onclick=()=>openTab(b.dataset.tab);
 });
 
 /* ===================== статус ===================== */
@@ -2299,6 +2304,10 @@ function initDates(){
   startStream();
   loadReport();
   loadAnalytics();
+  // вернуться на вкладку, которая была открыта до перезагрузки страницы
+  let savedTab='mon';
+  try{ savedTab=localStorage.getItem('skud_tab')||'mon'; }catch(e){}
+  if(savedTab!=='mon') openTab(savedTab);
   setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
   setInterval(()=>{ if(state.tab==='pas' && PASS_PENDING>0) loadPasses(); },20000);
   setInterval(loadStatus,30000);
