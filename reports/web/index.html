@@ -642,10 +642,16 @@ button .ic,a.btn .ic{opacity:.9}
   <section class="tab" id="tab-tsh">
     <div class="card" style="margin-bottom:12px">
       <div class="bd">
-        <div class="filters f5">
+        <div class="filters">
           <div><label class="f">Месяц</label><input type="month" id="tMonth"></div>
           <div><label class="f">Подразделение</label><select id="tGroup"><option value="">все</option></select></div>
           <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="tEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="tEmpList"></div></div></div>
+          <div><label class="f">Способ</label><select id="tMode">
+            <option value="normal">Обычный отчёт (с выбором точек)</option>
+            <option value="first_last">Первое — последнее за день</option>
+          </select></div>
+        </div>
+        <div class="filters" style="margin-top:12px">
           <div><label class="f">Точки входа</label>
             <div class="msel" id="tInPoint" data-ph="все точки">
               <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
@@ -656,6 +662,8 @@ button .ic,a.btn .ic{opacity:.9}
               <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
               <div class="msel-list"></div>
             </div></div>
+          <div><label class="f">Начало новых суток, ч</label>
+            <input type="number" id="tStart" min="0" max="23" value="0" disabled title="Только для режима «первое — последнее за день»"></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="tGo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></svg> Показать табель</button>
@@ -1456,6 +1464,8 @@ function tshQS(){
   const emp=empUid('#tEmp'); if(emp) p.set('user_ptr',emp);
   const ip=mselValues('#tInPoint'); if(ip.length) p.set('in_points',ip.join('|'));
   const op=mselValues('#tOutPoint'); if(op.length) p.set('out_points',op.join('|'));
+  p.set('mode',$('#tMode').value);
+  if($('#tMode').value==='first_last') p.set('start',$('#tStart').value||0);
   return p;
 }
 async function loadTimesheet(){
@@ -1491,6 +1501,7 @@ async function loadTimesheet(){
     $('#tWrap').innerHTML='<table class="tsh"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
   }catch(e){ $('#tWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
 }
+$('#tMode').onchange=()=>{ $('#tStart').disabled=$('#tMode').value!=='first_last'; };
 $('#tGo').onclick=loadTimesheet;
 $('#tPrint').onclick=()=>window.open('/print/timesheet?'+tshQS().toString(),'_blank');
 $('#tXls').onclick=()=>download('/export/timesheet.xls?'+tshQS().toString(),'tabel.xls');

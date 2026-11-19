@@ -792,13 +792,59 @@ def hm(minutes):
     return "%d:%02d" % (minutes // 60, minutes % 60)
 
 
-def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=None):
+def _first_last_rows(con, first, last, group, user_ptr, start_hour):
+    """Первое и последнее предъявление ключа за «сутки», начинающиеся с start_hour."""
+    users = _user_names(con)
+    t0 = dt.datetime.combine(first, dt.time(0)) - dt.timedelta(hours=start_hour)
+    t1 = dt.datetime.combine(last, dt.time(23, 59, 59))
+    cur = con.execute(
+        "SELECT ts, user_ptr, unit FROM events"
+        " WHERE ts>=? AND ts<=? AND event_type=? AND event_code=? AND user_ptr>0"
+        " ORDER BY ts", (t0.isoformat(sep=" "), t1.isoformat(sep=" "),
+                         PASS_TYPE, PASS_CODE))
+    per = {}
+    for ts, pid, _unit in cur:
+        u = users.get(pid)
+        if u is None or u["deleted"] or u["visitor"]:
+            continue
+        if user_ptr and pid != int(user_ptr):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        t = dt.datetime.fromisoformat(ts)
+        day = (t - dt.timedelta(hours=start_hour)).date()
+        if day < first or day > last:
+            continue
+        rec = per.get((pid, day))
+        if rec is None:
+            per[(pid, day)] = [t, t, u]
+        else:
+            if t < rec[0]:
+                rec[0] = t
+            if t > rec[1]:
+                rec[1] = t
+    out = []
+    for (pid, day), (a, b, u) in per.items():
+        out.append({
+            "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+            "group": u["group"], "position": u["position"],
+            "day": day.isoformat(),
+            "hours": round((b - a).total_seconds() / 3600.0, 2),
+        })
+    return out
+
+
+def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=None,
+              mode="normal", start_hour=0):
     """Табель за месяц: сотрудники × дни, часы в минутах (формат — в шаблоне)."""
     first = dt.date.fromisoformat(month + "-01")
     last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
-    rows = attendance(con, first.isoformat(), last.isoformat(),
-                      group=group, user_ptr=user_ptr,
-                      in_points=in_points, out_points=out_points)
+    if str(mode) == "first_last":
+        rows = _first_last_rows(con, first, last, group, user_ptr, int(start_hour or 0))
+    else:
+        rows = attendance(con, first.isoformat(), last.isoformat(),
+                          group=group, user_ptr=user_ptr,
+                          in_points=in_points, out_points=out_points)
     ndays = last.day
     wd_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     weekend = [first.replace(day=d).weekday() >= 5 for d in range(1, ndays + 1)]

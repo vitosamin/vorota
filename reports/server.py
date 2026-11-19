@@ -984,8 +984,15 @@ class Handler(BaseHTTPRequestHandler):
         user_ptr = q.get("user_ptr") or None
         in_points = (q.get("in_points") or "").strip() or None
         out_points = (q.get("out_points") or "").strip() or None
-        return gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr,
-                              in_points=in_points, out_points=out_points), month, group
+        mode = "first_last" if q.get("mode") == "first_last" else "normal"
+        try:
+            start = max(0, min(23, int(q.get("start") or 0)))
+        except (TypeError, ValueError):
+            start = 0
+        d = gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr,
+                           in_points=in_points, out_points=out_points,
+                           mode=mode, start_hour=start)
+        return d, month, group, mode, start
 
     def _ts_head(self, d, print_mode=True):
         cols = ['<col style="width:3%"><col style="width:14%"><col style="width:9%">']
@@ -1031,11 +1038,11 @@ class Handler(BaseHTTPRequestHandler):
         return "".join(out), "<tr>%s</tr>" % "".join(foot)
 
     def api_timesheet(self, q):
-        d, month, group = self._timesheet(q)
+        d, month, group, mode, start = self._timesheet(q)
         out = {
             "month": d["month"], "title": d["title"], "days": d["days"],
             "weekend": d["weekend"], "weekday": d["weekday"], "today": d["today"],
-            "count": d["count"], "group": group or "",
+            "count": d["count"], "group": group or "", "mode": mode, "start": start,
             "total": gate.hm(d["total"]),
             "day_totals": [gate.hm(x) if x else "" for x in d["day_totals"]],
             "rows": [{
@@ -1047,13 +1054,15 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_json(out)
 
     def print_timesheet(self, q):
-        d, month, group = self._timesheet(q)
+        d, month, group, mode, start = self._timesheet(q)
         colgroup, head = self._ts_head(d)
         rows, foot = self._ts_body(d)
-        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b>" % (
+        how = ("первое — последнее предъявление за сутки с %d:00" % start
+               if mode == "first_last" else "с выбором точек входа и выхода")
+        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b> · %s" % (
             _esc(d["title"]),
             "подразделение: " + _esc(group) if group else "все подразделения",
-            d["count"])
+            d["count"], how)
         html = TIMESHEET_TEMPLATE.format(
             title=_esc(d["title"]), sub=sub, colgroup=colgroup, head=head,
             rows=rows, foot=foot,
@@ -1061,7 +1070,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
 
     def export_timesheet_xls(self, q):
-        d, month, group = self._timesheet(q)
+        d, month, group, mode, start = self._timesheet(q)
         colgroup, head = self._ts_head(d)
         rows, foot = self._ts_body(d)
         html = ("<html><head><meta charset='utf-8'><style>"
