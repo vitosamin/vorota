@@ -99,7 +99,8 @@ section.tab.active{display:block}
 .kpi .val{font-size:26px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1.15}
 .kpi .sub{color:var(--dim);font-size:var(--fs-xs);margin-top:2px}
 .grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
-.grid2.eq{grid-template-columns:1fr 1fr}
+.grid2.eq{grid-template-columns:1fr 1fr;align-items:stretch}
+.grid2.eq>.card{height:100%;margin-bottom:0}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;align-items:start}
 @media(max-width:1080px){.grid2{grid-template-columns:1fr} .grid2.eq{grid-template-columns:1fr} .mon-grid{height:auto} .mon-grid .feed{max-height:520px} .pres-card .presence-list{max-height:420px}}
 .tblwrap{overflow:auto;max-height:640px}
