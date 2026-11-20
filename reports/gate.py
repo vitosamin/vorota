@@ -1448,6 +1448,7 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
 
 def employees(con, group=None, include_visitors=False):
     """Справочник сотрудников по алфавиту (для выбора в отчётах)."""
+    sched = schedules_map(con)
     out = []
     for pid, u in _user_names(con).items():
         if u["deleted"]:
@@ -1458,8 +1459,11 @@ def employees(con, group=None, include_visitors=False):
             continue
         if group and group not in ("", "all") and u["group"] != group:
             continue
+        s2 = sched.get(pid)
         out.append({"user_ptr": pid, "fio": u["fio"], "number": u["number"],
-                    "group": u["group"], "position": u["position"]})
+                    "group": u["group"], "position": u["position"],
+                    "schedule_start": s2[0] if s2 else "",
+                    "schedule_end": s2[1] if s2 else ""})
     out.sort(key=lambda x: x["fio"])
     return out
 
