@@ -81,7 +81,7 @@ Proxmox `192.168.2.8` (узел `srv-prox-tm`), Debian 13, unprivileged, onboot,
 |---|---|---|---|
 | 131 | `skud-reports` | 192.168.2.57 | отчёты СКУД, порт 8110 — **переехал**, `skud.almak.ru` через прокси 2.54 |
 | 132 | `b24-workday` | 192.168.2.159 | панель рабочего дня, 8101 — **переехала**, старый на 193 отключён |
-| 133 | `wiki` | 192.168.2.190 | BookStack + MariaDB в Docker, 8102 — **переехала**, данные через дамп (21 entity, 2 users) |
+| 133 | `wiki` | 192.168.2.190 | BookStack + MariaDB в Docker, 8102 — **переехала**, данные через дамп (21 entity, 2 users); `https://wiki.almak.ru`, вход по LDAP (DC 192.168.2.1, `alm.local`) |
 | 134 | `b24notify` | 192.168.2.199 | уведомления Б24 → Алиса — **переехал**, state.json сохранён |
 
 - Пароли root новых LXC — `.secrets/pve-lxc-<vmid>.txt`; SSH-ключи агента в `/root/.ssh/authorized_keys`.
