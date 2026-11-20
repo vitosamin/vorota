@@ -87,7 +87,7 @@ Proxmox `192.168.2.8` (узел `srv-prox-tm`), Debian 13, unprivileged, onboot,
 - Пароли root новых LXC — `.secrets/pve-lxc-<vmid>.txt`; SSH-ключи агента в `/root/.ssh/authorized_keys`.
 - На 131 включён бэкап базы: `skud-backup.timer` (03:30, 14 дней, integrity_check) в `/srv/backup/skud`.
 - Старые данные на LXC 124 (193) оставлены на неделю для отката; сервисы там остановлены и сняты с автозагрузки.
-- DNS: `workday.almak.ru` и `wiki.almak.ru` пока не резолвятся (внутренний DNS 192.168.2.1); после появления — добавить блоки nginx на 2.54 и имена в сертификат acme.sh (DNS-01, `dns_nic`).
+- DNS: `workday.almak.ru` и `wiki.almak.ru` → 192.168.2.54 (записи на внутреннем DC 192.168.2.1). На 2.54 добавлены блоки nginx, сертификат перевыпущен через acme.sh (DNS-01 `dns_nic`, SAN теперь включает оба имени), nginx перезагружен. `https://workday.almak.ru` → 401 (вход), `https://wiki.almak.ru` → 200, `APP_URL` вики переключён на домен.
 
 ## Веб-отчёты `reports/` — СКУД Gate-IP
 Мониторинг и отчёты посещаемости: `server.py` (порт 8110 на LXC 192.168.2.193, вход `vitosamin`), `gate.py` (данные и SQL для Gate), `web/index.html`. Подробности — `reports/README.md`, механизм ключей — `reports/KEYS.md`.
