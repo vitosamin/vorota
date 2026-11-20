@@ -349,6 +349,7 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="rpt">Отчёты</button>
     <button data-tab="tsh">Табель</button>
     <button data-tab="brk">Перекуры</button>
+    <button data-tab="ev">Журнал</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
   </nav>
@@ -453,12 +454,32 @@ button .ic,a.btn .ic{opacity:.9}
     </div>
 
     <div class="card" style="margin-top:12px">
-      <div class="hd" id="evHead" style="cursor:pointer" title="нажмите, чтобы раскрыть">
-        <h3>Журнал событий СКУД</h3>
-        <span class="hint" id="evHint">свёрнуто · данные не загружаются</span>
-        <button id="evToggle" style="margin-left:auto"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg> Развернуть</button>
+      <div class="hd"><h3>Динамика по дням</h3><span class="hint">проходы и уникальные сотрудники</span></div>
+      <div class="chart-box" id="chDays"></div>
+      <div class="legend"><span><i style="background:var(--chart-in)"></i>проходы</span><span><i style="background:var(--green)"></i>сотрудники</span></div>
+    </div>
+  </section>
+
+  <!-- ================= ЖУРНАЛ СОБЫТИЙ ================= -->
+  <section class="tab" id="tab-ev">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">С даты</label><input type="date" id="jFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="jTo"></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="jGo">Показать журнал</button>
+          <span class="muted" id="jHint" style="font-size:var(--fs-s);align-self:center">журнал событий СКУД за период</span>
+        </div>
       </div>
-      <div id="evBody" style="display:none">
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="hd">
+        <h3>Журнал событий СКУД</h3>
+        <span class="hint" id="evHint">фильтры и журнал событий за период</span>
+      </div>
+      <div id="evBody">
         <div class="bd">
           <div class="filters f5">
             <div><label class="f">Событие</label><select id="evMsg"><option value="">любое событие</option></select></div>
@@ -486,11 +507,6 @@ button .ic,a.btn .ic{opacity:.9}
           </div>
         </div>
       </div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="hd"><h3>Динамика по дням</h3><span class="hint">проходы и уникальные сотрудники</span></div>
-      <div class="chart-box" id="chDays"></div>
-      <div class="legend"><span><i style="background:var(--chart-in)"></i>проходы</span><span><i style="background:var(--green)"></i>сотрудники</span></div>
     </div>
   </section>
 
@@ -1596,18 +1612,14 @@ window.addEventListener('resize',()=>{
 
 /* ---------- журнал событий СКУД: грузится только при раскрытии ---------- */
 const EV_TYPES={1:'Пользователи',2:'Устройства',3:'Связь',4:'Запуск/останов',5:'Операторы',6:'Удаление'};
-let evOpen=false, evLoaded=false, evOffset=0, evTotal=0;
+let evLoaded=false, evOffset=0, evTotal=0;
 
-function evToggleBox(){
-  evOpen=!evOpen;
-  $('#evBody').style.display = evOpen?'block':'none';
-  $('#evToggle').innerHTML = evOpen ? '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg> Свернуть'
-                                  : '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg> Развернуть';
-  $('#evHint').textContent = evOpen?'данные загружаются по запросу':'свёрнуто · данные не загружаются';
-  if(evOpen && !evLoaded){ evLoaded=true; loadEvents(true); }
+function ensureEvents(){
+  if(evLoaded) return;
+  evLoaded=true;
+  loadEvents(true);
 }
-$('#evHead').onclick=(e)=>{ if(!e.target.closest('#evToggle')) evToggleBox(); };
-$('#evToggle').onclick=(e)=>{ e.stopPropagation(); evToggleBox(); };
+$('#jGo').onclick=()=>{ evLoaded=true; loadEvents(true); };
 $('#evApply').onclick=()=>loadEvents(true);
 $('#evMore').onclick=()=>loadEvents(false);
 $('#evReset').onclick=()=>{
@@ -1617,8 +1629,8 @@ $('#evReset').onclick=()=>{
 
 function evQuery(reset){
   const p=new URLSearchParams();
-  p.set('from',$('#aFrom').value||shiftISO(6));
-  p.set('to',$('#aTo').value||todayISO());
+  p.set('from',$('#jFrom').value||shiftISO(6));
+  p.set('to',$('#jTo').value||todayISO());
   if($('#evMsg').value) p.set('message',$('#evMsg').value);
   if($('#evType').value) p.set('type',$('#evType').value);
   const s=$('#evSearch').value.trim(); if(s) p.set('search',s);
@@ -1642,8 +1654,8 @@ async function loadEvents(reset){
 }
 async function loadEventSummary(){
   const p=new URLSearchParams();
-  p.set('from',$('#aFrom').value||shiftISO(6));
-  p.set('to',$('#aTo').value||todayISO());
+  p.set('from',$('#jFrom').value||shiftISO(6));
+  p.set('to',$('#jTo').value||todayISO());
   try{
     const s=await api('/api/events/summary?'+p.toString());
     $('#evTotal').textContent=NUM(s.total);
@@ -2380,6 +2392,7 @@ function initDates(){
   $('#mDay').value=t;
   $('#tMonth').value=t.slice(0,7);
   $('#bMonth').value=t.slice(0,7);
+  $('#jFrom').value=week; $('#jTo').value=t;
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
 }
