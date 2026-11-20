@@ -641,6 +641,7 @@ button .ic,a.btn .ic{opacity:.9}
       <div class="bd">
         <div class="filters">
           <div><label class="f">Поиск (ФИО, табельный, подразделение)</label><input id="empSearch" autocomplete="off" placeholder="начните вводить…"></div>
+          <div><label class="f">Быстро открыть карточку</label><select id="empPick"><option value="">— выберите сотрудника —</option></select></div>
         </div>
         <div class="row-actions">
           <span class="muted" id="empCount" style="font-size:var(--fs-s)"></span>
@@ -1163,22 +1164,35 @@ function chartHeat(matrix, o){
 }
 
 /* ---------- вкладка «Сотрудники» ---------- */
-let EMP_TAB=[];
-async function loadEmpTab(){
-  if(!EMP_TAB.length){
-    try{
-      const d=await api('/api/employees');
-      EMP_TAB=d.items||[];
-    }catch(e){
-      $('#empWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>';
-      return;
+let EMP_TAB=[], EMP_LOADING=false;
+const HOMOGLYPH={a:'а',e:'е',o:'о',p:'р',c:'с',y:'у',x:'х',k:'к',m:'м',t:'т',h:'н',b:'в'};
+function normText(v){
+  return (v||'').toLowerCase().replace(/[aeyopcxkmthb]/g, ch=>HOMOGLYPH[ch]||ch);
+}
+async function loadEmpTab(force){
+  if(EMP_LOADING) return;
+  if(EMP_TAB.length && !force){ renderEmpTab(); return; }
+  EMP_LOADING=true;
+  $('#empWrap').innerHTML='<div class="empty"><span class="spin"></span> Загрузка…</div>';
+  try{
+    const d=await api('/api/employees');
+    EMP_TAB=(d.items||[]).slice();
+    if(!EMP_TAB.length) throw new Error('справочник пуст');
+    const sel=$('#empPick');
+    if(sel && sel.options.length<=1){
+      sel.innerHTML='<option value="">— выберите сотрудника —</option>'
+        + EMP_TAB.map(x=>'<option value="'+x.user_ptr+'">'+esc(x.fio)+(x.group?' · '+esc(x.group):'')+'</option>').join('');
     }
-  }
-  renderEmpTab();
+    renderEmpTab();
+  }catch(e){
+    $('#empWrap').innerHTML='<div class="empty">Не удалось загрузить список: '+esc(e.message)
+      +' <button id="empRetry" style="margin-left:8px">Повторить</button></div>';
+    const b=$('#empRetry'); if(b) b.onclick=()=>loadEmpTab(true);
+  }finally{ EMP_LOADING=false; }
 }
 function renderEmpTab(){
-  const q=($('#empSearch').value||'').trim().toLowerCase();
-  const items=EMP_TAB.filter(x=>!q || ((x.fio||'')+' '+(x.number||'')+' '+(x.group||'')).toLowerCase().includes(q));
+  const q=normText($('#empSearch').value);
+  const items=EMP_TAB.filter(x=>!q || normText((x.fio||'')+' '+(x.number||'')+' '+(x.group||'')).includes(q));
   $('#empCount').textContent=items.length+' из '+EMP_TAB.length;
   if(!items.length){ $('#empWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
   $('#empWrap').innerHTML='<table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Должность</th>'
@@ -1191,6 +1205,7 @@ function renderEmpTab(){
     +'</tbody></table>';
 }
 $('#empSearch').oninput=()=>renderEmpTab();
+$('#empPick').onchange=(e)=>{ const uid=e.target.value; if(uid){ openPerson(uid); e.target.value=''; } };
 
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
