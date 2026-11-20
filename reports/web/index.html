@@ -204,8 +204,17 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .modal-hd .who2{color:var(--muted);font-size:var(--fs-s)}
 .modal-bd{padding:14px;overflow:auto}
 .modal-bd .kpis{margin-bottom:10px}
-.sched-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;font-size:var(--fs-m)}
-.sched-edit input[type=time]{width:auto;min-width:110px}
+.sched-edit{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px;background:var(--panel)}
+.sched-edit .sched-t{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.sched-edit .sched-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.sched-edit label{display:flex;flex-direction:column;gap:3px;font-size:var(--fs-xs);color:var(--muted)}
+.sched-edit input[type=time]{width:auto;min-width:104px}
+.sched-edit .sched-presets{margin-top:9px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:var(--fs-xs);color:var(--muted)}
+.sched-edit .sched-presets button{min-height:26px;padding:2px 10px;font-size:var(--fs-s)}
+.person-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin:0 0 12px;font-size:var(--fs-s)}
+.person-details .it{display:flex;gap:6px;min-width:0}
+.person-details .k{color:var(--muted);white-space:nowrap}
+.person-details b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .chip{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:5px 10px;font-size:var(--fs-s);color:var(--muted)}
 .chip b{color:var(--text)}
@@ -1911,14 +1920,43 @@ function renderPerson(d){
   const sch=d.schedule||{};
   $('#mTitle').textContent=u.fio||'Сотрудник';
   $('#mSub').textContent=[u.group,u.position,u.number].filter(Boolean).join(' · ');
+  const schNow = sch.start ? esc(sch.start)+' — '+esc(sch.end) : 'не задан';
   const schBox = canOperate()
-    ? '<div class="sched-edit"><b>График работы:</b> '
-      + '<input type="time" id="mSchStart" value="'+esc(sch.start||'')+'"> — '
-      + '<input type="time" id="mSchEnd" value="'+esc(sch.end||'')+'"> '
-      + '<button id="mSchSave">Сохранить</button>'
-      + '<span class="muted" id="mSchHint" style="font-size:var(--fs-s)">'
-      + (sch.start? 'опоздания считаются по этому графику' : 'не задан — берётся смена из отчёта')+'</span></div>'
-    : (sch.start? '<div class="sched-edit"><b>График работы:</b> '+esc(sch.start)+' — '+esc(sch.end)+'</div>' : '');
+    ? '<div class="sched-edit">'
+      + '<div class="sched-t"><b>График работы</b>'
+      + '<span class="muted" style="font-size:var(--fs-xs)">по нему считаются опоздания и ранние уходы</span>'
+      + '<span class="muted" id="mSchHint" style="margin-left:auto;font-size:var(--fs-s)">сейчас: '+schNow+'</span></div>'
+      + '<div class="sched-row">'
+      + '<label>Начало рабочего дня<input type="time" id="mSchStart" value="'+esc(sch.start||'')+'"></label>'
+      + '<label>Конец рабочего дня<input type="time" id="mSchEnd" value="'+esc(sch.end||'')+'"></label>'
+      + '<button class="primary" id="mSchSave">Сохранить график</button>'
+      + '</div>'
+      + '<div class="sched-presets">Быстрый выбор: '
+      + '<button data-sch="08:00|17:00">08:00–17:00</button>'
+      + '<button data-sch="09:00|18:00">09:00–18:00</button>'
+      + '<button data-sch="08:00|20:00">08:00–20:00</button>'
+      + '<button data-sch="00:00|23:59">круглосуточно</button>'
+      + '<button data-sch="|">сбросить</button>'
+      + '</div></div>'
+    : '<div class="sched-edit"><div class="sched-t"><b>График работы</b><span class="muted" id="mSchHint" style="margin-left:auto;font-size:var(--fs-s)">'+schNow+'</span></div></div>';
+
+  const dt=d.details||{};
+  const detRows=[
+    ['Табельный номер', u.number||''],
+    ['Номер карты', (u.number||'').indexOf('/')>=0 ? u.number.split('/')[1] : ''],
+    ['UID карты', dt.number_u||''],
+    ['Mifare', dt.number_mifare||''],
+    ['Подразделение', u.group||''],
+    ['Должность', u.position||''],
+    ['Статус', dt.status||''],
+    ['ID в Gate', dt.gate_id||''],
+    ['Доступ', (dt.access_points!==undefined ? dt.access_points+' точек' : '')],
+    ['Последний проход', dt.last_ts ? (dt.last_ts.replace('T',' ').slice(0,16)+(dt.last_unit?' · '+dt.last_unit:'')) : ''],
+  ];
+  if(dt.pass) detRows.push(['Пропуск', '№'+dt.pass.number+' · до '+dt.pass.valid_to+' · '+dt.pass.status]);
+  const details = '<div class="person-details">'
+    + detRows.filter(r=>r[1]).map(r=>'<div class="it"><span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('')
+    + '</div>';
   const chips='<div class="chips">'
     +'<span class="chip">дней: <b>'+NUM(sm.days||0)+'</b></span>'
     +'<span class="chip">часов: <b>'+fmtHours(sm.hours||0)+'</b></span>'
@@ -1936,9 +1974,18 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = schBox + chips + chart + table;
+  $('#mBody').innerHTML = details + schBox + chips + chart + table;
 }
 $('#mBody').addEventListener('click', async (e)=>{
+  const pre=e.target.closest('[data-sch]');
+  if(pre){
+    const v=pre.dataset.sch||'';
+    const parts=v.split('|');
+    $('#mSchStart').value=parts[0]||'';
+    $('#mSchEnd').value=parts[1]||'';
+    $('#mSchHint').textContent='нажмите «Сохранить график»';
+    return;
+  }
   if(e.target.id!=='mSchSave') return;
   const uid=$('#mBody').dataset.uid;
   const start=$('#mSchStart').value, end=$('#mSchEnd').value;

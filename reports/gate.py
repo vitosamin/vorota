@@ -1501,7 +1501,7 @@ def late_report(con, from_day, to_day, group=None, search=None,
 
 
 def person_history(con, user_ptr, from_day, to_day):
-    """Карточка сотрудника: дни, часы, опоздания за период."""
+    """Карточка сотрудника: дни, часы, опоздания, реквизиты карты."""
     users = _user_names(con)
     u = users.get(int(user_ptr))
     if u is None:
@@ -1512,7 +1512,33 @@ def person_history(con, user_ptr, from_day, to_day):
     summary = summ[0] if summ else {
         "days": 0, "hours": 0.0, "passes": 0, "late_days": 0, "late_total": 0,
         "avg_hours": 0.0, "early_total": 0, "open": False}
-    return {"user": u, "from": from_day, "to": to_day, "rows": rows, "summary": summary}
+    extra = {}
+    r = con.execute("SELECT number_u, number_mifare FROM users WHERE user_ptr=?",
+                    (int(user_ptr),)).fetchone()
+    if r:
+        extra["number_u"] = (r["number_u"] or "").strip()
+        extra["number_mifare"] = (r["number_mifare"] or "").strip()
+    acc = con.execute("SELECT COUNT(*) c FROM access_table WHERE user_ptr=?",
+                      (int(user_ptr),)).fetchone()
+    extra["access_points"] = acc["c"] if acc else 0
+    last = con.execute(
+        "SELECT ts, unit FROM events WHERE user_ptr=? AND event_type=? AND event_code=?"
+        " ORDER BY ts DESC LIMIT 1", (int(user_ptr), PASS_TYPE, PASS_CODE)).fetchone()
+    extra["last_ts"] = last["ts"] if last else ""
+    extra["last_unit"] = (last["unit"] or "") if last else ""
+    digits = re.sub(r"\D", "", u["number"] or "")
+    pr = None
+    if digits:
+        pr = con.execute(
+            "SELECT number, valid_to, status FROM passes"
+            " WHERE replace(replace(card,'/',''),' ','')=?"
+            " ORDER BY id DESC LIMIT 1", (digits,)).fetchone()
+    extra["pass"] = ({"number": pr["number"], "valid_to": pr["valid_to"],
+                      "status": pr["status"]} if pr else None)
+    extra["status"] = "удалён" if u["deleted"] else ("гость" if u["visitor"] else "активен")
+    extra["gate_id"] = u["user_ptr"]
+    return {"user": u, "from": from_day, "to": to_day, "rows": rows,
+            "summary": summary, "details": extra}
 
 
 
