@@ -608,6 +608,8 @@ class Handler(BaseHTTPRequestHandler):
         to = q.get("to") or dt.date.today().isoformat()
         con = gate.connect()
         data = gate.person_history(con, uid, frm, to)
+        if data is not None:
+            data["schedule"] = gate.get_schedule(con, uid)
         con.close()
         if data is None:
             return self.send_json({"error": "not found"}, code=404)
@@ -1112,10 +1114,11 @@ class Handler(BaseHTTPRequestHandler):
                                                gate.hm(v) if v else ""))
             tds.append('<td class="tot">%s</td>' % gate.hm(r["total"]))
             out.append("<tr>%s</tr>" % "".join(tds))
-        foot = ['<td colspan="3">Итого по дням, ч</td>']
+        foot = ['<td colspan="3">Итого по дням, ч/мин</td>']
         for i, v in enumerate(d["day_totals"]):
-            # за день суммарно сотни часов — в узкой клетке H:MM не влезает
-            cell = str(int(round(v / 60.0))) if v else ""
+            # в клетке шириной ~2 % помещается только два числа: часы и под ними минуты
+            hh, mm = divmod(int(v), 60)
+            cell = ("%d<div class='mins'>%02d</div>" % (hh, mm)) if v else ""
             foot.append('<td%s>%s</td>' % (' class="we"' if d["weekend"][i] else "", cell))
         foot.append('<td class="tot">%s</td>' % gate.hm(d["total"]))
         return "".join(out), "<tr>%s</tr>" % "".join(foot)
@@ -1285,6 +1288,23 @@ class Handler(BaseHTTPRequestHandler):
             return self.admin_post(path, body)
         if path.startswith("/api/passes"):
             return self.passes_post(path, body)
+        if path == "/api/schedules":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            con = gate.connect()
+            try:
+                uid = int(payload.get("user_ptr") or 0)
+                sch = gate.set_schedule(con, uid, payload.get("start"), payload.get("end"))
+                return self.send_json({"ok": True, "schedule": sch})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
         return self.send_bytes(b"not found", "text/plain; charset=utf-8", code=404)
 
 
@@ -1425,7 +1445,8 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
  th.today,td.today{{background:#e8f1ff}}
  th.today{{box-shadow:inset 0 -2px 0 #2f6fd0}}
  th.tot,td.tot{{background:#f7f9fb;font-weight:700}}
- tfoot td{{background:#eef2f6;font-weight:600;font-size:7.5px;padding:1px 0}}
+ tfoot td{{background:#eef2f6;font-weight:600;font-size:7.5px;padding:1px 0;line-height:1.05}}
+ tfoot .mins{{font-size:6.5px;font-weight:400;color:#667}}
 </style></head><body>
 <div class="toolbar"><span class="hint">Проверьте табель и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <h1>Табель учёта рабочего времени</h1>

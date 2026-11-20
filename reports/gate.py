@@ -198,6 +198,14 @@ CREATE TABLE IF NOT EXISTS access_table (
 );
 CREATE INDEX IF NOT EXISTS ix_access_user ON access_table(user_ptr);
 
+CREATE TABLE IF NOT EXISTS schedules (
+    user_ptr INTEGER PRIMARY KEY,
+    start    TEXT,
+    end_time TEXT,
+    days     TEXT,
+    updated  TEXT
+);
+
 CREATE TABLE IF NOT EXISTS users (
     user_ptr   INTEGER PRIMARY KEY,
     number     TEXT,
@@ -306,6 +314,42 @@ def meta_get(con, key, default=None):
 def meta_set(con, key, value):
     con.execute("INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, str(value)))
+
+
+def schedules_map(con):
+    """{user_ptr: (начало, конец)} — личные графики работы."""
+    out = {}
+    for r in con.execute("SELECT user_ptr, start, end_time FROM schedules"):
+        if r["start"] and r["end_time"]:
+            out[r["user_ptr"]] = (r["start"], r["end_time"])
+    return out
+
+
+def get_schedule(con, user_ptr):
+    r = con.execute("SELECT start, end_time FROM schedules WHERE user_ptr=?",
+                    (int(user_ptr),)).fetchone()
+    if not r:
+        return {"start": "", "end": ""}
+    return {"start": r["start"] or "", "end": r["end_time"] or ""}
+
+
+def set_schedule(con, user_ptr, start, end):
+    """Сохранить личный график; пустые значения — удалить."""
+    start = (start or "").strip()
+    end = (end or "").strip()
+    with _lock:
+        if not start or not end:
+            con.execute("DELETE FROM schedules WHERE user_ptr=?", (int(user_ptr),))
+        else:
+            for v in (start, end):
+                dt.time.fromisoformat(v)          # ValueError на мусоре
+            con.execute(
+                "INSERT INTO schedules(user_ptr,start,end_time,updated) VALUES(?,?,?,?)"
+                " ON CONFLICT(user_ptr) DO UPDATE SET start=excluded.start,"
+                " end_time=excluded.end_time, updated=excluded.updated",
+                (int(user_ptr), start, end, dt.datetime.now().isoformat(timespec="seconds")))
+        con.commit()
+    return get_schedule(con, user_ptr)
 
 
 # --------------------------------------------------------------------------
@@ -645,7 +689,7 @@ def _point_sql(point, column="unit"):
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
                shift_start=None, shift_end=None, user_ptr=None,
-               in_points=None, out_points=None):
+               in_points=None, out_points=None, personal=True):
     """Свод посещаемости по сотрудникам и дням.
 
     Приход — первый проход дня, уход — последний проход дня.
@@ -670,6 +714,7 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     shift_end = shift_end or CFG.get("shift_end", "17:00")
     sh_s = dt.time.fromisoformat(shift_start)
     sh_e = dt.time.fromisoformat(shift_end)
+    sched = schedules_map(con) if personal else {}
 
     in_needles = [x.lower() for x in _points(in_points)]
     out_needles = [x.lower() for x in _points(out_points)]
@@ -718,6 +763,9 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     rows = []
     for (pid, day), rec in per.items():
         enter, exit_ = rec["enter"], rec["exit"]
+        s2 = sched.get(pid)
+        sh_s_u = dt.time.fromisoformat(s2[0]) if s2 else sh_s
+        sh_e_u = dt.time.fromisoformat(s2[1]) if s2 else sh_e
         open_now = (day == today) and rec["last_dir"] == "in"
         if enter and (exit_ or open_now):
             t1 = dt.datetime.fromisoformat(enter)
@@ -725,13 +773,13 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             end = now if open_now else t2
             hours = round(max(0.0, (end - t1).total_seconds() / 3600.0), 2)
             late = max(0, int((dt.datetime.combine(t1.date(), t1.time())
-                               - dt.datetime.combine(t1.date(), sh_s)).total_seconds() // 60))
+                               - dt.datetime.combine(t1.date(), sh_s_u)).total_seconds() // 60))
         else:
             hours, late = 0.0, 0
         early = None
         if exit_ and not open_now:
             t2 = dt.datetime.fromisoformat(exit_)
-            early = max(0, int((dt.datetime.combine(t2.date(), sh_e)
+            early = max(0, int((dt.datetime.combine(t2.date(), sh_e_u)
                                 - dt.datetime.combine(t2.date(), t2.time())).total_seconds() // 60))
         rows.append({
             "user_ptr": pid,

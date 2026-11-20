@@ -204,6 +204,8 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .modal-hd .who2{color:var(--muted);font-size:var(--fs-s)}
 .modal-bd{padding:14px;overflow:auto}
 .modal-bd .kpis{margin-bottom:10px}
+.sched-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;font-size:var(--fs-m)}
+.sched-edit input[type=time]{width:auto;min-width:110px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .chip{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:5px 10px;font-size:var(--fs-s);color:var(--muted)}
 .chip b{color:var(--text)}
@@ -1839,8 +1841,17 @@ async function openPerson(uid, from, to){
 }
 function renderPerson(d){
   const u=d.user||{}, sm=d.summary||{}, rows=d.rows||[];
+  const sch=d.schedule||{};
   $('#mTitle').textContent=u.fio||'Сотрудник';
   $('#mSub').textContent=[u.group,u.position,u.number].filter(Boolean).join(' · ');
+  const schBox = canOperate()
+    ? '<div class="sched-edit"><b>График работы:</b> '
+      + '<input type="time" id="mSchStart" value="'+esc(sch.start||'')+'"> — '
+      + '<input type="time" id="mSchEnd" value="'+esc(sch.end||'')+'"> '
+      + '<button id="mSchSave">Сохранить</button>'
+      + '<span class="muted" id="mSchHint" style="font-size:var(--fs-s)">'
+      + (sch.start? 'опоздания считаются по этому графику' : 'не задан — берётся смена из отчёта')+'</span></div>'
+    : (sch.start? '<div class="sched-edit"><b>График работы:</b> '+esc(sch.start)+' — '+esc(sch.end)+'</div>' : '');
   const chips='<div class="chips">'
     +'<span class="chip">дней: <b>'+NUM(sm.days||0)+'</b></span>'
     +'<span class="chip">часов: <b>'+fmtHours(sm.hours||0)+'</b></span>'
@@ -1858,8 +1869,20 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = chips + chart + table;
+  $('#mBody').innerHTML = schBox + chips + chart + table;
 }
+$('#mBody').addEventListener('click', async (e)=>{
+  if(e.target.id!=='mSchSave') return;
+  const uid=$('#mBody').dataset.uid;
+  const start=$('#mSchStart').value, end=$('#mSchEnd').value;
+  try{
+    const d=await postJSON('/api/schedules',{user_ptr:uid, start, end});
+    $('#mSchHint').textContent = (d.schedule&&d.schedule.start)
+      ? 'сохранено: '+d.schedule.start+' — '+d.schedule.end
+      : 'график снят — берётся смена из отчёта';
+    toast('График сохранён');
+  }catch(err){ toast('График: '+err.message, true); }
+});
 $('#mClose').onclick=closePerson;
 $('#modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') closePerson(); });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePerson(); });
