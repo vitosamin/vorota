@@ -3015,6 +3015,7 @@ function gateCell(it){
   const g=it.gate;
   const js=it.gate_state||'';
   if(js==='sent') return '<button class="gateBtn" data-id="'+it.id+'" title="отправлено, агент обработает в течение 2 минут"><span class="badge live">отправлен в Gate…</span></button>';
+  if(js==='employee') return '<button class="gateBtn" data-id="'+it.id+'" title="'+esc(it.gate_error||'карта принадлежит сотруднику')+'"><span class="badge late">карта сотрудника</span></button>';
   if(js==='error'||js==='queue_error') return '<button class="gateBtn" data-id="'+it.id+'" title="'+esc(it.gate_error||'')+'"><span class="badge out">ошибка записи</span></button>';
   if(!g) return '<span class="dim">—</span>';
   if(!g.total){

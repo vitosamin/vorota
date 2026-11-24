@@ -1272,6 +1272,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("выберите точки доступа")
             con = gate.connect()
             try:
+                gate.refresh_config_mdb()
                 users = gate.mdb_export(os.path.join(gate.DATA, "config.mdb"), "Users")
                 fac, num, uid = gate.card_to_gate(card)
                 number = "%03d/%05d" % (fac, num)

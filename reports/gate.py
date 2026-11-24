@@ -1590,6 +1590,37 @@ def card_to_gate(number):
     return None
 
 
+def refresh_config_mdb():
+    """Свежая копия картотеки перед записью: иначе next UserPtr может совпасть."""
+    try:
+        smb_get("Server", "config.mdb", CONFIG_MDB)
+        return True
+    except Exception:
+        return False
+
+
+def find_user_by_card(card):
+    """Существующий (не удалённый) пользователь Gate с такой картой, или None."""
+    parsed = card_to_gate(card)
+    if not parsed:
+        return None
+    number = "%03d/%05d" % parsed[:2]
+    uid = parsed[2]
+    try:
+        users = mdb_export(CONFIG_MDB, "Users")
+    except Exception:
+        return None
+    for u in users:
+        same = ((u.get("Number") or "").strip() == number
+                or (uid and (u.get("NumberU") or "").strip().upper() == uid.upper()))
+        if same and (u.get("Deleted") or "0").strip() in ("0", ""):
+            fio = " ".join(x for x in ((u.get("LastName") or "").strip(),
+                                       (u.get("FirstName") or "").strip(),
+                                       (u.get("FatherName") or "").strip()) if x)
+            return {"user_ptr": _int(u.get("UserPtr")), "fio": fio or "—", "number": number}
+    return None
+
+
 def build_add_user_sql(con, data, user_ptr):
     """SQL для агента: создать пользователя и раздать доступы на двери."""
     cfg = os.path.join(DATA, "config.mdb")
@@ -2604,6 +2635,14 @@ def pass_create(con, data, created_by=""):
     # если карта в формате Gate и выбраны двери — ставим задание агенту
     if card and card_to_gate(card) and (data.get("doors") or []):
         try:
+            refresh_config_mdb()
+            existing = find_user_by_card(card)
+            if existing:
+                with _lock:
+                    con.execute("UPDATE passes SET gate_state='employee', gate_error=? WHERE id=?",
+                                ("карта принадлежит сотруднику %s — новый пользователь не создаётся" % existing["fio"], pid))
+                    con.commit()
+                return pass_get(con, pid)
             users = mdb_export(os.path.join(DATA, "config.mdb"), "Users")
             next_ptr = max((_int(u.get("UserPtr")) for u in users), default=0) + 1
             job = "pass_%s" % pid
