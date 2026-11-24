@@ -727,7 +727,7 @@ button .ic,a.btn .ic{opacity:.9}
       </div>
     </div>
     <div class="card">
-      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">новые сверху · через выбранные точки</span></div>
+      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">новые сверху · только по выбранным точкам</span></div>
       <div class="bd"><div class="tblwrap" id="kppFeed"><div class="empty">Нет событий</div></div></div>
     </div>
   </section>
@@ -1431,7 +1431,7 @@ function kppStop(){
 }
 function kppMatch(it){
   const pts=mselValues('#kppPoint');
-  if(!pts.length) return true;
+  if(!pts.length) return false;
   const u=(it.unit||'').toLowerCase();
   return pts.some(p=>u.includes(p.toLowerCase()));
 }
@@ -1498,9 +1498,13 @@ function kppNext(){
 }
 function kppStart(){
   kppStop();
+  if(!mselValues('#kppPoint').length){
+    $('#kppStatus').textContent='выберите точки КПП';
+    return;
+  }
   if(!window.EventSource){ $('#kppStatus').textContent='нет EventSource'; return; }
   kppEs=new EventSource('/api/stream?day='+todayISO());
-  kppEs.onopen=()=>{ $('#kppStatus').textContent='подключено · точки: '+(mselValues('#kppPoint').length||'все'); };
+  kppEs.onopen=()=>{ $('#kppStatus').textContent='подключено · точек: '+mselValues('#kppPoint').length; };
   kppEs.onerror=()=>{ $('#kppStatus').textContent='переподключение…'; };
   kppEs.onmessage=(ev)=>{
     let m; try{m=JSON.parse(ev.data);}catch(e){return;}
@@ -1509,6 +1513,14 @@ function kppStart(){
     if(m.type==='init'){ (m.items||[]).slice(0,20).reverse().forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
   };
 }
+function kppRefreshFilter(){
+  const n=mselValues('#kppPoint').length;
+  if(kppEs){ $('#kppFeed').innerHTML=''; $('#kppStatus').textContent='подключено · точек: '+n; }
+  else if(n){ kppStart(); }
+  else { $('#kppStatus').textContent='выберите точки КПП'; }
+}
+$('#kppPoint').addEventListener('change', ()=>kppRefreshFilter());
+$('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
 
