@@ -224,17 +224,6 @@ table.pf td,table.pf th{white-space:nowrap}
 .tag.neg{background:#fdecea;color:#c62828} .tag.pos{background:#e8f5e9;color:#2e7d32}
 table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
-body.kpp-mode{background:linear-gradient(160deg,#eef3fa 0%,#dfe8f5 100%)}
-body.kpp-mode nav.tabs{display:none}
-body.kpp-mode #btnSync{display:none}
-body.kpp-mode .tab{display:none}
-body.kpp-mode #tab-kpp{display:flex;flex-direction:column;gap:12px;height:calc(100vh - 96px)}
-body.kpp-mode #tab-kpp > .card:last-child{flex:1;min-height:0;display:flex;flex-direction:column}
-body.kpp-mode #tab-kpp > .card:last-child .bd{flex:1;min-height:0;overflow:auto}
-body.kpp-mode #tab-kpp .card{margin:0}
-body.kpp-mode #kppFeed{max-height:none;overflow:auto}
-body.kpp-mode .kpp-row{font-size:15px;padding:8px 2px}
-body.kpp-mode footer{display:none}
 .kpp-overlay{position:fixed;inset:0;background:rgba(8,12,18,.72);display:none;align-items:center;justify-content:center;z-index:999}
 .kpp-overlay.on{display:flex}
 .kpp-card{background:#fff;border-radius:22px;padding:28px 30px;display:flex;gap:28px;align-items:flex-start;width:880px;max-width:94vw;box-shadow:0 30px 90px rgba(0,0,0,.5)}
@@ -733,8 +722,6 @@ button .ic,a.btn .ic{opacity:.9}
         <div class="row-actions">
           <button class="primary" id="kppStart">Подключить</button>
           <button id="kppStop">Отключить</button>
-          <button id="kppDemo" title="Показать тестовую карточку">Проверить карточку</button>
-          <button id="kppAll" title="Отметить все точки">Все точки</button>
           <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
         </div>
       </div>
@@ -1434,20 +1421,7 @@ $('#accGo').onclick=loadAccess;
 $('#accPrint').onclick=()=>window.open('/print/access?'+accQS().toString(),'_blank');
 
 /* ---------- КПП: карточка на мониторе охраны ---------- */
-let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null, kppLastMsg=0;
-function kppError(text){
-  let el=$('#kppErr');
-  if(!el){
-    el=document.createElement('div'); el.id='kppErr';
-    el.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:1001;background:#fdecea;color:#b3261e;'
-      +'border:1px solid #f3b6b0;border-radius:10px;padding:10px 14px;font-size:13px;white-space:pre-wrap;display:none';
-    document.body.appendChild(el);
-  }
-  el.textContent='Ошибка на экране КПП: '+text;
-  el.style.display='block';
-}
-window.addEventListener('error', e=>{ if(document.body.classList.contains('kpp-mode')) kppError((e.message||'сбой')+' ('+(e.filename||'').split('/').pop()+':'+e.lineno+')'); });
-window.addEventListener('unhandledrejection', e=>{ if(document.body.classList.contains('kpp-mode')) kppError(String((e.reason&&e.reason.message)||e.reason||'сбой')); });
+let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null;
 function kppStop(){
   if(kppEs){ kppEs.close(); kppEs=null; }
   kppQueue=[]; kppShowing=false;
@@ -1455,20 +1429,6 @@ function kppStop(){
   $('#kppOverlay').classList.remove('on');
   $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
   $('#kppStatus').textContent='не подключено';
-}
-function kppFromUrl(){
-  let qp; try{ qp=new URLSearchParams(location.search); }catch(e){ return false; }
-  if(qp.get('kpp')!=='1') return false;
-  const pts=(qp.get('points')||'').split(',').map(x=>x.trim()).filter(Boolean);
-  const sec=qp.get('sec');
-  if(sec) $('#kppSec').value=sec;
-  if(pts.length && MSEL['#kppPoint']){
-    pts.forEach(p=>MSEL['#kppPoint'].add(p));
-    mselUpdate('#kppPoint');
-  }
-  openTab('kpp', false);
-  kppStart();
-  return true;
 }
 function kppMatch(it){
   const pts=mselValues('#kppPoint');
@@ -1546,25 +1506,20 @@ function kppStart(){
   }
   if(!window.EventSource){ $('#kppStatus').textContent='нет EventSource'; return; }
   kppEs=new EventSource('/api/stream?day='+todayISO());
-  kppLastMsg=Date.now();
-  kppEs.onopen=()=>{ kppLastMsg=Date.now(); $('#kppStatus').textContent='подключено · точек: '+mselValues('#kppPoint').length; };
+  kppEs.onopen=()=>{ $('#kppStatus').textContent='подключено · точек: '+mselValues('#kppPoint').length; };
   kppEs.onerror=()=>{ $('#kppStatus').textContent='переподключение…'; };
   kppEs.onmessage=(ev)=>{
-    kppLastMsg=Date.now();
     let m; try{m=JSON.parse(ev.data);}catch(e){return;}
     // лента: новые сверху — элементы идут по возрастанию, prepend кладёт последний выше всех
     if(m.type==='events'){ (m.items||[]).forEach(it=>{ if(kppMatch(it)){ kppFeedAdd(it); kppEnqueue(it); } }); }
     if(m.type==='init'){ (m.items||[]).slice(0,20).reverse().forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
-    if(m.type==='reload'){ kppStart(); }
   };
 }
 function kppOnOpen(){
   const n=mselValues('#kppPoint').length;
   if(!kppEs){
     $('#kppOverlay').classList.remove('on');
-    $('#kppFeed').innerHTML='<div class="empty">'+(n
-      ? 'Точки выбраны — нажмите «Подключить»'
-      : 'Выберите точки КПП и нажмите «Подключить»')+'</div>';
+    $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
     $('#kppStatus').textContent = n ? 'точки выбраны · нажмите «Подключить»' : 'выберите точки КПП';
   }
 }
@@ -1582,24 +1537,8 @@ function kppRefreshFilter(){
 }
 $('#kppPoint').addEventListener('change', ()=>kppRefreshFilter());
 $('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
-setInterval(()=>{
-  if(state.tab==='kpp' && kppEs && kppLastMsg && Date.now()-kppLastMsg>30000){
-    kppStart();                       // поток замолчал — переподключаемся
-  }
-},10000);
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
-$('#kppAll').onclick=()=>{
-  (POINTS||[]).forEach(p=>MSEL['#kppPoint'] && MSEL['#kppPoint'].add(p.unit));
-  mselUpdate('#kppPoint');
-  kppRefreshFilter();
-  kppStart();
-};
-$('#kppDemo').onclick=()=>{
-  const it={fio:'Тестовый Сотрудник',position:'проверка карточки',group:'охрана',time:new Date().toTimeString().slice(0,8),
-            unit:'КПП2 - Вход',direction:'in',photo:false,user_ptr:0,number:'000/00000',ts:''};
-  kppEnqueue(it);
-};
 
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
@@ -3098,18 +3037,6 @@ function initDates(){
 (async function start(){
   initDates();
   await loadMe();
-  if(ME.role==='kpp'){
-    document.body.classList.add('kpp-mode');
-    document.title='Пост КПП';
-    const h1=document.querySelector('.top h1'); if(h1) h1.textContent='Пост КПП';
-    const sub=document.querySelector('.top .sub'); if(sub) sub.textContent='экран охраны · выберите точки и нажмите «Подключить»';
-    try{ await loadStatus(); }catch(e){ console.error('status', e); }
-    try{ await loadRefs(); }catch(e){ console.error('refs', e); kppError('справочники: '+e.message); }
-    openTab('kpp', false);
-    kppFromUrl();
-    setInterval(loadStatus,30000);
-    return;
-  }
   await loadStatus();
   setupCardReader();
   passDaysRender();
@@ -3130,7 +3057,7 @@ function initDates(){
   setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
   setInterval(()=>{ if(state.tab==='pas' && PASS_PENDING>0) loadPasses(); },20000);
   setInterval(loadStatus,30000);
-  if(!kppFromUrl()) checkVersion();
+  checkVersion();
 })();
 </script>
 </body>

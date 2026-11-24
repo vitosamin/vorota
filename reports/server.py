@@ -388,8 +388,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def redirect(self, to, cookie=None):
         self.send_response(302)
-        # заголовки HTTP — только latin-1: кириллицу в адресе кодируем
-        self.send_header("Location", urllib.parse.quote(to, safe="/?&=%:+,;@!$'()*-._~#[]"))
+        self.send_header("Location", to)
         self.send_header("Content-Length", "0")
         if cookie:
             self.send_header("Set-Cookie", cookie)
@@ -943,34 +942,19 @@ class Handler(BaseHTTPRequestHandler):
                 "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
                 " ORDER BY idx DESC LIMIT 30", (day,)).fetchall()
             send({"type": "init", "day": day, "items": [item_of(r) for r in rows]})
-            top = con.execute(
-                "SELECT ts, idx FROM events WHERE day=? AND event_type=1 AND event_code=8"
-                " ORDER BY ts DESC, idx DESC LIMIT 1", (day,)).fetchone()
-            last_ts = top["ts"] if top else ""
-            last_idx = top["idx"] if top else 0
+            last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
             idle = 0
-            tick = 0
             while True:
                 time.sleep(0.25)
-                tick += 1
-                if tick % 40 == 0:
-                    # самовосстановление: журнал откатился/перезаписан — просим переподключиться
-                    dbmax = con.execute(
-                        "SELECT COALESCE(MAX(ts),'') m FROM events WHERE day=? AND event_type=1 AND event_code=8",
-                        (day,)).fetchone()["m"]
-                    if dbmax < last_ts:
-                        send({"type": "reload"})
-                        break
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break
                 new = con.execute(
-                    "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
-                    " AND (ts>? OR (ts=? AND idx>?)) ORDER BY ts, idx LIMIT 50",
-                    (day, last_ts, last_ts, last_idx)).fetchall()
+                    "SELECT * FROM events WHERE day=? AND idx>? AND event_type=1 AND event_code=8"
+                    " ORDER BY idx LIMIT 50", (day, last)).fetchall()
                 if new:
-                    last_ts = max(r["ts"] for r in new)
-                    last_idx = max(r["idx"] for r in new if r["ts"] == last_ts)
+                    for r in new:
+                        last = max(last, r["idx"])
                     send({"type": "events", "items": [item_of(r) for r in new]})
                     idle = 0
                 else:
@@ -978,8 +962,6 @@ class Handler(BaseHTTPRequestHandler):
                     if idle % 8 == 0:
                         self.wfile.write(b": ping\n\n")
                         self.wfile.flush()
-                    if idle % 60 == 0:
-                        send({"type": "ping"})
         except (BrokenPipeError, ConnectionResetError, OSError):
             pass
         finally:
@@ -1475,11 +1457,7 @@ class Handler(BaseHTTPRequestHandler):
             if check_password(login, form.get("password", "")):
                 cookie = "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax" % (
                     COOKIE, make_token(login), SESSION_HOURS * 3600)
-                nxt = (urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-                       .get("next", ["/"])[0] or "/")
-                if not nxt.startswith("/") or nxt.startswith("//"):
-                    nxt = "/"
-                return self.redirect(nxt, cookie=cookie)
+                return self.redirect("/", cookie=cookie)
             return self.redirect("/login?e=1")
         if not self.current_user():
             return self.send_json({"error": "unauthorized"}, code=401)

@@ -16,8 +16,8 @@ import threading
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PATH = os.path.join(ROOT, "users.json")
 
-ROLES = ("admin", "operator", "viewer", "kpp")
-ROLE_TITLES = {"admin": "Администратор", "operator": "Оператор", "viewer": "Просмотр", "kpp": "Пост КПП"}
+ROLES = ("admin", "operator", "viewer")
+ROLE_TITLES = {"admin": "Администратор", "operator": "Оператор", "viewer": "Просмотр"}
 
 _lock = threading.Lock()
 

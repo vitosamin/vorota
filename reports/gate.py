@@ -725,9 +725,9 @@ def import_day_incremental(con, day, path):
 def sync_today_fast(con=None):
     """Быстрая досинхронизация сегодняшнего журнала.
 
-    Gate периодически перезаписывает файл событий, меняя порядок/индексы
-    записей, поэтому инкремент «по idx» пропускает события. Здесь файл
-    копируется и при изменении содержимого день импортируется целиком.
+    Копируем файл каждый цикл: атрибуты SMB-каталога кешируются на несколько
+    секунд, поэтому проверка mtime пропускала бы свежие записи. Имя файла
+    строим сами (nГГММДД.mdb), чтобы не запрашивать листинг каталога.
     """
     own = con is None
     con = con or connect()
@@ -739,21 +739,12 @@ def sync_today_fast(con=None):
     except Exception:
         return 0
     try:
-        with open(local, "rb") as fh:
-            digest = hashlib.md5(fh.read()).hexdigest()
-    except OSError:
-        return 0
-    key = "fast_hash:" + day
-    if meta_get(con, key) == digest:
-        return 0
-    try:
-        res = import_day(con, day, local)
+        return import_day_incremental(con, day, local)
     except Exception:
         return 0
-    with _lock:
-        meta_set(con, key, digest)
-        con.commit()
-    return int(res or 0)
+    finally:
+        if own:
+            con.close()
 
 
 def remote_event_days():
