@@ -1269,6 +1269,22 @@ class Handler(BaseHTTPRequestHandler):
             con = gate.connect()
             try:
                 users = gate.mdb_export(os.path.join(gate.DATA, "config.mdb"), "Users")
+                fac, num, uid = gate.card_to_gate(card)
+                number = "%03d/%05d" % (fac, num)
+                for u in users:
+                    same = ((u.get("Number") or "").strip() == number
+                            or (uid and (u.get("NumberU") or "").strip().upper() == uid.upper()))
+                    if same:
+                        raise ValueError("этот ключ уже привязан: %s %s %s (табельный %s)" % (
+                            (u.get("LastName") or "").strip(), (u.get("FirstName") or "").strip(),
+                            (u.get("FatherName") or "").strip(), (u.get("Number") or "").strip()))
+                warn = ""
+                up = [u for u in users if (u.get("Deleted") or "0").strip() in ("0", "")
+                      and " ".join(x for x in ((u.get("LastName") or "").strip(),
+                                               (u.get("FirstName") or "").strip()) if x).lower()
+                      == " ".join(x.strip() for x in (p.get("last"), p.get("first")) if (x or "").strip()).lower()]
+                if up:
+                    warn = "в картотеке уже есть сотрудник с таким ФИО — новый будет отдельной записью"
                 next_ptr = max((gate._int(u.get("UserPtr")) for u in users), default=0) + 1
                 sql = gate.build_add_user_sql(con, {"visitor": fio, "card": card, "doors": doors,
                                                     "position": p.get("position", ""),
@@ -1283,7 +1299,7 @@ class Handler(BaseHTTPRequestHandler):
             job = "staff_%d" % int(time.time())
             gate.queue_put(job + ".sql", sql)
             gate.queue_restart()
-            return self.send_json({"ok": True, "job": job, "user_ptr": next_ptr})
+            return self.send_json({"ok": True, "job": job, "user_ptr": next_ptr, "warning": warn})
         except (ValueError, TypeError) as exc:
             return self.send_json({"ok": False, "error": str(exc)}, code=400)
 
