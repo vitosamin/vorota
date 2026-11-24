@@ -940,7 +940,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             rows = con.execute(
                 "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
-                " ORDER BY idx DESC LIMIT 30", (day,)).fetchall()
+                " ORDER BY ts DESC, idx DESC LIMIT 30", (day,)).fetchall()
             send({"type": "init", "day": day, "items": [item_of(r) for r in rows]})
             last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
             idle = 0
