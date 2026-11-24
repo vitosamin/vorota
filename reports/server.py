@@ -388,7 +388,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def redirect(self, to, cookie=None):
         self.send_response(302)
-        self.send_header("Location", to)
+        # заголовки HTTP — только latin-1: кириллицу в адресе кодируем
+        self.send_header("Location", urllib.parse.quote(to, safe="/?&=%:+,;@!$'()*-._~#[]"))
         self.send_header("Content-Length", "0")
         if cookie:
             self.send_header("Set-Cookie", cookie)
@@ -942,10 +943,23 @@ class Handler(BaseHTTPRequestHandler):
                 "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
                 " ORDER BY idx DESC LIMIT 30", (day,)).fetchall()
             send({"type": "init", "day": day, "items": [item_of(r) for r in rows]})
-            last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
+            last = con.execute(
+                "SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=? AND event_type=1 AND event_code=8",
+                (day,)).fetchone()["m"]
             idle = 0
+            tick = 0
             while True:
                 time.sleep(0.25)
+                tick += 1
+                if tick % 40 == 0:
+                    # самовосстановление: если записей стало меньше (чистка/переимпорт),
+                    # просим клиента переподключиться и заново взять срез
+                    dbmax = con.execute(
+                        "SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=? AND event_type=1 AND event_code=8",
+                        (day,)).fetchone()["m"]
+                    if dbmax < last:
+                        send({"type": "reload"})
+                        break
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break
@@ -1457,7 +1471,11 @@ class Handler(BaseHTTPRequestHandler):
             if check_password(login, form.get("password", "")):
                 cookie = "%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax" % (
                     COOKIE, make_token(login), SESSION_HOURS * 3600)
-                return self.redirect("/", cookie=cookie)
+                nxt = (urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                       .get("next", ["/"])[0] or "/")
+                if not nxt.startswith("/") or nxt.startswith("//"):
+                    nxt = "/"
+                return self.redirect(nxt, cookie=cookie)
             return self.redirect("/login?e=1")
         if not self.current_user():
             return self.send_json({"error": "unauthorized"}, code=401)

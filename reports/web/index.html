@@ -1432,7 +1432,7 @@ $('#accGo').onclick=loadAccess;
 $('#accPrint').onclick=()=>window.open('/print/access?'+accQS().toString(),'_blank');
 
 /* ---------- КПП: карточка на мониторе охраны ---------- */
-let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null;
+let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null, kppLastMsg=0;
 function kppStop(){
   if(kppEs){ kppEs.close(); kppEs=null; }
   kppQueue=[]; kppShowing=false;
@@ -1440,6 +1440,20 @@ function kppStop(){
   $('#kppOverlay').classList.remove('on');
   $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
   $('#kppStatus').textContent='не подключено';
+}
+function kppFromUrl(){
+  let qp; try{ qp=new URLSearchParams(location.search); }catch(e){ return false; }
+  if(qp.get('kpp')!=='1') return false;
+  const pts=(qp.get('points')||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const sec=qp.get('sec');
+  if(sec) $('#kppSec').value=sec;
+  if(pts.length && MSEL['#kppPoint']){
+    pts.forEach(p=>MSEL['#kppPoint'].add(p));
+    mselUpdate('#kppPoint');
+  }
+  openTab('kpp', false);
+  kppStart();
+  return true;
 }
 function kppMatch(it){
   const pts=mselValues('#kppPoint');
@@ -1517,13 +1531,16 @@ function kppStart(){
   }
   if(!window.EventSource){ $('#kppStatus').textContent='нет EventSource'; return; }
   kppEs=new EventSource('/api/stream?day='+todayISO());
-  kppEs.onopen=()=>{ $('#kppStatus').textContent='подключено · точек: '+mselValues('#kppPoint').length; };
+  kppLastMsg=Date.now();
+  kppEs.onopen=()=>{ kppLastMsg=Date.now(); $('#kppStatus').textContent='подключено · точек: '+mselValues('#kppPoint').length; };
   kppEs.onerror=()=>{ $('#kppStatus').textContent='переподключение…'; };
   kppEs.onmessage=(ev)=>{
+    kppLastMsg=Date.now();
     let m; try{m=JSON.parse(ev.data);}catch(e){return;}
     // лента: новые сверху — элементы идут по возрастанию, prepend кладёт последний выше всех
     if(m.type==='events'){ (m.items||[]).forEach(it=>{ if(kppMatch(it)){ kppFeedAdd(it); kppEnqueue(it); } }); }
     if(m.type==='init'){ (m.items||[]).slice(0,20).reverse().forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
+    if(m.type==='reload'){ kppStart(); }
   };
 }
 function kppOnOpen(){
@@ -1550,6 +1567,11 @@ function kppRefreshFilter(){
 }
 $('#kppPoint').addEventListener('change', ()=>kppRefreshFilter());
 $('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
+setInterval(()=>{
+  if(state.tab==='kpp' && kppEs && kppLastMsg && Date.now()-kppLastMsg>30000){
+    kppStart();                       // поток замолчал — переподключаемся
+  }
+},10000);
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
 
@@ -3058,6 +3080,7 @@ function initDates(){
     await loadStatus();
     await loadRefs();
     openTab('kpp', false);
+    kppFromUrl();
     setInterval(loadStatus,30000);
     return;
   }
@@ -3081,7 +3104,7 @@ function initDates(){
   setInterval(()=>{ if(state.tab==='mon') loadMon(); },15000);
   setInterval(()=>{ if(state.tab==='pas' && PASS_PENDING>0) loadPasses(); },20000);
   setInterval(loadStatus,30000);
-  checkVersion();
+  if(!kppFromUrl()) checkVersion();
 })();
 </script>
 </body>
