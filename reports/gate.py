@@ -1888,7 +1888,7 @@ def t13(con, month, group=None, user_ptr=None):
             "days": days, "worked_days": worked_days,
             "absent_days": abs_days, "total_min": total_min,
         })
-    out.sort(key=lambda r: (r["group"], r["fio"]))
+    out.sort(key=lambda r: r["fio"])
     return {"month": month, "days": ndays,
             "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
             "rows": out, "count": len(out),
