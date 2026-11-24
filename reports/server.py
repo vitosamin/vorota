@@ -943,32 +943,34 @@ class Handler(BaseHTTPRequestHandler):
                 "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
                 " ORDER BY idx DESC LIMIT 30", (day,)).fetchall()
             send({"type": "init", "day": day, "items": [item_of(r) for r in rows]})
-            last = con.execute(
-                "SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=? AND event_type=1 AND event_code=8",
-                (day,)).fetchone()["m"]
+            top = con.execute(
+                "SELECT ts, idx FROM events WHERE day=? AND event_type=1 AND event_code=8"
+                " ORDER BY ts DESC, idx DESC LIMIT 1", (day,)).fetchone()
+            last_ts = top["ts"] if top else ""
+            last_idx = top["idx"] if top else 0
             idle = 0
             tick = 0
             while True:
                 time.sleep(0.25)
                 tick += 1
                 if tick % 40 == 0:
-                    # самовосстановление: если записей стало меньше (чистка/переимпорт),
-                    # просим клиента переподключиться и заново взять срез
+                    # самовосстановление: журнал откатился/перезаписан — просим переподключиться
                     dbmax = con.execute(
-                        "SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=? AND event_type=1 AND event_code=8",
+                        "SELECT COALESCE(MAX(ts),'') m FROM events WHERE day=? AND event_type=1 AND event_code=8",
                         (day,)).fetchone()["m"]
-                    if dbmax < last:
+                    if dbmax < last_ts:
                         send({"type": "reload"})
                         break
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break
                 new = con.execute(
-                    "SELECT * FROM events WHERE day=? AND idx>? AND event_type=1 AND event_code=8"
-                    " ORDER BY idx LIMIT 50", (day, last)).fetchall()
+                    "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
+                    " AND (ts>? OR (ts=? AND idx>?)) ORDER BY ts, idx LIMIT 50",
+                    (day, last_ts, last_ts, last_idx)).fetchall()
                 if new:
-                    for r in new:
-                        last = max(last, r["idx"])
+                    last_ts = max(r["ts"] for r in new)
+                    last_idx = max(r["idx"] for r in new if r["ts"] == last_ts)
                     send({"type": "events", "items": [item_of(r) for r in new]})
                     idle = 0
                 else:
