@@ -906,12 +906,16 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         con = gate.connect()
         users = gate._user_names(con)
+        photos = gate.photos_map(con)
 
         def item_of(r):
             u = users.get(r["user_ptr"])
             return {"ts": r["ts"], "time": r["ts"][11:19], "user_ptr": r["user_ptr"],
                     "fio": u["fio"] if u else (r["name"] or "—"),
                     "group": u["group"] if u else "", "unit": r["unit"] or "",
+                    "position": u["position"] if u else "",
+                    "number": u["number"] if u else "",
+                    "photo": r["user_ptr"] in photos,
                     "direction": gate.direction(r["unit"]), "message": r["message"] or "",
                     "event_type": r["event_type"], "event_code": r["event_code"]}
 

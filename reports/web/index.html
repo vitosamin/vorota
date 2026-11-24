@@ -224,6 +224,16 @@ table.pf td,table.pf th{white-space:nowrap}
 .tag.neg{background:#fdecea;color:#c62828} .tag.pos{background:#e8f5e9;color:#2e7d32}
 table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
+.kpp-overlay{position:fixed;inset:0;background:rgba(8,12,18,.72);display:none;align-items:center;justify-content:center;z-index:999}
+.kpp-overlay.on{display:flex}
+.kpp-card{background:#fff;border-radius:20px;padding:26px 32px;display:flex;gap:28px;align-items:center;min-width:700px;max-width:1100px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.kpp-photo{width:240px;height:300px;border-radius:14px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;font-size:64px;color:#2f6fd0;font-weight:700;flex:none}
+.kpp-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.kpp-info{min-width:0}
+.kpp-name{font-size:34px;font-weight:700;line-height:1.1}
+.kpp-pos{font-size:19px;color:#4b5a6a;margin-top:8px}
+.kpp-meta{font-size:17px;color:#2f6fd0;margin-top:16px;display:flex;gap:18px;flex-wrap:wrap}
+.kpp-meta .dir.in{color:#2e7d32} .kpp-meta .dir.out{color:#c62828}
 .photo-row{display:flex;gap:14px;align-items:center;margin:0 0 12px}
 .photo-box{width:92px;height:92px;border-radius:12px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;color:#2f6fd0;font-weight:700;font-size:28px;flex:none}
 .photo-box img{width:100%;height:100%;object-fit:cover;display:block}
@@ -376,6 +386,7 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="rep">Посещаемость</button>
     <button data-tab="pas">Пропуска</button>
     <button data-tab="emp">Сотрудники</button>
+    <button data-tab="kpp">КПП</button>
     <button data-tab="rpt">Отчёты</button>
     <button data-tab="tsh">Табель</button>
     <button data-tab="brk">Перекуры</button>
@@ -688,6 +699,31 @@ button .ic,a.btn .ic{opacity:.9}
     </div>
   </section>
 
+  <!-- ================= КПП (пост охраны) ================= -->
+  <section class="tab" id="tab-kpp">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Точки КПП</label>
+            <div class="msel" id="kppPoint" data-ph="все точки">
+              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+              <div class="msel-list"></div>
+            </div></div>
+          <div><label class="f">Показ, секунд</label><input type="number" id="kppSec" min="1" max="20" value="3"></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="kppStart">Подключить</button>
+          <button id="kppStop">Отключить</button>
+          <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">последние проходы через выбранные точки</span></div>
+      <div class="bd"><div class="tblwrap" id="kppFeed"><div class="empty">Нет событий</div></div></div>
+    </div>
+  </section>
+
   <!-- ================= ОТЧЁТЫ ================= -->
   <section class="tab" id="tab-rpt">
     <div class="card" style="margin-bottom:12px">
@@ -968,6 +1004,16 @@ button .ic,a.btn .ic{opacity:.9}
       <button id="mClose" style="margin-left:auto">✕ Закрыть</button>
     </div>
     <div class="modal-bd" id="mBody"></div>
+  </div>
+</div>
+<div class="kpp-overlay" id="kppOverlay">
+  <div class="kpp-card">
+    <div class="kpp-photo" id="kppPhoto"></div>
+    <div class="kpp-info">
+      <div class="kpp-name" id="kppName"></div>
+      <div class="kpp-pos" id="kppPos"></div>
+      <div class="kpp-meta" id="kppMeta"></div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1283,7 +1329,7 @@ function renderEmpTab(){
   if(!items.length){ $('#empWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
   $('#empWrap').innerHTML='<table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Должность</th>'
     +'<th>Табельный</th><th>График работы</th></tr></thead><tbody>'
-    + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+(x.photo?'<img class="avatar" style="width:100%;height:100%" src="/photo/'+x.user_ptr+'">':esc(initials(x.fio)))+'</div>'
+    + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+esc(initials(x.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(x.fio)+'</div></div></div></td>'
       +'<td class="tag">'+esc(x.group||'')+'</td><td class="tag">'+esc(x.position||'')+'</td>'
       +'<td class="mono tag">'+esc(x.number||'')+'</td>'
@@ -1364,6 +1410,66 @@ async function loadAccess(){
 $('#accGo').onclick=loadAccess;
 $('#accPrint').onclick=()=>window.open('/print/access?'+accQS().toString(),'_blank');
 
+/* ---------- КПП: карточка на мониторе охраны ---------- */
+let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null;
+function kppStop(){
+  if(kppEs){ kppEs.close(); kppEs=null; }
+  kppQueue=[]; kppShowing=false;
+  clearTimeout(kppItemTimer);
+  $('#kppOverlay').classList.remove('on');
+  $('#kppStatus').textContent='не подключено';
+}
+function kppMatch(it){
+  const pts=mselValues('#kppPoint');
+  if(!pts.length) return true;
+  const u=(it.unit||'').toLowerCase();
+  return pts.some(p=>u.includes(p.toLowerCase()));
+}
+function kppFeedAdd(it){
+  const wrap=$('#kppFeed');
+  if(wrap.querySelector('.empty')) wrap.innerHTML='';
+  const dir=it.direction==='in'?'<span class="dir in">вход</span>':(it.direction==='out'?'<span class="dir out">выход</span>':'');
+  const row=document.createElement('div');
+  row.className='kpp-row';
+  row.style.cssText='display:flex;gap:10px;padding:4px 0;border-bottom:1px solid #eef1f5;font-size:13px';
+  row.innerHTML='<span class="mono">'+esc(it.time||'')+'</span><b>'+esc(it.fio||'')+'</b>'
+    +'<span class="muted">'+esc(it.position||'')+'</span><span class="muted" style="margin-left:auto">'+esc(it.unit||'')+'</span>'+dir;
+  wrap.prepend(row);
+  while(wrap.children.length>60) wrap.lastChild.remove();
+}
+function kppEnqueue(it){ kppQueue.push(it); if(!kppShowing) kppNext(); }
+function kppNext(){
+  const it=kppQueue.shift();
+  if(!it){ kppShowing=false; $('#kppOverlay').classList.remove('on'); return; }
+  kppShowing=true;
+  $('#kppName').textContent=it.fio||'';
+  $('#kppPos').textContent=[it.position,it.group].filter(Boolean).join(' · ');
+  const dir=it.direction==='in'?'вход':(it.direction==='out'?'выход':'');
+  $('#kppMeta').innerHTML='<span>'+esc(it.time||'')+'</span><span>'+esc(it.unit||'')+'</span><span class="dir '+(it.direction||'')+'">'+dir+'</span>'
+    + (it.number?'<span class="muted">'+esc(it.number)+'</span>':'');
+  $('#kppPhoto').innerHTML = it.photo
+    ? '<img src="/photo/'+it.user_ptr+'?t='+encodeURIComponent(it.ts||'')+'" alt="">'
+    : esc(initials(it.fio||''));
+  $('#kppOverlay').classList.add('on');
+  const sec=Math.max(1, Math.min(20, parseInt($('#kppSec').value||'3',10)));
+  clearTimeout(kppItemTimer);
+  kppItemTimer=setTimeout(()=>{ kppNext(); }, sec*1000);
+}
+function kppStart(){
+  kppStop();
+  if(!window.EventSource){ $('#kppStatus').textContent='нет EventSource'; return; }
+  kppEs=new EventSource('/api/stream?day='+todayISO());
+  kppEs.onopen=()=>{ $('#kppStatus').textContent='подключено · точки: '+(mselValues('#kppPoint').length||'все'); };
+  kppEs.onerror=()=>{ $('#kppStatus').textContent='переподключение…'; };
+  kppEs.onmessage=(ev)=>{
+    let m; try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.type==='events'){ (m.items||[]).slice().reverse().forEach(it=>{ if(kppMatch(it)){ kppFeedAdd(it); kppEnqueue(it); } }); }
+    if(m.type==='init'){ (m.items||[]).slice(0,20).forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
+  };
+}
+$('#kppStart').onclick=kppStart;
+$('#kppStop').onclick=kppStop;
+
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
 setInterval(tickClock,1000); tickClock();
@@ -1378,6 +1484,7 @@ function openTab(name, remember){
   btn.classList.add('active'); $('#tab-'+name).classList.add('active');
   state.tab=name;
   if(remember!==false){ try{ localStorage.setItem('skud_tab', name); }catch(e){} }
+  if(name!=='kpp' && kppEs) kppStop();
   if(!REFS_OK) loadRefs();
   if(name==='mon') loadMon();
   if(name==='ana') loadAnalytics();
@@ -1390,6 +1497,7 @@ function openTab(name, remember){
   if(name==='emp') loadEmpTab();
   if(name==='pf') loadPlanFact();
   if(name==='acc') loadAccess();
+  if(name==='kpp') kppStart();
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>openTab(b.dataset.tab);
@@ -2809,7 +2917,7 @@ async function loadRefs(){
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
       ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup','#bGroup','#pfGroup','#accGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
-      ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint','#bPoint'].forEach(s=>buildMsel(s, POINTS));
+      ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint','#bPoint','#kppPoint'].forEach(s=>buildMsel(s, POINTS));
       if(!window._bPointInit && MSEL['#bPoint'] && !MSEL['#bPoint'].size){
         // по умолчанию — проходная производства: там и курят
         POINTS.filter(p=>/произ/i.test(p.unit)).forEach(p=>MSEL['#bPoint'].add(p.unit));
