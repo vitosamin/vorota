@@ -734,6 +734,7 @@ button .ic,a.btn .ic{opacity:.9}
           <button class="primary" id="kppStart">Подключить</button>
           <button id="kppStop">Отключить</button>
           <button id="kppDemo" title="Показать тестовую карточку">Проверить карточку</button>
+          <button id="kppAll" title="Отметить все точки">Все точки</button>
           <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
         </div>
       </div>
@@ -1588,6 +1589,12 @@ setInterval(()=>{
 },10000);
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
+$('#kppAll').onclick=()=>{
+  (POINTS||[]).forEach(p=>MSEL['#kppPoint'] && MSEL['#kppPoint'].add(p.unit));
+  mselUpdate('#kppPoint');
+  kppRefreshFilter();
+  kppStart();
+};
 $('#kppDemo').onclick=()=>{
   const it={fio:'Тестовый Сотрудник',position:'проверка карточки',group:'охрана',time:new Date().toTimeString().slice(0,8),
             unit:'КПП2 - Вход',direction:'in',photo:false,user_ptr:0,number:'000/00000',ts:''};
