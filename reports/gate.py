@@ -1607,10 +1607,13 @@ def build_add_user_sql(con, data, user_ptr):
             if g:
                 groups[g] = groups.get(g, 0) + 1
     group_ptr = max(groups, key=groups.get) if groups else (tpl.get("GroupPtr") or "2")
+    if (data.get("group_ptr") or "").strip().isdigit():
+        group_ptr = data["group_ptr"].strip()
+    position = (data.get("position") or "").strip() or "Водитель"
     vals = [str(user_ptr), tpl.get("KeyType") or "1", q(number), q(number_u), "NULL",
             q(last), q(first), q(father), group_ptr, "0",
             "0", "NULL", "NULL", "0", "0",
-            q("Водитель"), "0", "0", "0", "NULL", "0", "NULL", "0", "0"]
+            q(position), "0", "0", "0", "NULL", "0", "NULL", "0", "0"]
     lines = ["# СКУД Gate: новый пользователь из приложения",
              "INSERT INTO [Users] (%s) VALUES (%s)" % (", ".join("[%s]" % c for c in cols), ", ".join(vals))]
     for rdr, inner in rdrs_slots:

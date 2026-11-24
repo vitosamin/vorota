@@ -698,6 +698,7 @@ button .ic,a.btn .ic{opacity:.9}
           <div><label class="f">Быстро открыть карточку</label><select id="empPick"><option value="">— выберите сотрудника —</option></select></div>
         </div>
         <div class="row-actions">
+          <button id="empAdd" style="display:none">Добавить сотрудника</button>
           <span class="muted" id="empCount" style="font-size:var(--fs-s)"></span>
         </div>
       </div>
@@ -1051,6 +1052,35 @@ button .ic,a.btn .ic{opacity:.9}
       <button id="mClose" style="margin-left:auto">✕ Закрыть</button>
     </div>
     <div class="modal-bd" id="mBody"></div>
+  </div>
+</div>
+<div class="modal" id="staffModal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3>Новый сотрудник (в Gate)</h3>
+      <button id="stClose" style="margin-left:auto">✕ Закрыть</button>
+    </div>
+    <div class="modal-bd">
+      <div class="filters" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div><label class="f">Фамилия</label><input id="stLast" autocomplete="off"></div>
+        <div><label class="f">Имя</label><input id="stFirst" autocomplete="off"></div>
+        <div><label class="f">Отчество</label><input id="stFather" autocomplete="off"></div>
+        <div><label class="f">Должность</label><input id="stPos" autocomplete="off"></div>
+        <div><label class="f">Ключ (140/39939)</label><input id="stCard" placeholder="140/39939" autocomplete="off"></div>
+      </div>
+      <div style="margin:12px 0">
+        <label class="f">Точки доступа</label>
+        <div class="msel" id="stDoors" data-ph="выберите двери">
+          <button type="button" class="msel-btn"><span class="msel-txt">выберите двери</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+          <div class="msel-list"></div>
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="primary" id="stSave">Добавить в Gate</button>
+        <span class="muted" id="stHint" style="font-size:var(--fs-s);align-self:center"></span>
+      </div>
+      <div class="notice warn" style="margin-top:12px"><span class="ni"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg></span><span>Сотрудник создаётся в картотеке Gate, служба GateServ перезапускается. В панели появится после синхронизации (1–2 минуты). Перед записью делается резервная копия картотеки.</span></div>
+    </div>
   </div>
 </div>
 <div class="kpp-overlay" id="kppOverlay">
@@ -2719,6 +2749,30 @@ async function loadDoors(){
 }
 
 let PASS_PENDING=0;
+
+/* ---------- добавление сотрудника в Gate (админ) ---------- */
+async function openStaffModal(){
+  if(!DOORS.length) await loadDoors();
+  buildMsel('#stDoors', DOORS.map(d=>({unit:d.name})));
+  $('#stHint').textContent='';
+  $('#staffModal').classList.add('open');
+}
+$('#stClose').onclick=()=>$('#staffModal').classList.remove('open');
+$('#empAdd').onclick=openStaffModal;
+$('#stSave').onclick=async ()=>{
+  const doors=mselValues('#stDoors');
+  if(!doors.length){ toast('Выберите хотя бы одну точку доступа', true); return; }
+  $('#stSave').disabled=true;
+  try{
+    const d=await postJSON('/api/staff/add',{
+      last:$('#stLast').value, first:$('#stFirst').value, father:$('#stFather').value,
+      position:$('#stPos').value, card:$('#stCard').value, doors});
+    $('#stHint').textContent='задание отправлено в Gate ('+d.job+')';
+    toast('Сотрудник отправлен в Gate — появится через 1–2 минуты');
+    setTimeout(()=>$('#staffModal').classList.remove('open'), 2500);
+  }catch(e){ toast('Сотрудник: '+e.message, true); }
+  finally{ $('#stSave').disabled=false; }
+};
 async function loadPasses(){
   const p=new URLSearchParams();
   if($('#passFltFrom').value) p.set('from',$('#passFltFrom').value);
@@ -2966,6 +3020,7 @@ async function loadMe(){
     const btn=$('#tabBtnSet');
     if(ME.role==='admin'){ btn.style.display=''; }
     const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
+    const ea=$('#empAdd'); if(ea) ea.style.display = (ME.role==='admin'?'':'none');
     else { btn.style.display='none'; }
     const ml=$('#meLogin'); if(ml) ml.textContent=ME.login+' · '+ME.roleTitle;
     if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }

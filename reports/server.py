@@ -19,6 +19,7 @@ import hmac
 import io
 import json
 import os
+import shutil
 import sys
 import threading
 import time
@@ -1246,6 +1247,46 @@ class Handler(BaseHTTPRequestHandler):
                                filename="Табель_Т-13_%s.xls" % d["title"].replace(" ", "_"),
                                ascii_name="t13_%s.xls" % d["month"])
 
+    def api_staff_add(self, body):
+        user = self.require_admin()
+        if not user:
+            return
+        try:
+            p = json.loads(body or b"{}")
+        except ValueError:
+            p = {}
+        fio = " ".join(x.strip() for x in (p.get("last"), p.get("first"), p.get("father"))
+                       if (x or "").strip()) or (p.get("fio") or "").strip()
+        try:
+            if len(fio) < 3:
+                raise ValueError("укажите ФИО")
+            card = (p.get("card") or "").strip()
+            if not gate.card_to_gate(card):
+                raise ValueError("номер ключа в формате 140/39939")
+            doors = [d for d in (p.get("doors") or []) if str(d).strip()]
+            if not doors:
+                raise ValueError("выберите точки доступа")
+            con = gate.connect()
+            try:
+                users = gate.mdb_export(os.path.join(gate.DATA, "config.mdb"), "Users")
+                next_ptr = max((gate._int(u.get("UserPtr")) for u in users), default=0) + 1
+                sql = gate.build_add_user_sql(con, {"visitor": fio, "card": card, "doors": doors,
+                                                    "position": p.get("position", ""),
+                                                    "group_ptr": p.get("group_ptr", "")}, next_ptr)
+            finally:
+                con.close()
+            if p.get("dry_run"):
+                return self.send_json({"ok": True, "sql": sql, "user_ptr": next_ptr})
+            src = os.path.join(gate.DATA, "config.mdb")
+            if os.path.exists(src):
+                shutil.copyfile(src, src + ".bak-staff")
+            job = "staff_%d" % int(time.time())
+            gate.queue_put(job + ".sql", sql)
+            gate.queue_restart()
+            return self.send_json({"ok": True, "job": job, "user_ptr": next_ptr})
+        except (ValueError, TypeError) as exc:
+            return self.send_json({"ok": False, "error": str(exc)}, code=400)
+
     def api_test_people(self):
         if not self.require_admin():
             return
@@ -1564,6 +1605,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True, "photo": ph})
             finally:
                 con.close()
+        if path == "/api/staff/add":
+            return self.api_staff_add(body)
         if path.startswith("/api/test/"):
             return self.test_post(path, body)
         if path == "/api/absences":
