@@ -1278,7 +1278,7 @@ class Handler(BaseHTTPRequestHandler):
                 for u in users:
                     same = ((u.get("Number") or "").strip() == number
                             or (uid and (u.get("NumberU") or "").strip().upper() == uid.upper()))
-                    if same:
+                    if same and (u.get("Deleted") or "0").strip() in ("0", ""):
                         raise ValueError("этот ключ уже привязан: %s %s %s (табельный %s)" % (
                             (u.get("LastName") or "").strip(), (u.get("FirstName") or "").strip(),
                             (u.get("FatherName") or "").strip(), (u.get("Number") or "").strip()))
