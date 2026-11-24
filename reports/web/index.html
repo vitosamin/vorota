@@ -224,6 +224,17 @@ table.pf td,table.pf th{white-space:nowrap}
 .tag.neg{background:#fdecea;color:#c62828} .tag.pos{background:#e8f5e9;color:#2e7d32}
 table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
+body.kpp-mode{background:linear-gradient(160deg,#eef3fa 0%,#dfe8f5 100%)}
+body.kpp-mode nav.tabs{display:none}
+body.kpp-mode #btnSync{display:none}
+body.kpp-mode .tab{display:none}
+body.kpp-mode #tab-kpp{display:flex;flex-direction:column;gap:12px;height:calc(100vh - 96px)}
+body.kpp-mode #tab-kpp > .card:last-child{flex:1;min-height:0;display:flex;flex-direction:column}
+body.kpp-mode #tab-kpp > .card:last-child .bd{flex:1;min-height:0;overflow:auto}
+body.kpp-mode #tab-kpp .card{margin:0}
+body.kpp-mode #kppFeed{max-height:none;overflow:auto}
+body.kpp-mode .kpp-row{font-size:15px;padding:8px 2px}
+body.kpp-mode footer{display:none}
 .kpp-overlay{position:fixed;inset:0;background:rgba(8,12,18,.72);display:none;align-items:center;justify-content:center;z-index:999}
 .kpp-overlay.on{display:flex}
 .kpp-card{background:#fff;border-radius:22px;padding:28px 30px;display:flex;gap:28px;align-items:flex-start;width:880px;max-width:94vw;box-shadow:0 30px 90px rgba(0,0,0,.5)}
@@ -1519,7 +1530,9 @@ function kppOnOpen(){
   const n=mselValues('#kppPoint').length;
   if(!kppEs){
     $('#kppOverlay').classList.remove('on');
-    $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
+    $('#kppFeed').innerHTML='<div class="empty">'+(n
+      ? 'Точки выбраны — нажмите «Подключить»'
+      : 'Выберите точки КПП и нажмите «Подключить»')+'</div>';
     $('#kppStatus').textContent = n ? 'точки выбраны · нажмите «Подключить»' : 'выберите точки КПП';
   }
 }
@@ -3037,6 +3050,17 @@ function initDates(){
 (async function start(){
   initDates();
   await loadMe();
+  if(ME.role==='kpp'){
+    document.body.classList.add('kpp-mode');
+    document.title='Пост КПП';
+    const h1=document.querySelector('.top h1'); if(h1) h1.textContent='Пост КПП';
+    const sub=document.querySelector('.top .sub'); if(sub) sub.textContent='экран охраны · выберите точки и нажмите «Подключить»';
+    await loadStatus();
+    await loadRefs();
+    openTab('kpp', false);
+    setInterval(loadStatus,30000);
+    return;
+  }
   await loadStatus();
   setupCardReader();
   passDaysRender();
