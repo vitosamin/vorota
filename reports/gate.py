@@ -198,6 +198,12 @@ CREATE TABLE IF NOT EXISTS access_table (
 );
 CREATE INDEX IF NOT EXISTS ix_access_user ON access_table(user_ptr);
 
+CREATE TABLE IF NOT EXISTS photos (
+    user_ptr INTEGER PRIMARY KEY,
+    ext      TEXT,
+    updated  TEXT
+);
+
 CREATE TABLE IF NOT EXISTS absences (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     user_ptr  INTEGER NOT NULL,
@@ -333,6 +339,49 @@ def meta_get(con, key, default=None):
 def meta_set(con, key, value):
     con.execute("INSERT INTO meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, str(value)))
+
+
+PHOTOS_DIR = os.path.join(DATA, "photos")
+
+
+def photo_path(user_ptr, ext):
+    return os.path.join(PHOTOS_DIR, "%s.%s" % (int(user_ptr), ext))
+
+
+def get_photo(con, user_ptr):
+    r = con.execute("SELECT ext, updated FROM photos WHERE user_ptr=?",
+                    (int(user_ptr),)).fetchone()
+    if not r or not os.path.exists(photo_path(user_ptr, r["ext"])):
+        return None
+    return {"ext": r["ext"], "updated": r["updated"] or ""}
+
+
+def set_photo(con, user_ptr, ext):
+    """Сохранить расширение фото (файл уже записан); ext=None — удалить."""
+    uid = int(user_ptr)
+    old = con.execute("SELECT ext FROM photos WHERE user_ptr=?", (uid,)).fetchone()
+    if old and old["ext"]:
+        try:
+            os.remove(photo_path(uid, old["ext"]))
+        except OSError:
+            pass
+    with _lock:
+        if not ext:
+            con.execute("DELETE FROM photos WHERE user_ptr=?", (uid,))
+        else:
+            con.execute("INSERT INTO photos(user_ptr,ext,updated) VALUES(?,?,?)"
+                        " ON CONFLICT(user_ptr) DO UPDATE SET ext=excluded.ext, updated=excluded.updated",
+                        (uid, ext, dt.datetime.now().isoformat(timespec="seconds")))
+        con.commit()
+    return get_photo(con, uid)
+
+
+def photos_map(con):
+    out = {}
+    for r in con.execute("SELECT user_ptr, ext, updated FROM photos"):
+        if os.path.exists(photo_path(r["user_ptr"], r["ext"])):
+            out[r["user_ptr"]] = r["updated"] or ""
+    return out
 
 
 def schedules_map(con):
@@ -1584,6 +1633,7 @@ def events_list(con, from_day, to_day, etype=None, search=None, alarms_only=Fals
 def employees(con, group=None, include_visitors=False):
     """Справочник сотрудников по алфавиту (для выбора в отчётах)."""
     sched = schedules_map(con)
+    photos = photos_map(con)
     out = []
     for pid, u in _user_names(con).items():
         if u["deleted"]:
@@ -1598,7 +1648,8 @@ def employees(con, group=None, include_visitors=False):
         out.append({"user_ptr": pid, "fio": u["fio"], "number": u["number"],
                     "group": u["group"], "position": u["position"],
                     "schedule_start": s2[0] if s2 else "",
-                    "schedule_end": s2[1] if s2 else ""})
+                    "schedule_end": s2[1] if s2 else "",
+                    "photo": pid in photos})
     out.sort(key=lambda x: x["fio"])
     return out
 
@@ -1785,7 +1836,7 @@ def person_history(con, user_ptr, from_day, to_day):
     extra["gate_id"] = u["user_ptr"]
     return {"user": u, "from": from_day, "to": to_day, "rows": rows,
             "summary": summary, "details": extra, "breaks": get_breaks(con, user_ptr),
-            "absences": get_absences(con, user_ptr)}
+            "absences": get_absences(con, user_ptr), "photo": get_photo(con, user_ptr)}
 
 
 

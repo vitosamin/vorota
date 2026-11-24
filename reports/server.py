@@ -411,6 +411,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(gate.doors_list(gate.connect()))
             if path == "/print/pass":
                 return self.print_pass(q)
+            if path.startswith("/photo/"):
+                return self.serve_photo(path[len("/photo/"):])
             if path == "/print/timesheet":
                 return self.print_timesheet(q)
             if path == "/print/breaks":
@@ -1140,6 +1142,25 @@ class Handler(BaseHTTPRequestHandler):
                                      stats="", head=head, rows="".join(trs))
         return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
 
+    def serve_photo(self, uid):
+        try:
+            uid = int(uid)
+        except ValueError:
+            return self.send_bytes(b"", "image/jpeg", code=404)
+        con = gate.connect()
+        ph = gate.get_photo(con, uid)
+        con.close()
+        if not ph:
+            return self.send_bytes(b"", "image/jpeg", code=404)
+        try:
+            with open(gate.photo_path(uid, ph["ext"]), "rb") as fh:
+                data = fh.read()
+        except OSError:
+            return self.send_bytes(b"", "image/jpeg", code=404)
+        ctype = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+                 "webp": "image/webp"}.get(ph["ext"], "application/octet-stream")
+        return self.send_bytes(data, ctype, extra={"Cache-Control": "private, max-age=300"})
+
     def _timesheet(self, q):
         month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
         try:
@@ -1369,6 +1390,42 @@ class Handler(BaseHTTPRequestHandler):
             return self.admin_post(path, body)
         if path.startswith("/api/passes"):
             return self.passes_post(path, body)
+        if path == "/api/photo":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            try:
+                uid = int(payload.get("user_ptr") or 0)
+            except (TypeError, ValueError):
+                return self.send_json({"ok": False, "error": "user_ptr"}, code=400)
+            con = gate.connect()
+            try:
+                if payload.get("remove"):
+                    gate.set_photo(con, uid, None)
+                    return self.send_json({"ok": True, "photo": None})
+                raw = payload.get("data") or ""
+                ext = (payload.get("ext") or "").lower().strip(".")
+                if ext == "jpeg":
+                    ext = "jpg"
+                if ext not in ("jpg", "png", "webp"):
+                    return self.send_json({"ok": False, "error": "только JPG, PNG или WebP"}, code=400)
+                try:
+                    data = base64.b64decode(raw, validate=True)
+                except (ValueError, TypeError):
+                    return self.send_json({"ok": False, "error": "плохие данные файла"}, code=400)
+                if not data or len(data) > 4 * 1024 * 1024:
+                    return self.send_json({"ok": False, "error": "файл пустой или больше 4 МБ"}, code=400)
+                os.makedirs(gate.PHOTOS_DIR, exist_ok=True)
+                with open(gate.photo_path(uid, ext), "wb") as fh:
+                    fh.write(data)
+                ph = gate.set_photo(con, uid, ext)
+                return self.send_json({"ok": True, "photo": ph})
+            finally:
+                con.close()
         if path == "/api/absences":
             user = self.require_role("admin", "operator")
             if not user:

@@ -224,6 +224,11 @@ table.pf td,table.pf th{white-space:nowrap}
 .tag.neg{background:#fdecea;color:#c62828} .tag.pos{background:#e8f5e9;color:#2e7d32}
 table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
+.photo-row{display:flex;gap:14px;align-items:center;margin:0 0 12px}
+.photo-box{width:92px;height:92px;border-radius:12px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;color:#2f6fd0;font-weight:700;font-size:28px;flex:none}
+.photo-box img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+img.avatar{object-fit:cover;padding:0;background:#e8eef8}
 .person-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin:0 0 12px;font-size:var(--fs-s)}
 .person-details .it{display:flex;gap:6px;min-width:0}
 .person-details .k{color:var(--muted);white-space:nowrap}
@@ -1276,7 +1281,7 @@ function renderEmpTab(){
   if(!items.length){ $('#empWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
   $('#empWrap').innerHTML='<table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Должность</th>'
     +'<th>Табельный</th><th>График работы</th></tr></thead><tbody>'
-    + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+esc(initials(x.fio))+'</div>'
+    + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+(x.photo?'<img class="avatar" style="width:100%;height:100%" src="/photo/'+x.user_ptr+'">':esc(initials(x.fio)))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(x.fio)+'</div></div></div></td>'
       +'<td class="tag">'+esc(x.group||'')+'</td><td class="tag">'+esc(x.position||'')+'</td>'
       +'<td class="mono tag">'+esc(x.number||'')+'</td>'
@@ -2147,6 +2152,19 @@ function renderPerson(d){
         + abs.map(a=>'<div class="brk-row">'+esc(a.from)+' — '+esc(a.to)+' · '+esc(a.kind)+(a.note?' · '+esc(a.note):'')+'</div>').join('')
         + '</div>' : '');
 
+  const ph=d.photo||null;
+  const photoBox='<div class="photo-row"><div class="photo-box">'
+    + (ph ? '<img src="/photo/'+u.user_ptr+'?v='+encodeURIComponent(ph.updated||'')+'" alt="">'
+          : esc(initials(u.fio)))
+    + '</div>'
+    + (canOperate()
+        ? '<div class="photo-actions"><button id="mPhotoUp" type="button">Загрузить фото</button>'
+          + '<button id="mPhotoDel" type="button"'+(ph?'':' style="display:none"')+'>Удалить</button>'
+          + '<span class="muted" style="font-size:var(--fs-xs)">JPG, PNG или WebP, до 4 МБ</span>'
+          + '<input type="file" id="mPhotoFile" accept="image/jpeg,image/png,image/webp" style="display:none"></div>'
+        : '')
+    + '</div>';
+
   const dt=d.details||{};
   const detRows=[
     ['Табельный номер', u.number||''],
@@ -2181,7 +2199,7 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = details + schBox + brkBox + absBox + chips + chart + table;
+  $('#mBody').innerHTML = photoBox + details + schBox + brkBox + absBox + chips + chart + table;
 }
 $('#mBody').addEventListener('click', async (e)=>{
   const pre=e.target.closest('[data-sch]');
@@ -2191,6 +2209,19 @@ $('#mBody').addEventListener('click', async (e)=>{
     $('#mSchStart').value=parts[0]||'';
     $('#mSchEnd').value=parts[1]||'';
     $('#mSchHint').textContent='нажмите «Сохранить график»';
+    return;
+  }
+  if(e.target.id==='mPhotoUp'){
+    const f=$('#mPhotoFile'); if(f) f.click();
+    return;
+  }
+  if(e.target.id==='mPhotoDel'){
+    const uid=$('#mBody').dataset.uid;
+    try{
+      await postJSON('/api/photo',{user_ptr:uid, remove:true});
+      await openPerson(uid);
+      toast('Фото удалено');
+    }catch(err){ toast('Фото: '+err.message, true); }
     return;
   }
   if(e.target.id==='mAbsAdd'){
@@ -2251,6 +2282,23 @@ $('#mBody').addEventListener('click', async (e)=>{
       : 'график снят — берётся смена из отчёта';
     toast('График сохранён');
   }catch(err){ toast('График: '+err.message, true); }
+});
+$('#mBody').addEventListener('change', async (e)=>{
+  if(e.target.id!=='mPhotoFile') return;
+  const f=e.target.files && e.target.files[0];
+  if(!f) return;
+  const uid=$('#mBody').dataset.uid;
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  const reader=new FileReader();
+  reader.onload=async ()=>{
+    const b64=String(reader.result||'').split(',')[1]||'';
+    try{
+      await postJSON('/api/photo',{user_ptr:uid, data:b64, ext});
+      await openPerson(uid);
+      toast('Фото сохранено');
+    }catch(err){ toast('Фото: '+err.message, true); }
+  };
+  reader.readAsDataURL(f);
 });
 $('#mClose').onclick=closePerson;
 $('#modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') closePerson(); });
