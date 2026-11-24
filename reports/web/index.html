@@ -721,7 +721,7 @@ button .ic,a.btn .ic{opacity:.9}
       </div>
     </div>
     <div class="card">
-      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">последние проходы через выбранные точки</span></div>
+      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">новые сверху · через выбранные точки</span></div>
       <div class="bd"><div class="tblwrap" id="kppFeed"><div class="empty">Нет событий</div></div></div>
     </div>
   </section>
@@ -1468,8 +1468,9 @@ function kppStart(){
   kppEs.onerror=()=>{ $('#kppStatus').textContent='переподключение…'; };
   kppEs.onmessage=(ev)=>{
     let m; try{m=JSON.parse(ev.data);}catch(e){return;}
-    if(m.type==='events'){ (m.items||[]).slice().reverse().forEach(it=>{ if(kppMatch(it)){ kppFeedAdd(it); kppEnqueue(it); } }); }
-    if(m.type==='init'){ (m.items||[]).slice(0,20).forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
+    // лента: новые сверху — элементы идут по возрастанию, prepend кладёт последний выше всех
+    if(m.type==='events'){ (m.items||[]).forEach(it=>{ if(kppMatch(it)){ kppFeedAdd(it); kppEnqueue(it); } }); }
+    if(m.type==='init'){ (m.items||[]).slice(0,20).reverse().forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
   };
 }
 $('#kppStart').onclick=kppStart;
