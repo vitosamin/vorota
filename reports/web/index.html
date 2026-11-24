@@ -215,8 +215,15 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .brk-edit .sched-t{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .brk-edit .brk-row{display:flex;align-items:center;gap:6px;margin:4px 0}
 .brk-edit input[type=time]{width:auto;min-width:96px}
+.brk-edit input[type=date]{width:auto;min-width:132px}
 .brk-edit input.brk-t2{flex:1;min-width:120px}
 .brk-edit .brk-actions{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+table.pf td,table.pf th{white-space:nowrap}
+.pf-bar{position:relative;height:14px;background:#eef2f7;border-radius:4px;min-width:120px}
+.pf-fact{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#6ba0ea,#2f6fd0);border-radius:4px}
+.tag.neg{background:#fdecea;color:#c62828} .tag.pos{background:#e8f5e9;color:#2e7d32}
+table.acc td.c,table.acc th.c{text-align:center}
+.ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
 .person-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin:0 0 12px;font-size:var(--fs-s)}
 .person-details .it{display:flex;gap:6px;min-width:0}
 .person-details .k{color:var(--muted);white-space:nowrap}
@@ -368,6 +375,8 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="tsh">Табель</button>
     <button data-tab="brk">Перекуры</button>
     <button data-tab="ev">Журнал</button>
+    <button data-tab="pf">План-факт</button>
+    <button data-tab="acc">Доступы</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
   </nav>
@@ -410,6 +419,11 @@ button .ic,a.btn .ic{opacity:.9}
           <div class="presence-list" id="presence"><div class="empty">Загрузка…</div></div>
         </div>
       </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="hd"><h3>Отклонения за день</h3><span class="hint" id="devHint">—</span></div>
+      <div class="bd"><div class="tblwrap" id="devWrap"><div class="empty">—</div></div></div>
     </div>
   </section>
 
@@ -765,6 +779,56 @@ button .ic,a.btn .ic{opacity:.9}
     <div class="card">
       <div class="hd"><h3>Последние выходы</h3><span class="hint">до 300 записей</span></div>
       <div class="bd"><div class="tblwrap" id="bDetail"></div></div>
+    </div>
+  </section>
+
+  <!-- ================= ПЛАН-ФАКТ ================= -->
+  <section class="tab" id="tab-pf">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">С даты</label><input type="date" id="pfFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="pfTo"></div>
+          <div><label class="f">Подразделение</label><select id="pfGroup"><option value="">все</option></select></div>
+          <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pfEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="pfEmpList"></div></div></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="pfGo">Рассчитать</button>
+          <button id="pfPrint">Печать</button>
+          <span class="muted" id="pfHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">План</div><div class="val" id="pfPlan">—</div><div class="sub">по графикам</div></div>
+      <div class="kpi g"><div class="lbl">Факт</div><div class="val" id="pfFact">—</div><div class="sub">по проходам</div></div>
+      <div class="kpi a"><div class="lbl">Отклонение</div><div class="val" id="pfDiff">—</div><div class="sub">факт − план</div></div>
+      <div class="kpi r"><div class="lbl">Опозданий</div><div class="val" id="pfLate">—</div><div class="sub">человеко-дней</div></div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>План и факт по сотрудникам</h3><span class="hint" id="pfRange"></span></div>
+      <div class="bd"><div class="tblwrap" id="pfWrap"><div class="empty">Выберите период и нажмите «Рассчитать»</div></div></div>
+    </div>
+  </section>
+
+  <!-- ================= ДОСТУПЫ ================= -->
+  <section class="tab" id="tab-acc">
+    <div class="card" style="margin-bottom:12px">
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Поиск (ФИО, табельный)</label><input id="accSearch" autocomplete="off" placeholder="начните вводить…"></div>
+          <div><label class="f">Подразделение</label><select id="accGroup"><option value="">все</option></select></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="accGo">Показать</button>
+          <button id="accPrint">Печать</button>
+          <span class="muted" id="accHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>Права доступа на дату</h3><span class="hint">отметка — проход разрешён</span></div>
+      <div class="bd"><div class="tblwrap" id="accWrap"><div class="empty">Загрузка…</div></div></div>
     </div>
   </section>
 
@@ -1222,6 +1286,77 @@ function renderEmpTab(){
 $('#empSearch').oninput=()=>renderEmpTab();
 $('#empPick').onchange=(e)=>{ const uid=e.target.value; if(uid){ openPerson(uid); e.target.value=''; } };
 
+/* ---------- план-факт ---------- */
+function pfQS(){
+  const p=new URLSearchParams();
+  const t=todayISO();
+  p.set('from', $('#pfFrom').value || (t.slice(0,8)+'01'));
+  p.set('to', $('#pfTo').value || t);
+  if($('#pfGroup').value) p.set('group',$('#pfGroup').value);
+  const e=empUid('#pfEmp'); if(e) p.set('user_ptr',e);
+  return p;
+}
+async function loadPlanFact(){
+  const p=pfQS();
+  $('#pfHint').textContent='считаю…';
+  try{
+    const d=await api('/api/planfact?'+p.toString());
+    $('#pfPlan').textContent=d.total_plan;
+    $('#pfFact').textContent=d.total_fact;
+    $('#pfDiff').textContent=(d.total_diff.indexOf('-')===0?'−':'+')+d.total_diff.replace('-','');
+    $('#pfLate').textContent=NUM(d.late_days);
+    $('#pfRange').textContent=d.from+' — '+d.to;
+    $('#pfHint').textContent='сотрудников: '+d.count;
+    if(!d.rows.length){ $('#pfWrap').innerHTML='<div class="empty">Нет данных за период</div>'; return; }
+    let html='<table class="pf"><thead><tr><th>Сотрудник</th><th>Подразделение</th>'
+      +'<th class="num">План</th><th class="num">Факт</th><th class="num">Отклонение</th><th>Выполнение</th>'
+      +'<th class="num">Опозданий</th><th class="num">Минут</th></tr></thead><tbody>';
+    d.rows.forEach(r=>{
+      const plan=parseHM(r.plan), fact=parseHM(r.fact);
+      const pct=plan>0? Math.min(100, Math.round(fact/plan*100)) : 0;
+      const cls=r.diff_sign==='-'?'neg':'pos';
+      html+='<tr><td>'+esc(r.fio)+'</td><td class="tag">'+esc(r.group)+'</td>'
+        +'<td class="num mono">'+r.plan+'</td><td class="num mono">'+r.fact+'</td>'
+        +'<td class="num"><span class="tag '+cls+'">'+r.diff_sign+r.diff+'</span></td>'
+        +'<td><div class="pf-bar"><div class="pf-fact" style="width:'+pct+'%"></div></div></td>'
+        +'<td class="num">'+r.late_days+'</td><td class="num">'+r.late+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    $('#pfWrap').innerHTML=html;
+  }catch(e){ $('#pfHint').textContent='ошибка: '+e.message; }
+}
+function parseHM(v){ const m=String(v||'').match(/^(\d+):(\d+)$/); return m? (+m[1]*60 + +m[2]) : 0; }
+$('#pfGo').onclick=loadPlanFact;
+$('#pfPrint').onclick=()=>window.open('/print/planfact?'+pfQS().toString(),'_blank');
+
+/* ---------- права доступа ---------- */
+function accQS(){
+  const p=new URLSearchParams();
+  const q=$('#accSearch').value.trim(); if(q) p.set('search',q);
+  if($('#accGroup').value) p.set('group',$('#accGroup').value);
+  return p;
+}
+async function loadAccess(){
+  $('#accWrap').innerHTML='<div class="empty"><span class="spin"></span> Загрузка…</div>';
+  try{
+    const d=await api('/api/access?'+accQS().toString());
+    $('#accHint').textContent='сотрудников: '+d.rows.length+' · точек: '+d.devices.length;
+    if(!d.rows.length){ $('#accWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
+    let html='<table class="acc"><thead><tr><th>Сотрудник</th><th>Карта</th><th>Подразделение</th>'
+      + d.devices.map(x=>'<th class="c">'+esc(x.name)+'</th>').join('') + '</tr></thead><tbody>';
+    d.rows.forEach(r=>{
+      const allowed=new Set(r.allowed);
+      html+='<tr><td>'+esc(r.fio)+'</td><td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
+        + d.devices.map(x=>'<td class="c">'+(allowed.has(x.id)?'<span class="ok">✓</span>':'<span class="no">—</span>')+'</td>').join('')
+        + '</tr>';
+    });
+    html+='</tbody></table>';
+    $('#accWrap').innerHTML=html;
+  }catch(e){ $('#accWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
+}
+$('#accGo').onclick=loadAccess;
+$('#accPrint').onclick=()=>window.open('/print/access?'+accQS().toString(),'_blank');
+
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
 setInterval(tickClock,1000); tickClock();
@@ -1246,6 +1381,8 @@ function openTab(name, remember){
   if(name==='brk') loadBreaks();
   if(name==='ev') ensureEvents();
   if(name==='emp') loadEmpTab();
+  if(name==='pf') loadPlanFact();
+  if(name==='acc') loadAccess();
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>openTab(b.dataset.tab);
@@ -1283,7 +1420,26 @@ async function loadMon(){
     $('#chHour').innerHTML=chartBars(hours,{h:165,pb:24,w:wOf('#chHour',720)});
     $('#chartDay').textContent = isToday? 'сегодня' : state.day;
     renderPresence(p.people||[]);
+    loadDeviations(state.day);
   }catch(e){ toast('Мониторинг: '+e.message,true); }
+}
+async function loadDeviations(day){
+  try{
+    const d=await api('/api/report?from='+day+'&to='+day+'&view=detail');
+    const rows=(d.rows||[]).filter(r=>r.late||r.early);
+    $('#devHint').textContent = rows.length? 'записей: '+rows.length : 'отклонений нет';
+    if(!rows.length){ $('#devWrap').innerHTML='<div class="empty">Все пришли вовремя</div>'; return; }
+    let h='<table><thead><tr><th>Сотрудник</th><th class="num">Приход</th><th class="num">Уход</th>'
+      +'<th class="num">Опоздание</th><th class="num">Ранний уход</th></tr></thead><tbody>';
+    rows.slice(0,50).forEach(r=>{
+      const late=r.late?'<span class="badge late">+'+r.late+' мин</span>':'<span class="dim">—</span>';
+      const early=(r.early===null||r.early===undefined)?'<span class="dim">—</span>':(r.early?r.early+' мин':'<span class="dim">—</span>');
+      h+='<tr><td>'+esc(r.fio)+'</td><td class="num mono">'+esc(r.enter)+'</td><td class="num mono">'+esc(r.exit)+'</td>'
+        +'<td class="num">'+late+'</td><td class="num mono">'+early+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    $('#devWrap').innerHTML=h;
+  }catch(e){ $('#devWrap').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
 }
 function renderPresence(people){
   $('#presCount').textContent=people.length+' чел.';
@@ -1500,6 +1656,7 @@ buildCombo('#rEmp','#rEmpList');
 buildCombo('#eEmp','#eEmpList');
 buildCombo('#tEmp','#tEmpList');
 buildCombo('#bEmp','#bEmpList');
+buildCombo('#pfEmp','#pfEmpList');
 buildCombo('#pEmp','#pEmpList');
 
 /* ---------- вкладка «Отчёты» ---------- */
@@ -1928,6 +2085,15 @@ function brkRow(b){
     +'<input class="brk-t2" placeholder="обед / перекур" value="'+esc(b.title||'')+'"> '
     +'<button class="brk-del" type="button" title="удалить">✕</button></div>';
 }
+function absRow(a){
+  a=a||{};
+  const kinds=['отпуск','больничный','отгул','командировка','прогул','другое'];
+  return '<div class="brk-row abs-row"><input type="date" class="abs-f" value="'+esc(a.from||'')+'"> — '
+    +'<input type="date" class="abs-t" value="'+esc(a.to||a.from||'')+'"> '
+    +'<select class="abs-k" style="width:auto;min-width:130px">'+kinds.map(k=>'<option'+(k===(a.kind||'отпуск')?' selected':'')+'>'+k+'</option>').join('')+'</select> '
+    +'<input class="brk-t2 abs-n" placeholder="примечание" value="'+esc(a.note||'')+'"> '
+    +'<button class="abs-del brk-del" type="button" title="удалить">✕</button></div>';
+}
 function renderPerson(d){
   const u=d.user||{}, sm=d.summary||{}, rows=d.rows||[];
   const sch=d.schedule||{};
@@ -1967,6 +2133,20 @@ function renderPerson(d){
         + brk.map(b=>'<div class="brk-row">'+esc(b.start)+' — '+esc(b.end)+' · '+esc(b.title)+'</div>').join('')
         + '</div>' : '');
 
+  const abs=(d.absences||[]);
+  const absRows=abs.map(absRow).join('');
+  const absBox = canOperate()
+    ? '<div class="brk-edit"><div class="sched-t"><b>Отсутствия</b>'
+      + '<span class="muted" style="font-size:var(--fs-xs)">отпуск, больничный и т.п. — эти дни не попадают в план</span>'
+      + '<span class="muted" id="mAbsHint" style="margin-left:auto;font-size:var(--fs-s)">'
+      + (abs.length ? 'задано: '+abs.length : 'нет')+'</span></div>'
+      + '<div id="mAbsList">'+absRows+'</div>'
+      + '<div class="brk-actions"><button id="mAbsAdd" type="button">+ Добавить отсутствие</button>'
+      + '<button class="primary" id="mAbsSave" type="button">Сохранить отсутствия</button></div></div>'
+    : (abs.length ? '<div class="brk-edit"><div class="sched-t"><b>Отсутствия</b></div>'
+        + abs.map(a=>'<div class="brk-row">'+esc(a.from)+' — '+esc(a.to)+' · '+esc(a.kind)+(a.note?' · '+esc(a.note):'')+'</div>').join('')
+        + '</div>' : '');
+
   const dt=d.details||{};
   const detRows=[
     ['Табельный номер', u.number||''],
@@ -2001,7 +2181,7 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = details + schBox + brkBox + chips + chart + table;
+  $('#mBody').innerHTML = details + schBox + brkBox + absBox + chips + chart + table;
 }
 $('#mBody').addEventListener('click', async (e)=>{
   const pre=e.target.closest('[data-sch]');
@@ -2011,6 +2191,31 @@ $('#mBody').addEventListener('click', async (e)=>{
     $('#mSchStart').value=parts[0]||'';
     $('#mSchEnd').value=parts[1]||'';
     $('#mSchHint').textContent='нажмите «Сохранить график»';
+    return;
+  }
+  if(e.target.id==='mAbsAdd'){
+    $('#mAbsList').insertAdjacentHTML('beforeend', absRow({}));
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('abs-del')){
+    e.target.closest('.abs-row').remove();
+    return;
+  }
+  if(e.target.id==='mAbsSave'){
+    const uid=$('#mBody').dataset.uid;
+    const items=[];
+    document.querySelectorAll('#mAbsList .abs-row').forEach(row=>{
+      const from=row.querySelector('.abs-f').value;
+      const to=row.querySelector('.abs-t').value||from;
+      if(!from) return;
+      items.push({from, to, kind:row.querySelector('.abs-k').value,
+                  note:(row.querySelector('.abs-n').value||'').trim()});
+    });
+    try{
+      const d=await postJSON('/api/absences',{user_ptr:uid, items});
+      $('#mAbsHint').textContent=(d.absences&&d.absences.length)? 'сохранено: '+d.absences.length : 'отсутствий нет';
+      toast('Отсутствия сохранены');
+    }catch(err){ toast('Отсутствия: '+err.message, true); }
     return;
   }
   if(e.target.id==='mBrkAdd'){
@@ -2543,7 +2748,7 @@ async function loadRefs(){
     if(Array.isArray(g) && Array.isArray(pts)){
       const opts=g.map(x=>'<option>'+esc(x)+'</option>').join('');
       const popts=pts.map(p=>'<option value="'+esc(p.unit)+'">'+esc(p.unit)+' ('+p.count+')</option>').join('');
-      ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup','#bGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
+      ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup','#bGroup','#pfGroup','#accGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
       ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint','#bPoint'].forEach(s=>buildMsel(s, POINTS));
       if(!window._bPointInit && MSEL['#bPoint'] && !MSEL['#bPoint'].size){
@@ -2564,6 +2769,7 @@ async function loadRefs(){
   buildCombo('#eEmp','#eEmpList');
   buildCombo('#tEmp','#tEmpList');
   buildCombo('#bEmp','#bEmpList');
+  buildCombo('#pfEmp','#pfEmpList');
   buildCombo('#pEmp','#pEmpList');
   REFS_OK = okGroups && okEmp;
   if(!REFS_OK && !loadRefs._warned){
@@ -2580,6 +2786,7 @@ function initDates(){
   $('#tMonth').value=t.slice(0,7);
   $('#bMonth').value=t.slice(0,7);
   $('#jFrom').value=week; $('#jTo').value=t;
+  $('#pfFrom').value=t.slice(0,8)+'01'; $('#pfTo').value=t;
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
 }

@@ -198,6 +198,16 @@ CREATE TABLE IF NOT EXISTS access_table (
 );
 CREATE INDEX IF NOT EXISTS ix_access_user ON access_table(user_ptr);
 
+CREATE TABLE IF NOT EXISTS absences (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_ptr  INTEGER NOT NULL,
+    date_from TEXT,
+    date_to   TEXT,
+    kind      TEXT,
+    note      TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_absences_user ON absences(user_ptr);
+
 CREATE TABLE IF NOT EXISTS breaks (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
     user_ptr INTEGER NOT NULL,
@@ -377,6 +387,68 @@ def set_breaks(con, user_ptr, items):
         con.executemany("INSERT INTO breaks(user_ptr,start,end_time,title) VALUES(?,?,?,?)", clean)
         con.commit()
     return get_breaks(con, user_ptr)
+
+
+ABSENCE_KINDS = ("отпуск", "больничный", "отгул", "командировка", "прогул", "другое")
+
+
+def get_absences(con, user_ptr):
+    rows = con.execute("SELECT date_from, date_to, kind, note FROM absences"
+                       " WHERE user_ptr=? ORDER BY date_from", (int(user_ptr),)).fetchall()
+    return [{"from": r["date_from"], "to": r["date_to"], "kind": r["kind"] or "другое",
+             "note": r["note"] or ""} for r in rows]
+
+
+def set_absences(con, user_ptr, items):
+    clean = []
+    for it in items or []:
+        df = (it.get("from") or "").strip()
+        dt_ = (it.get("to") or df).strip()
+        if not df:
+            continue
+        d1 = dt.date.fromisoformat(df)
+        d2 = dt.date.fromisoformat(dt_)
+        if d2 < d1:
+            raise ValueError("отсутствие: дата окончания раньше начала")
+        clean.append((int(user_ptr), df, dt_, (it.get("kind") or "другое").strip()[:40],
+                      (it.get("note") or "").strip()[:200]))
+    with _lock:
+        con.execute("DELETE FROM absences WHERE user_ptr=?", (int(user_ptr),))
+        con.executemany("INSERT INTO absences(user_ptr,date_from,date_to,kind,note)"
+                        " VALUES(?,?,?,?,?)", clean)
+        con.commit()
+    return get_absences(con, user_ptr)
+
+
+def absences_map(con):
+    out = {}
+    for r in con.execute("SELECT user_ptr, date_from, date_to, kind FROM absences"):
+        out.setdefault(r["user_ptr"], []).append((r["date_from"], r["date_to"], r["kind"]))
+    return out
+
+
+def _absence_days(abs_list, d1, d2):
+    """Сколько дней периода попадает в отсутствия (без пересечений)."""
+    days = set()
+    for a, b, _kind in abs_list or ():
+        da = max(d1, dt.date.fromisoformat(a))
+        db = min(d2, dt.date.fromisoformat(b))
+        while da <= db:
+            days.add(da)
+            da += dt.timedelta(days=1)
+    return len(days)
+
+
+def _break_total_minutes(breaks):
+    total = 0
+    for st, en, _t in breaks or ():
+        a = dt.time.fromisoformat(st)
+        b = dt.time.fromisoformat(en)
+        m = (b.hour * 60 + b.minute) - (a.hour * 60 + a.minute)
+        if m < 0:
+            m += 24 * 60
+        total += m
+    return total
 
 
 def _break_minutes(breaks, t1, end):
@@ -1531,6 +1603,117 @@ def employees(con, group=None, include_visitors=False):
     return out
 
 
+def plan_fact(con, from_day, to_day, group=None, user_ptr=None):
+    """План (по личным графикам, без выходных и отсутствий) против факта из проходов."""
+    d1 = dt.date.fromisoformat(from_day)
+    d2 = dt.date.fromisoformat(to_day)
+    rows = attendance(con, from_day, to_day, group=group, user_ptr=user_ptr)
+    users = _user_names(con)
+    sched = schedules_map(con)
+    brk = breaks_map(con)
+    absn = absences_map(con)
+    cfg_s = CFG.get("shift_start", "08:00")
+    cfg_e = CFG.get("shift_end", "17:00")
+
+    fact = {}
+    for r in rows:
+        f = fact.setdefault(r["user_ptr"], {"fact": 0, "late_days": 0, "late": 0,
+                                            "early": 0, "days": 0})
+        f["fact"] += int(round((r["hours"] or 0) * 60))
+        f["days"] += 1
+        if r["late"]:
+            f["late_days"] += 1
+            f["late"] += r["late"]
+        if r["early"]:
+            f["early"] += r["early"]
+
+    out = []
+    day = d1
+    days = []
+    while day <= d2:
+        days.append(day)
+        day += dt.timedelta(days=1)
+
+    for pid, u in users.items():
+        if u["deleted"] or u["visitor"] or not _real_name(u["fio"]):
+            continue
+        if user_ptr and pid != int(user_ptr):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        s2 = sched.get(pid)
+        sh_s = dt.time.fromisoformat(s2[0] if s2 else cfg_s)
+        sh_e = dt.time.fromisoformat(s2[1] if s2 else cfg_e)
+        shift_min = (sh_e.hour * 60 + sh_e.minute) - (sh_s.hour * 60 + sh_s.minute)
+        if shift_min <= 0:
+            shift_min += 24 * 60
+        shift_min -= _break_total_minutes(brk.get(pid))
+        if shift_min < 0:
+            shift_min = 0
+        abs_dates = set()
+        for a, b, _k in absn.get(pid, ()):
+            da = dt.date.fromisoformat(a)
+            db = dt.date.fromisoformat(b)
+            while da <= db:
+                abs_dates.add(da)
+                da += dt.timedelta(days=1)
+        plan = 0
+        absent = 0
+        for day in days:
+            if day.weekday() >= 5:
+                continue
+            if day in abs_dates:
+                absent += 1
+                continue
+            plan += shift_min
+        f = fact.get(pid, {"fact": 0, "late_days": 0, "late": 0, "early": 0, "days": 0})
+        if plan == 0 and f["fact"] == 0:
+            continue
+        out.append({
+            "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+            "group": u["group"], "position": u["position"],
+            "plan": plan, "fact": f["fact"], "diff": f["fact"] - plan,
+            "late_days": f["late_days"], "late": f["late"], "early": f["early"],
+            "days": f["days"], "absent_days": absent,
+        })
+    out.sort(key=lambda r: (r["group"], r["fio"]))
+    return {
+        "rows": out,
+        "total_plan": sum(r["plan"] for r in out),
+        "total_fact": sum(r["fact"] for r in out),
+        "total_diff": sum(r["diff"] for r in out),
+        "count": len(out),
+        "late_days": sum(r["late_days"] for r in out),
+    }
+
+
+def access_rights(con, group=None, search=None):
+    """Матрица «сотрудник × устройство»: какие точки открывает карта."""
+    users = _user_names(con)
+    devs = con.execute("SELECT dev_ptr, name FROM devices ORDER BY name").fetchall()
+    access = set()
+    for r in con.execute("SELECT a.user_ptr AS u, r.dev_ptr AS d FROM access_table a"
+                         " JOIN readers r ON r.rdr_ptr = a.rdr_ptr"):
+        access.add((r["u"], r["d"]))
+    rows = []
+    for pid, u in users.items():
+        if u["deleted"] or not _real_name(u["fio"]):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        if search:
+            q = search.lower()
+            if q not in u["fio"].lower() and q not in (u["number"] or "").lower():
+                continue
+        rows.append({
+            "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+            "group": u["group"], "position": u["position"],
+            "allowed": [d["dev_ptr"] for d in devs if (pid, d["dev_ptr"]) in access],
+        })
+    rows.sort(key=lambda r: r["fio"])
+    return {"devices": [{"id": d["dev_ptr"], "name": d["name"]} for d in devs], "rows": rows}
+
+
 def late_report(con, from_day, to_day, group=None, search=None,
                 shift_start=None, shift_end=None, user_ptr=None, point=None):
     """Опоздания за период: по сотрудникам, с худшим днём."""
@@ -1601,7 +1784,8 @@ def person_history(con, user_ptr, from_day, to_day):
     extra["status"] = "удалён" if u["deleted"] else ("гость" if u["visitor"] else "активен")
     extra["gate_id"] = u["user_ptr"]
     return {"user": u, "from": from_day, "to": to_day, "rows": rows,
-            "summary": summary, "details": extra, "breaks": get_breaks(con, user_ptr)}
+            "summary": summary, "details": extra, "breaks": get_breaks(con, user_ptr),
+            "absences": get_absences(con, user_ptr)}
 
 
 

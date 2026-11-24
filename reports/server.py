@@ -439,6 +439,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_report(q)
             if path == "/api/timesheet":
                 return self.api_timesheet(q)
+            if path == "/api/planfact":
+                return self.api_planfact(q)
+            if path == "/api/access":
+                return self.api_access(q)
+            if path == "/print/planfact":
+                return self.print_planfact(q)
+            if path == "/print/access":
+                return self.print_access(q)
             if path == "/api/breaks":
                 return self.api_breaks(q)
             if path == "/api/analytics":
@@ -1059,6 +1067,79 @@ class Handler(BaseHTTPRequestHandler):
                                filename="Перекуры_%s.xls" % first.isoformat(),
                                ascii_name="perekury_%s.xls" % first.isoformat())
 
+    def _period(self, q):
+        frm = q.get("from") or (dt.date.today().replace(day=1)).isoformat()
+        to = q.get("to") or dt.date.today().isoformat()
+        return frm, to
+
+    def api_planfact(self, q):
+        frm, to = self._period(q)
+        group = (q.get("group") or "").strip() or None
+        user_ptr = q.get("user_ptr") or None
+        d = gate.plan_fact(gate.connect(), frm, to, group=group, user_ptr=user_ptr)
+        return self.send_json({
+            "from": frm, "to": to, "count": d["count"],
+            "total_plan": gate.hm(d["total_plan"]), "total_fact": gate.hm(d["total_fact"]),
+            "total_diff": gate.hm(d["total_diff"]), "late_days": d["late_days"],
+            "rows": [{
+                "fio": r["fio"], "number": r["number"], "group": r["group"],
+                "position": r["position"], "plan": gate.hm(r["plan"]),
+                "fact": gate.hm(r["fact"]), "diff": gate.hm(abs(r["diff"])),
+                "diff_sign": "-" if r["diff"] < 0 else ("+" if r["diff"] > 0 else ""),
+                "late_days": r["late_days"], "late": r["late"], "early": r["early"],
+                "days": r["days"], "absent_days": r["absent_days"],
+            } for r in d["rows"]],
+        })
+
+    def print_planfact(self, q):
+        frm, to = self._period(q)
+        group = (q.get("group") or "").strip() or None
+        d = gate.plan_fact(gate.connect(), frm, to, group=group)
+        head = ("<th>Сотрудник</th><th>Подразделение</th><th class='num'>План</th>"
+                "<th class='num'>Факт</th><th class='num'>Отклонение</th>"
+                "<th class='num'>Опозданий</th><th class='num'>Минут</th>")
+        trs = []
+        for r in d["rows"]:
+            sign = "−" if r["diff"] < 0 else ("+" if r["diff"] > 0 else "")
+            trs.append("<tr><td>%s</td><td>%s</td><td class='num'>%s</td><td class='num'>%s</td>"
+                       "<td class='num'>%s%s</td><td class='num'>%d</td><td class='num'>%d</td></tr>" % (
+                           _esc(r["fio"]), _esc(r["group"]), gate.hm(r["plan"]), gate.hm(r["fact"]),
+                           sign, gate.hm(abs(r["diff"])), r["late_days"], r["late"]))
+        stats = [("План", gate.hm(d["total_plan"])), ("Факт", gate.hm(d["total_fact"])),
+                 ("Отклонение", gate.hm(abs(d["total_diff"]))),
+                 ("Опозданий", d["late_days"])]
+        stats_html = "".join('<div class="stat"><span>%s</span><b>%s</b></div>' % (_esc(a), _esc(b))
+                             for a, b in stats)
+        html = PRINT_TEMPLATE.format(title="План-факт рабочего времени", period="%s — %s" % (frm, to),
+                                     orient="portrait", subtitle="план по графикам, факт по проходам",
+                                     n=d["count"], stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"),
+                                     stats=stats_html, head=head, rows="".join(trs))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
+    def api_access(self, q):
+        group = (q.get("group") or "").strip() or None
+        search = (q.get("search") or "").strip() or None
+        d = gate.access_rights(gate.connect(), group=group, search=search)
+        return self.send_json(d)
+
+    def print_access(self, q):
+        group = (q.get("group") or "").strip() or None
+        d = gate.access_rights(gate.connect(), group=group)
+        head = "<th>Сотрудник</th><th>Карта</th><th>Подразделение</th>" + "".join(
+            "<th class='num'>%s</th>" % _esc(x["name"]) for x in d["devices"])
+        trs = []
+        for r in d["rows"]:
+            allowed = set(r["allowed"])
+            tds = "".join("<td class='num'>%s</td>" % ("✓" if x["id"] in allowed else "—")
+                          for x in d["devices"])
+            trs.append("<tr><td>%s</td><td>%s</td><td>%s</td>%s</tr>" % (
+                _esc(r["fio"]), _esc(r["number"]), _esc(r["group"]), tds))
+        html = PRINT_TEMPLATE.format(title="Права доступа на дату", period=dt.date.today().isoformat(),
+                                     orient="landscape", subtitle="какие точки открывает карта",
+                                     n=len(d["rows"]), stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"),
+                                     stats="", head=head, rows="".join(trs))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
     def _timesheet(self, q):
         month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
         try:
@@ -1288,6 +1369,24 @@ class Handler(BaseHTTPRequestHandler):
             return self.admin_post(path, body)
         if path.startswith("/api/passes"):
             return self.passes_post(path, body)
+        if path == "/api/absences":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            con = gate.connect()
+            try:
+                uid = int(payload.get("user_ptr") or 0)
+                items = payload.get("items") or []
+                res = gate.set_absences(con, uid, items)
+                return self.send_json({"ok": True, "absences": res})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
         if path == "/api/employee-breaks":
             user = self.require_role("admin", "operator")
             if not user:
