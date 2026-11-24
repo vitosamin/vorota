@@ -205,6 +205,14 @@ CREATE TABLE IF NOT EXISTS photos (
     updated  TEXT
 );
 
+CREATE TABLE IF NOT EXISTS preview_times (
+    user_ptr INTEGER NOT NULL,
+    day      TEXT NOT NULL,
+    enter    TEXT,
+    exit     TEXT,
+    PRIMARY KEY(user_ptr, day)
+);
+
 CREATE TABLE IF NOT EXISTS test_people (
     id       INTEGER PRIMARY KEY AUTOINCREMENT,
     fio      TEXT NOT NULL,
@@ -830,6 +838,64 @@ def sync_all(days_back=7, con=None):
 # --------------------------------------------------------------------------
 
 PASS_TYPE, PASS_CODE = 1, 8          # «Проход совершен» — факт прохода
+
+
+def find_by_card(con, card):
+    """Найти сотрудника в картотеке Gate по номеру карты (Number или NumberU)."""
+    raw = (card or "").strip()
+    if not raw:
+        raise ValueError("укажите номер карты")
+    parsed = card_to_gate(raw)
+    number = "%03d/%05d" % parsed[:2] if parsed else raw
+    uid = parsed[2] if parsed else ""
+    for u in mdb_export(os.path.join(DATA, "config.mdb"), "Users"):
+        same = ((u.get("Number") or "").strip() == number
+                or (uid and (u.get("NumberU") or "").strip().upper() == uid.upper()))
+        if same:
+            fio = " ".join(x for x in ((u.get("LastName") or "").strip(),
+                                       (u.get("FirstName") or "").strip(),
+                                       (u.get("FatherName") or "").strip()) if x)
+            return {"user_ptr": _int(u.get("UserPtr")), "fio": fio or "—",
+                    "number": (u.get("Number") or "").strip(),
+                    "position": (u.get("Position") or "").strip()}
+    raise ValueError("карта %s не найдена в картотеке" % number)
+
+
+def preview_generate(con, user_ptr, day_from, day_to, enter_from, enter_to, exit_from, exit_to):
+    pid = int(user_ptr)
+    d1 = dt.date.fromisoformat(day_from)
+    d2 = dt.date.fromisoformat(day_to)
+    ef = dt.time.fromisoformat(enter_from)
+    et = dt.time.fromisoformat(enter_to)
+    xf = dt.time.fromisoformat(exit_from)
+    xt = dt.time.fromisoformat(exit_to)
+    made = 0
+    day = d1
+    while day <= d2:
+        if day.weekday() < 5:
+            k = random.Random("preview|%d|%s" % (pid, day.isoformat()))
+            e = k.randint(ef.hour * 60 + ef.minute, et.hour * 60 + et.minute)
+            x = k.randint(xf.hour * 60 + xf.minute, xt.hour * 60 + xt.minute)
+            with _lock:
+                con.execute("INSERT OR REPLACE INTO preview_times(user_ptr,day,enter,exit) VALUES(?,?,?,?)",
+                            (pid, day.isoformat(), "%02d:%02d" % (e // 60, e % 60),
+                             "%02d:%02d" % (x // 60, x % 60)))
+                con.commit()
+            made += 1
+        day += dt.timedelta(days=1)
+    return made
+
+
+def preview_list(con, user_ptr):
+    rows = con.execute("SELECT day, enter, exit FROM preview_times WHERE user_ptr=? ORDER BY day",
+                       (int(user_ptr),)).fetchall()
+    return [{"day": r["day"], "enter": r["enter"], "exit": r["exit"]} for r in rows]
+
+
+def preview_clear(con, user_ptr):
+    with _lock:
+        con.execute("DELETE FROM preview_times WHERE user_ptr=?", (int(user_ptr),))
+        con.commit()
 
 
 def test_people_list(con):
@@ -1538,6 +1604,16 @@ def build_add_user_sql(con, data, user_ptr):
         raise ValueError("номер карты должен быть в виде 140/39939")
     fac, card, number_u = parsed
     number = "%03d/%05d" % (fac, card)
+    # карта (ключ) в Gate — это и есть «табельный номер» пользователя в поле Number:
+    # если такой номер уже есть в картотеке, нового пользователя не создаём
+    for u in users:
+        same = ((u.get("Number") or "").strip() == number
+                or (number_u and (u.get("NumberU") or "").strip().upper() == number_u.upper()))
+        if same and (u.get("Deleted") or "0").strip() in ("0", ""):
+            who = " ".join(x for x in ((u.get("LastName") or "").strip(),
+                                       (u.get("FirstName") or "").strip(),
+                                       (u.get("FatherName") or "").strip()) if x)
+            raise ValueError("карта %s уже в картотеке: %s" % (number, who or "без имени"))
     dev_by_name = {}
     for d in devices:
         dev_by_name.setdefault((d.get("Name") or "").strip().lower(), set()).add(_int(d.get("DevPtr")))

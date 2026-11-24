@@ -954,6 +954,22 @@ button .ic,a.btn .ic{opacity:.9}
   <section class="tab" id="tab-test">
     <div class="notice warn"><span class="ni"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg></span><span><b>Тестовый режим.</b> Это вымышленные сотрудники и проходы — для проверки отчётов, табеля и Т-13. Реальные люди и их данные не затрагиваются; тестового сотрудника можно удалить вместе с его днями.</span></div>
     <div class="card" style="margin-bottom:16px">
+      <div class="hd"><h3>Проверка по номеру карты</h3><span class="hint">находит существующего сотрудника; генерация — только предпросмотр, в отчёты не попадает</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Номер карты</label><input id="tstCard" placeholder="140/39939 или UID" autocomplete="off"></div>
+          <div class="row-actions" style="align-self:end"><button class="primary" id="tstFind">Найти</button><span class="muted" id="tstFound" style="font-size:var(--fs-s)"></span></div>
+        </div>
+        <div class="row-actions">
+          <button id="prvGen">Сгенерировать по карте</button>
+          <button id="prvClear">Очистить</button>
+          <span class="muted" id="prvHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+        <div class="tblwrap" id="prvList"><div class="empty">Найдите сотрудника по карте</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
       <div class="hd"><h3>Тестовые сотрудники</h3><span class="hint">появляются в списках и отчётах</span></div>
       <div class="bd">
         <div class="filters">
@@ -1608,6 +1624,47 @@ $('#kppPoint').addEventListener('change', ()=>kppRefreshFilter());
 $('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
+
+/* ---------- проверка по карте (админ, только предпросмотр) ---------- */
+let PRV_UID=0;
+async function prvLoad(){
+  if(!PRV_UID) return;
+  const d=await api('/api/test/preview?user_ptr='+PRV_UID);
+  const items=d.items||[];
+  if(!items.length){ $('#prvList').innerHTML='<div class="empty">Дней нет — нажмите «Сгенерировать по карте»</div>'; return; }
+  let h='<table><thead><tr><th>День</th><th class="num">Приход</th><th class="num">Уход</th><th class="num">Часов</th></tr></thead><tbody>';
+  items.forEach(r=>{
+    const a=r.enter.split(':'), b=r.exit.split(':');
+    const m=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);
+    h+='<tr><td>'+esc(r.day)+'</td><td class="num mono">'+esc(r.enter)+'</td><td class="num mono">'+esc(r.exit)+'</td><td class="num">'+Math.floor(m/60)+':'+String(m%60).padStart(2,'0')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  $('#prvList').innerHTML=h;
+}
+$('#tstFind').onclick=async ()=>{
+  try{
+    const d=await api('/api/test/find?card='+encodeURIComponent($('#tstCard').value.trim()));
+    PRV_UID=d.person.user_ptr;
+    $('#tstFound').textContent='найден: '+d.person.fio+' ('+d.person.number+')';
+    await prvLoad();
+  }catch(e){ PRV_UID=0; $('#tstFound').textContent=''; $('#prvList').innerHTML=''; toast('Карта: '+e.message, true); }
+};
+$('#prvGen').onclick=async ()=>{
+  if(!PRV_UID){ toast('Сначала найдите сотрудника по карте', true); return; }
+  try{
+    const d=await postJSON('/api/test/preview/generate',{user_ptr:PRV_UID,
+      from:$('#tstFrom').value, to:$('#tstTo').value,
+      enter_from:$('#tstEF').value, enter_to:$('#tstET').value,
+      exit_from:$('#tstXF').value, exit_to:$('#tstXT').value});
+    $('#prvHint').textContent='дней: '+d.days;
+    await prvLoad();
+  }catch(e){ toast('Тест: '+e.message, true); }
+};
+$('#prvClear').onclick=async ()=>{
+  if(!PRV_UID) return;
+  try{ await postJSON('/api/test/preview/clear',{user_ptr:PRV_UID}); await prvLoad(); toast('Очищено'); }
+  catch(e){ toast('Тест: '+e.message, true); }
+};
 
 /* ---------- тестовые сотрудники (админ) ---------- */
 let TST_PEOPLE=[];

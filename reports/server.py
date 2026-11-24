@@ -466,6 +466,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_test_people()
             if path == "/api/test/times":
                 return self.api_test_times(q)
+            if path == "/api/test/find":
+                return self.api_test_find(q)
+            if path == "/api/test/preview":
+                return self.api_test_preview(q)
             if path == "/print/planfact":
                 return self.print_planfact(q)
             if path == "/print/access":
@@ -1303,6 +1307,30 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, TypeError) as exc:
             return self.send_json({"ok": False, "error": str(exc)}, code=400)
 
+    def api_test_find(self, q):
+        if not self.require_admin():
+            return
+        con = gate.connect()
+        try:
+            return self.send_json({"ok": True, "person": gate.find_by_card(con, q.get("card") or "")})
+        except (ValueError, TypeError) as exc:
+            return self.send_json({"ok": False, "error": str(exc)}, code=404)
+        finally:
+            con.close()
+
+    def api_test_preview(self, q):
+        if not self.require_admin():
+            return
+        try:
+            uid = int(q.get("user_ptr") or 0)
+        except ValueError:
+            uid = 0
+        con = gate.connect()
+        try:
+            return self.send_json({"items": gate.preview_list(con, uid)})
+        finally:
+            con.close()
+
     def api_test_people(self):
         if not self.require_admin():
             return
@@ -1347,6 +1375,15 @@ class Handler(BaseHTTPRequestHandler):
                                              p.get("enter_from", "07:40"), p.get("enter_to", "07:55"),
                                              p.get("exit_from", "17:00"), p.get("exit_to", "17:15"))
                 return self.send_json({"ok": True, "days": n})
+            if path == "/api/test/preview/generate":
+                n = gate.preview_generate(con, int(p.get("user_ptr") or 0),
+                                          p.get("from"), p.get("to"),
+                                          p.get("enter_from", "07:40"), p.get("enter_to", "07:55"),
+                                          p.get("exit_from", "17:00"), p.get("exit_to", "17:15"))
+                return self.send_json({"ok": True, "days": n})
+            if path == "/api/test/preview/clear":
+                gate.preview_clear(con, int(p.get("user_ptr") or 0))
+                return self.send_json({"ok": True})
             if path == "/api/test/times/clear":
                 gate.test_times_clear(con, int(p.get("person_id") or 0))
                 return self.send_json({"ok": True})
