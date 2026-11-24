@@ -187,6 +187,9 @@ CREATE INDEX IF NOT EXISTS ix_events_ts   ON events(ts);
 CREATE INDEX IF NOT EXISTS ix_events_user ON events(user_ptr, day);
 CREATE INDEX IF NOT EXISTS ix_events_pass ON events(event_type, event_code, day);
 CREATE INDEX IF NOT EXISTS ix_events_day_type ON events(day, event_type, alarm_status);
+-- «последний проход сотрудника»: без этого индекса запрос сканировал все его
+-- события за все годы (0.4 с на карточку КПП вместо 0.01 с)
+CREATE INDEX IF NOT EXISTS ix_events_last ON events(user_ptr, event_type, event_code, ts);
 
 CREATE TABLE IF NOT EXISTS readers (
     rdr_ptr INTEGER PRIMARY KEY,
@@ -2255,18 +2258,9 @@ def person_history(con, user_ptr, from_day, to_day):
 
 def users_report(con, group=None, search=None, include_deleted=False, user_ptr=None):
     """Отчёт о пользователях: табельный, ФИО, подразделение, должность, последний проход."""
-    last = {}
-    for r in con.execute(
-            "SELECT user_ptr, MAX(ts) t FROM events WHERE event_type=? AND event_code=?"
-            " AND user_ptr>0 GROUP BY user_ptr", (PASS_TYPE, PASS_CODE)):
-        last[r["user_ptr"]] = r["t"]
-    last_unit = {}
-    for r in con.execute(
-            "SELECT user_ptr, unit, MAX(ts) t FROM events WHERE event_type=? AND event_code=?"
-            " AND user_ptr>0 GROUP BY user_ptr", (PASS_TYPE, PASS_CODE)):
-        last_unit[r["user_ptr"]] = r["unit"]
-    out = []
-    for pid, u in _user_names(con).items():
+    users = _user_names(con)
+    wanted = []
+    for pid, u in users.items():
         if user_ptr and pid != int(user_ptr):
             continue
         if u["deleted"] and not include_deleted:
@@ -2277,6 +2271,20 @@ def users_report(con, group=None, search=None, include_deleted=False, user_ptr=N
             needle = search.lower()
             if needle not in u["fio"].lower() and needle not in u["number"].lower():
                 continue
+        wanted.append(pid)
+    # «последний проход» берём точечно по индексу ix_events_last: два GROUP BY
+    # по всему журналу (1.5 млн строк) давали 1.4 с на каждый запрос списка
+    last, last_unit = {}, {}
+    for pid in wanted:
+        r = con.execute(
+            "SELECT ts, unit FROM events WHERE user_ptr=? AND event_type=? AND event_code=?"
+            " ORDER BY ts DESC LIMIT 1", (pid, PASS_TYPE, PASS_CODE)).fetchone()
+        if r:
+            last[pid] = r["ts"]
+            last_unit[pid] = r["unit"]
+    out = []
+    for pid in wanted:
+        u = users[pid]
         lt = last.get(pid, "")
         out.append({
             "user_ptr": pid, "number": u["number"], "fio": u["fio"],
@@ -2715,12 +2723,24 @@ def pass_delete(con, pid):
     return True
 
 
+_POINTS_CACHE = {"at": 0.0, "data": None}
+
+
 def points_list(con):
-    """Контрольные точки (двери), встречающиеся в журнале."""
+    """Контрольные точки (двери), встречающиеся в журнале.
+
+    GROUP BY по 1.5 млн проходов — 0.6 с, а список точек меняется раз в месяц,
+    поэтому держим результат в памяти 5 минут.
+    """
+    now = time.time()
+    if _POINTS_CACHE["data"] is not None and now - _POINTS_CACHE["at"] < 300:
+        return _POINTS_CACHE["data"]
     rows = con.execute("SELECT unit, COUNT(*) c FROM events"
                        " WHERE event_type=? AND event_code=? GROUP BY unit ORDER BY c DESC",
                        (PASS_TYPE, PASS_CODE)).fetchall()
-    return [{"unit": r["unit"], "count": r["c"]} for r in rows if r["unit"]]
+    data = [{"unit": r["unit"], "count": r["c"]} for r in rows if r["unit"]]
+    _POINTS_CACHE.update({"at": now, "data": data})
+    return data
 
 
 def presence_now(con, day=None):

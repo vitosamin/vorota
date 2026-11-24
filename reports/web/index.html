@@ -1535,28 +1535,49 @@ function kppFeedAdd(it){
   wrap.prepend(row);
   while(wrap.children.length>60) wrap.lastChild.remove();
 }
-function kppEnqueue(it){ kppQueue.push(it); if(!kppShowing) kppNext(); }
+function kppEnqueue(it){
+  kppQueue.push(it);
+  kppPrefetch(it);                    // детали грузим заранее — к показу готово
+  if(!kppShowing) kppNext();
+}
+/* Кэш карточек: пока человек идёт от турникета до экрана, запрос уже вернулся */
+const kppCache=new Map();
+function kppPrefetch(it){
+  if(!it.user_ptr || kppCache.has(it.user_ptr)) return;
+  kppCache.set(it.user_ptr, null);
+  api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)
+      +'&from='+todayISO()+'&to='+todayISO())
+    .then(d=>{ kppCache.set(it.user_ptr, d); })
+    .catch(()=>{ kppCache.delete(it.user_ptr); });
+  if(kppCache.size>200) kppCache.delete(kppCache.keys().next().value);
+}
 let kppToken=0;
+function kppRenderDetails(d, it){
+  const u=d.user||{}, det=d.details||{}, sch=d.schedule||{};
+  const brk=(d.breaks||[]).map(b=>b.start+'–'+b.end).join(', ');
+  const rows=[
+    ['Табельный', u.number||it.number||''],
+    ['UID карты', det.number_u||''],
+    ['Статус', det.status||''],
+    ['Доступ', det.access_points!==undefined ? det.access_points+' точек' : ''],
+    ['График', sch.start ? sch.start+'–'+sch.end : 'не задан'],
+    ['Перерывы', brk||''],
+    ['Последний проход', det.last_ts ? (det.last_ts.slice(8,10)+'.'+det.last_ts.slice(5,7)+' '+det.last_ts.slice(11,16)+(det.last_unit?' · '+det.last_unit:'')) : ''],
+    ['Пропуск', det.pass ? ('№'+det.pass.number+' до '+det.pass.valid_to) : ''],
+  ].filter(r=>r[1]);
+  $('#kppDetails').innerHTML=rows.map(r=>'<div class="it'+((r[0]==='Перерывы'||r[0]==='Последний проход')?' wide':'')+'"><span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('');
+  $('#kppGroup').textContent=it.group||u.group||'';
+}
 async function kppFillDetails(it, token){
   if(!it.user_ptr) return;
+  const ready=kppCache.get(it.user_ptr);
+  if(ready){ if(token===kppToken) kppRenderDetails(ready, it); return; }
   try{
     const d=await api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)
       +'&from='+todayISO()+'&to='+todayISO());
+    kppCache.set(it.user_ptr, d);
     if(token!==kppToken) return;
-    const u=d.user||{}, det=d.details||{}, sch=d.schedule||{};
-    const brk=(d.breaks||[]).map(b=>b.start+'–'+b.end).join(', ');
-    const rows=[
-      ['Табельный', u.number||it.number||''],
-      ['UID карты', det.number_u||''],
-      ['Статус', det.status||''],
-      ['Доступ', det.access_points!==undefined ? det.access_points+' точек' : ''],
-      ['График', sch.start ? sch.start+'–'+sch.end : 'не задан'],
-      ['Перерывы', brk||''],
-      ['Последний проход', det.last_ts ? (det.last_ts.slice(8,10)+'.'+det.last_ts.slice(5,7)+' '+det.last_ts.slice(11,16)+(det.last_unit?' · '+det.last_unit:'')) : ''],
-      ['Пропуск', det.pass ? ('№'+det.pass.number+' до '+det.pass.valid_to) : ''],
-    ].filter(r=>r[1]);
-    $('#kppDetails').innerHTML=rows.map(r=>'<div class="it'+((r[0]==='Перерывы'||r[0]==='Последний проход')?' wide':'')+'"><span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('');
-    $('#kppGroup').textContent=it.group||u.group||'';
+    kppRenderDetails(d, it);
   }catch(e){ /* без деталей */ }
 }
 function kppNext(){
@@ -1581,7 +1602,13 @@ function kppNext(){
   $('#kppOverlay').classList.add('on');
   kppFillDetails(it, token);
   const secRaw=parseFloat(String($('#kppSec').value||'4.5').replace(',','.'));
-  const sec=Math.max(1, Math.min(20, isNaN(secRaw)?4.5:secRaw));
+  const base=Math.max(1, Math.min(20, isNaN(secRaw)?4.5:secRaw));
+  // Пачка проходов подряд: укорачиваем показ, чтобы карточки не отставали от
+  // реальности. При пустой очереди — обычная выдержка из «Показ, секунд».
+  const q=kppQueue.length;
+  const sec = q>=6 ? Math.max(1.2, base/3) : (q>=3 ? Math.max(1.5, base/2) : base);
+  if(q) $('#kppMeta').insertAdjacentHTML('beforeend',
+    '<span class="muted">в очереди: '+q+'</span>');
   clearTimeout(kppItemTimer);
   kppItemTimer=setTimeout(()=>{ kppNext(); }, sec*1000);
 }

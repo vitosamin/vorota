@@ -12,6 +12,7 @@
 """
 
 import base64
+import collections
 import csv
 import datetime as dt
 import hashlib
@@ -139,16 +140,39 @@ def do_sync(days=None):
         sync_lock.release()
 
 
+# Событие «в журнал пришли новые проходы»: будит SSE-потоки экрана КПП сразу
+# после записи в SQLite, а не по таймеру. Так карточка появляется на 0.1–0.25 с
+# раньше, чем при простом опросе раз в 0.25 с.
+LIVE_WAKE = threading.Event()
+
+
 def live_sync_worker():
-    """Досинхронизация сегодняшнего журнала раз в секунду — для экрана КПП."""
+    """Досинхронизация сегодняшнего журнала — для экрана КПП.
+
+    Соединение с SQLite держим открытым (открытие — самый дорогой шаг цикла).
+    В простое спим 0.2 с; как только появились новые записи — сразу идём на
+    следующий круг, чтобы пачка проходов подряд не ждала таймера.
+    """
+    con = None
     while True:
         try:
-            con = gate.connect()
-            gate.sync_today_fast(con=con)
-            con.close()
+            if con is None:
+                con = gate.connect()
+            new = gate.sync_today_fast(con=con)
         except Exception:                        # noqa: BLE001
-            pass
-        time.sleep(0.25)
+            try:
+                if con is not None:
+                    con.close()
+            except Exception:                    # noqa: BLE001
+                pass
+            con, new = None, 0
+        if new:
+            LIVE_WAKE.set()
+            time.sleep(0.02)
+            continue
+        # 0.5 с в простое: живой канал экрана КПП — буфер Gate (live_buf_worker),
+        # а SQLite нужен отчётам и как страховка, секундная точность ему не нужна
+        time.sleep(0.5)
 
 
 def sync_worker():
@@ -158,6 +182,66 @@ def sync_worker():
         except Exception:                        # noqa: BLE001
             pass
         time.sleep(45)
+
+
+# --------------------------------------------------------------------------
+# быстрый канал экрана КПП: буфер событий Gate
+# --------------------------------------------------------------------------
+# Суточный журнал Server\Events\nГГММДД.mdb дописывается с задержкой 1.5–3 с:
+# Gate сначала складывает события в буфер Server\nEvBuf.mdb и уже оттуда
+# переносит их в суточный файл. Читая буфер, карточка на посту охраны
+# появляется в среднем на 0.4–0.6 с раньше. Буфер — внутренний файл Gate,
+# поэтому при любой ошибке чтения просто ничего не делаем: экран КПП в этом
+# случае живёт на обычном канале (SQLite), ничего не ломается.
+
+LIVE_ITEMS = collections.deque(maxlen=400)   # свежие события из буфера
+LIVE_SEEN = {}                               # ключ -> время, чтобы не дублировать
+
+
+def _live_key(ts, user_ptr, unit):
+    return (ts, int(user_ptr or 0), (unit or "").strip())
+
+
+def live_buf_worker():
+    path = os.path.join(gate.DATA, "events", "_nEvBuf.mdb")
+    while True:
+        try:
+            gate.smb_get("Server", "nEvBuf.mdb", path)
+            rows = gate.mdb_export(path, "Events")
+            added = 0
+            now = time.time()
+            for r in rows:
+                if gate._int(r.get("EventType")) != 1 or gate._int(r.get("EventCode")) != 8:
+                    continue                     # экрану КПП нужны только проходы
+                ts = gate.parse_dt(r.get("DateTime"))
+                if ts is None:
+                    continue
+                item = {
+                    "ts": ts.isoformat(sep=" "), "time": ts.strftime("%H:%M:%S"),
+                    "user_ptr": gate._int(r.get("UserPtr")),
+                    "fio": (r.get("Name") or "").strip(),
+                    "unit": (r.get("Unit") or "").strip(),
+                    "event_type": gate._int(r.get("EventType")),
+                    "event_code": gate._int(r.get("EventCode")),
+                    "direction": gate.direction(r.get("Unit")),
+                    "message": (r.get("Message") or "").strip(),
+                }
+                key = _live_key(item["ts"], item["user_ptr"], item["unit"])
+                if key in LIVE_SEEN:
+                    continue
+                item["_key"] = key
+                LIVE_SEEN[key] = now
+                LIVE_ITEMS.append(item)
+                added += 1
+            if added:
+                LIVE_WAKE.set()
+            if len(LIVE_SEEN) > 2000:            # подчищаем устаревшие ключи
+                for k, t in list(LIVE_SEEN.items()):
+                    if now - t > 900:
+                        del LIVE_SEEN[k]
+        except Exception:                        # noqa: BLE001
+            pass
+        time.sleep(0.2)
 
 
 # --------------------------------------------------------------------------
@@ -946,31 +1030,72 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(("data: " + json.dumps(obj, ensure_ascii=False) + "\n\n").encode("utf-8"))
             self.wfile.flush()
 
+        def buf_item(it):
+            """Событие из буфера Gate -> строка потока (как item_of)."""
+            d = {k: v for k, v in it.items() if k != "_key"}
+            u = users.get(d["user_ptr"])
+            if u:
+                d.update({"fio": u["fio"] or d["fio"], "group": u["group"],
+                          "position": u["position"], "number": u["number"]})
+            else:
+                d.setdefault("group", "")
+                d.setdefault("position", "")
+                d.setdefault("number", "")
+            d["photo"] = d["user_ptr"] in photos
+            return d
+
         try:
             rows = con.execute(
                 "SELECT * FROM events WHERE day=? AND event_type=1 AND event_code=8"
                 " ORDER BY ts DESC, idx DESC LIMIT 30", (day,)).fetchall()
             send({"type": "init", "day": day, "items": [item_of(r) for r in rows]})
+            sent = {_live_key(r["ts"], r["user_ptr"], r["unit"]) for r in rows}
+            sent.update(it["_key"] for it in list(LIVE_ITEMS))   # старое в буфере — не показываем
             last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
             idle = 0
+            users_at = time.time()
             while True:
-                time.sleep(0.25)
+                # ждём «кик» от синхронизатора, но не дольше 0.2 с
+                LIVE_WAKE.wait(0.2)
+                LIVE_WAKE.clear()
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break
+                if time.time() - users_at > 60:
+                    # справочник сотрудников подтягиваем раз в минуту: новый
+                    # человек сразу получает ФИО и фото в карточке
+                    users = gate._user_names(con)
+                    photos = gate.photos_map(con)
+                    users_at = time.time()
+                # 1) буфер Gate — приходит раньше суточного журнала
+                batch = []
+                for it in list(LIVE_ITEMS):
+                    k = it.get("_key")
+                    if k in sent:
+                        continue
+                    sent.add(k)
+                    batch.append(buf_item(it))
+                # 2) SQLite — обычный канал (и страховка, если буфер не читается)
                 new = con.execute(
                     "SELECT * FROM events WHERE day=? AND idx>? AND event_type=1 AND event_code=8"
                     " ORDER BY idx LIMIT 50", (day, last)).fetchall()
-                if new:
-                    for r in new:
-                        last = max(last, r["idx"])
-                    send({"type": "events", "items": [item_of(r) for r in new]})
+                for r in new:
+                    last = max(last, r["idx"])
+                    k = _live_key(r["ts"], r["user_ptr"], r["unit"])
+                    if k in sent:
+                        continue            # уже отправлено из буфера
+                    sent.add(k)
+                    batch.append(item_of(r))
+                if batch:
+                    send({"type": "events", "items": batch})
                     idle = 0
                 else:
                     idle += 1
                     if idle % 8 == 0:
                         self.wfile.write(b": ping\n\n")
                         self.wfile.flush()
+                if len(sent) > 4000:
+                    sent = {_live_key(r["ts"], r["user_ptr"], r["unit"]) for r in rows}
         except (BrokenPipeError, ConnectionResetError, OSError):
             pass
         finally:
@@ -1807,6 +1932,7 @@ def main():
         print("создан администратор из gate.config.json → auth", flush=True)
     threading.Thread(target=sync_worker, daemon=True).start()
     threading.Thread(target=live_sync_worker, daemon=True).start()
+    threading.Thread(target=live_buf_worker, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print("СКУД Gate: http://0.0.0.0:%d/  вход: %s  (Ctrl+C — стоп)" % (port, AUTH_USER), flush=True)
     try:
