@@ -962,6 +962,8 @@ button .ic,a.btn .ic{opacity:.9}
         </div>
         <div class="row-actions">
           <button id="prvGen">Сгенерировать по карте</button>
+          <button id="prvTs">Табель (предпросмотр)</button>
+          <button id="prvT13">Т-13 (предпросмотр)</button>
           <button id="prvClear">Очистить</button>
           <span class="muted" id="prvHint" style="font-size:var(--fs-s);align-self:center"></span>
         </div>
@@ -1659,6 +1661,21 @@ $('#prvGen').onclick=async ()=>{
     $('#prvHint').textContent='дней: '+d.days;
     await prvLoad();
   }catch(e){ toast('Тест: '+e.message, true); }
+};
+function prvMonth(){
+  for(const id of ['#tMonth','#bMonth']){
+    const el=$(id);
+    if(el && /^\d{4}-\d{2}$/.test(el.value||'')) return el.value;
+  }
+  const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+$('#prvTs').onclick=()=>{
+  if(!PRV_UID){ toast('Сначала найдите сотрудника по карте', true); return; }
+  window.open('/print/timesheet?month='+prvMonth()+'&user_ptr='+PRV_UID+'&preview=1','_blank');
+};
+$('#prvT13').onclick=()=>{
+  if(!PRV_UID){ toast('Сначала найдите сотрудника по карте', true); return; }
+  window.open('/print/t13?month='+prvMonth()+'&user_ptr='+PRV_UID+'&preview=1','_blank');
 };
 $('#prvClear').onclick=async ()=>{
   if(!PRV_UID) return;

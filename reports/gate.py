@@ -1096,7 +1096,8 @@ def _point_sql(point, column="unit"):
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
                shift_start=None, shift_end=None, user_ptr=None,
-               in_points=None, out_points=None, personal=True, breaks=True):
+               in_points=None, out_points=None, personal=True, breaks=True,
+               with_preview=False):
     """Свод посещаемости по сотрудникам и дням.
 
     Приход — первый проход дня, уход — последний проход дня.
@@ -1211,7 +1212,13 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             "out_unit": rec["out_unit"],
             "points": ", ".join(sorted(rec["points"])),
         })
+    preview_keys = set()
     tt = test_times_map(con)
+    if with_preview and user_ptr:
+        for r in con.execute("SELECT day, enter, exit FROM preview_times WHERE user_ptr=?",
+                             (int(user_ptr),)).fetchall():
+            tt.setdefault((int(user_ptr), r["day"]), (r["enter"], r["exit"]))
+            preview_keys.add((int(user_ptr), r["day"]))
     if tt and not point:
         sh_s_t = dt.time.fromisoformat(shift_start or CFG.get("shift_start", "08:00"))
         sh_e_t = dt.time.fromisoformat(shift_end or CFG.get("shift_end", "17:00"))
@@ -1245,6 +1252,7 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
                 "hours": hours, "break_min": 0, "passes": 2,
                 "late": late, "early": early, "open": False,
                 "in_unit": "ТЕСТ", "out_unit": "ТЕСТ", "points": "ТЕСТ",
+                "preview": (pid, day) in preview_keys,
             })
     rows.sort(key=lambda r: (r["day"], r["enter"], r["fio"]))
     return rows
@@ -1386,7 +1394,7 @@ def _first_last_rows(con, first, last, group, user_ptr, start_hour):
 
 
 def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=None,
-              mode="normal", start_hour=0):
+              mode="normal", start_hour=0, with_preview=False):
     """Табель за месяц: сотрудники × дни, часы в минутах (формат — в шаблоне)."""
     first = dt.date.fromisoformat(month + "-01")
     last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
@@ -1395,7 +1403,8 @@ def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=
     else:
         rows = attendance(con, first.isoformat(), last.isoformat(),
                           group=group, user_ptr=user_ptr,
-                          in_points=in_points, out_points=out_points)
+                          in_points=in_points, out_points=out_points,
+                          with_preview=with_preview)
     ndays = last.day
     wd_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
     weekend = [first.replace(day=d).weekday() >= 5 for d in range(1, ndays + 1)]
@@ -1403,6 +1412,7 @@ def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=
     today = dt.date.today()
     today_day = today.day if (today.year, today.month) == (first.year, first.month) else 0
     per, day_tot = {}, [0] * ndays
+    preview_days = set()
     for r in rows:
         minutes = int(round((r["hours"] or 0) * 60))
         if minutes <= 0:            # фильтр по точкам не дал пары «вход-выход»
@@ -1410,8 +1420,11 @@ def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=
         u = per.setdefault(r["user_ptr"], {
             "user_ptr": r["user_ptr"], "number": r["number"], "fio": r["fio"],
             "position": r["position"], "group": r["group"],
-            "cells": {}, "total": 0, "days": 0})
+            "cells": {}, "preview": {}, "total": 0, "days": 0})
         day = int(r["day"][8:10])
+        if r.get("preview"):
+            preview_days.add((r["user_ptr"], day))
+            u["preview"][day] = True
         u["cells"][day] = minutes
         u["total"] += minutes
         u["days"] += 1
@@ -1419,6 +1432,7 @@ def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=
     out = sorted(per.values(), key=lambda x: x["fio"])
     return {
         "month": month,
+        "preview_days": preview_days,
         "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
         "days": ndays,
         "weekend": weekend,
@@ -2094,14 +2108,16 @@ T13_CODES = {"отпуск": "О", "больничный": "Б", "отгул": "
              "командировка": "К", "прогул": "ПР", "другое": "НН"}
 
 
-def t13(con, month, group=None, user_ptr=None):
+def t13(con, month, group=None, user_ptr=None, with_preview=False):
     """Табель Т-13: код и часы по каждому дню месяца."""
     first = dt.date.fromisoformat(month + "-01")
     last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
     ndays = last.day
     users = _user_names(con)
     absn = absences_map(con)
-    rows = attendance(con, first.isoformat(), last.isoformat(), group=group, user_ptr=user_ptr)
+    rows = attendance(con, first.isoformat(), last.isoformat(), group=group,
+                      user_ptr=user_ptr, with_preview=with_preview)
+    is_preview = {(r["user_ptr"], r["day"]) for r in rows if r.get("preview")}
     fact = {}
     for r in rows:
         fact[(r["user_ptr"], r["day"])] = r["hours"] or 0
@@ -2137,6 +2153,10 @@ def t13(con, month, group=None, user_ptr=None):
                 continue
             h = fact.get((pid, day.isoformat()))
             if h:
+                if (pid, day.isoformat()) in is_preview:
+                    days.append({"code": "Я", "hours": "", "off": False, "preview": True})
+                    worked_days += 1
+                    continue
                 worked_days += 1
                 total_min += int(round(h * 60))
                 hv = int(h) if abs(h - int(h)) < 0.05 else round(h, 1)

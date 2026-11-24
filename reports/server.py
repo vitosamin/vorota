@@ -306,7 +306,7 @@ def rows_to_xls(rows, cols, title):
         "td{padding:4px 8px;border:1px solid #d5dde6;font-family:'Segoe UI',Arial;font-size:12px}"
         "td.n{text-align:center}tr.e td{background:#f4f7fb}"
         "h3{font-family:'Segoe UI',Arial;font-size:14px}"
-        "</style>"
+        "\n.pv{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}\n</style>"
     )
     head = "".join('<th%s>%s</th>' % (' class="n"' if k in NUM_KEYS else "", esc(col_title(t)))
                    for k, t in cols)
@@ -1200,7 +1200,9 @@ class Handler(BaseHTTPRequestHandler):
             month = dt.date.today().strftime("%Y-%m")
         group = (q.get("group") or "").strip() or None
         user_ptr = q.get("user_ptr") or None
-        return gate.t13(gate.connect(), month, group=group, user_ptr=user_ptr), group
+        pv = str(q.get("preview") or "") in ("1", "true", "yes")
+        return gate.t13(gate.connect(), month, group=group, user_ptr=user_ptr,
+                        with_preview=pv), group
 
     def _t13_table(self, d):
         head = "<th>№</th><th>Сотрудник</th><th>Должность</th>"
@@ -1216,6 +1218,8 @@ class Handler(BaseHTTPRequestHandler):
                    '<td class="pos">%s</td>' % _esc(r["position"])]
             for day in r["days"]:
                 cls = "we" if day["off"] else ""
+                if day.get("preview"):
+                    cls = (cls + " pv").strip()
                 if day["hours"]:
                     tds.append('<td class="%s"><div class="c">%s</div><div class="h">%s</div></td>'
                                % (cls, day["code"], day["hours"]))
@@ -1232,6 +1236,9 @@ class Handler(BaseHTTPRequestHandler):
         cols, head, rows = self._t13_table(d)
         sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b>" % (
             _esc(d["title"]), "подразделение: " + _esc(group) if group else "все подразделения", d["count"])
+        if str(q.get("preview") or "") in ("1", "true", "yes"):
+            sub += (' <span style="color:#b26a00;font-weight:700">· ПРЕДПРОСМОТР: '
+                    'сгенерированные дни подсвечены, в учёт и выгрузку не попадают</span>')
         html = T13_TEMPLATE.format(title=_esc(d["title"]), sub=sub, colgroup=cols, head=head,
                                    rows=rows, stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
         return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
@@ -1243,7 +1250,7 @@ class Handler(BaseHTTPRequestHandler):
                 "table{border-collapse:collapse;font-family:'Segoe UI',Arial;font-size:10px}"
                 "th,td{border:1px solid #b6c2cf;padding:2px 3px;text-align:center}"
                 "th{background:#eef2f6}td.nm,td.pos{text-align:left}"
-                ".we{background:#f1f4f8}.tot{font-weight:700}</style></head><body>"
+                ".we{background:#f1f4f8}.tot{font-weight:700}\n.pv{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}\n</style></head><body>"
                 "<h3>Табель учёта рабочего времени · %s</h3><table>"
                 "<colgroup>%s</colgroup><thead><tr>%s</tr></thead><tbody>%s</tbody></table>"
                 "</body></html>") % (_esc(d["title"]), cols, head, rows)
@@ -1409,9 +1416,10 @@ class Handler(BaseHTTPRequestHandler):
             start = max(0, min(23, int(q.get("start") or 0)))
         except (TypeError, ValueError):
             start = 0
+        pv = str(q.get("preview") or "") in ("1", "true", "yes")
         d = gate.timesheet(gate.connect(), month, group=group, user_ptr=user_ptr,
                            in_points=in_points, out_points=out_points,
-                           mode=mode, start_hour=start)
+                           mode=mode, start_hour=start, with_preview=pv)
         return d, month, group, mode, start
 
     def _ts_head(self, d, print_mode=True):
@@ -1438,6 +1446,7 @@ class Handler(BaseHTTPRequestHandler):
             tds = ['<td>%d</td>' % n,
                    '<td class="name">%s</td>' % _esc(r["fio"]),
                    '<td class="pos">%s</td>' % _esc(r["position"] or "")]
+            pvcells = r.get("preview") or {}
             for day in range(1, d["days"] + 1):
                 v = r["cells"].get(day)
                 cls = []
@@ -1445,6 +1454,8 @@ class Handler(BaseHTTPRequestHandler):
                     cls.append("we")
                 if day == (d.get("today") or 0):
                     cls.append("today")
+                if pvcells.get(day):
+                    cls.append("pv")
                 tds.append('<td%s>%s</td>' % ((' class="%s"' % " ".join(cls)) if cls else "",
                                                gate.hm(v) if v else ""))
             tds.append('<td class="tot">%s</td>' % gate.hm(r["total"]))
@@ -1484,6 +1495,9 @@ class Handler(BaseHTTPRequestHandler):
             _esc(d["title"]),
             "подразделение: " + _esc(group) if group else "все подразделения",
             d["count"], how)
+        if d.get("preview_days"):
+            sub += (' <span style="color:#b26a00;font-weight:700">· ПРЕДПРОСМОТР: '
+                    'подсвеченные клетки сгенерированы, в учёт не входят</span>')
         html = TIMESHEET_TEMPLATE.format(
             title=_esc(d["title"]), sub=sub, colgroup=colgroup, head=head,
             rows=rows, foot=foot,
@@ -1498,7 +1512,7 @@ class Handler(BaseHTTPRequestHandler):
                 "table{border-collapse:collapse;font-family:'Segoe UI',Arial;font-size:11px}"
                 "th,td{border:1px solid #b6c2cf;padding:3px 5px;text-align:center}"
                 "th{background:#1f6feb;color:#fff}td.name,td.pos{text-align:left}"
-                ".we{background:#f1f4f8}td.tot{font-weight:700}</style></head><body>"
+                ".we{background:#f1f4f8}td.tot{font-weight:700}\n.pv{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}\n</style></head><body>"
                 "<h3>Табель учёта рабочего времени · %s</h3>"
                 "<table><thead><tr>%s</tr></thead><tbody>%s</tbody><tfoot>%s</tfoot></table>"
                 "</body></html>") % (_esc(d["title"]), head, rows, foot)
@@ -1766,6 +1780,8 @@ PRINT_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
  tr{{page-break-inside:avoid}}
  .foot{{margin-top:8px;padding-top:5px;border-top:1px solid #d7dee6;color:#777;font-size:9px;
    display:flex;justify-content:space-between}}
+
+.pv{{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}}
 </style></head><body>
 <div class="toolbar"><span class="hint">Проверьте форму и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <div class="doc-head">
@@ -1823,6 +1839,8 @@ PASS_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
    display:flex;justify-content:space-between}}
  .state{{font-size:10px;color:#2f6fd0;border:1px solid #cfe0f7;background:#eef5ff;border-radius:3px;padding:1px 6px}}
  .mono{{font-family:ui-monospace,Consolas,monospace}}
+
+.pv{{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}}
 </style></head><body>
 <div class="toolbar"><button onclick="window.print()">Печать</button></div>
 <div class="card">
@@ -1875,6 +1893,8 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
  th.tot,td.tot{{background:#f7f9fb;font-weight:700}}
  tfoot td{{background:#eef2f6;font-weight:600;font-size:7.5px;padding:1px 0;line-height:1.05}}
  tfoot .mins{{font-size:6.5px;font-weight:400;color:#667}}
+
+.pv{{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}}
 </style></head><body>
 <div class="toolbar"><span class="hint">Проверьте табель и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <h1>Табель учёта рабочего времени</h1>
@@ -1911,6 +1931,8 @@ T13_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
  .h{{font-size:7.5px;color:#445;line-height:1.1}}
  .sign{{display:flex;justify-content:space-between;margin-top:10px;font-size:9.5px;color:#333}}
  .sign div{{border-top:1px solid #999;padding-top:3px;width:30%;text-align:center}}
+
+.pv{{background:#fff3cd;box-shadow:inset 0 0 0 1px #e0b400}}
 </style></head><body>
 <div class="toolbar"><span class="hint">Проверьте форму и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
 <h1>ТАБЕЛЬ УЧЁТА РАБОЧЕГО ВРЕМЕНИ</h1>
