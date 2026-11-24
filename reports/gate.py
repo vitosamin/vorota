@@ -1217,7 +1217,7 @@ def timesheet(con, month, group=None, user_ptr=None, in_points=None, out_points=
         u["total"] += minutes
         u["days"] += 1
         day_tot[day - 1] += minutes
-    out = sorted(per.values(), key=lambda x: (x["group"], x["fio"]))
+    out = sorted(per.values(), key=lambda x: x["fio"])
     return {
         "month": month,
         "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
