@@ -717,7 +717,7 @@ button .ic,a.btn .ic{opacity:.9}
               <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
               <div class="msel-list"></div>
             </div></div>
-          <div><label class="f">Показ, секунд</label><input type="number" id="kppSec" min="1" max="20" value="3"></div>
+          <div><label class="f">Показ, секунд</label><input type="number" id="kppSec" min="1" max="20" step="0.5" value="4.5"></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="kppStart">Подключить</button>
@@ -1493,7 +1493,8 @@ function kppNext(){
       + '<span>Нет фото</span></div>';
   $('#kppOverlay').classList.add('on');
   kppFillDetails(it, token);
-  const sec=Math.max(1, Math.min(20, parseInt($('#kppSec').value||'3',10)));
+  const secRaw=parseFloat(String($('#kppSec').value||'4.5').replace(',','.'));
+  const sec=Math.max(1, Math.min(20, isNaN(secRaw)?4.5:secRaw));
   clearTimeout(kppItemTimer);
   kppItemTimer=setTimeout(()=>{ kppNext(); }, sec*1000);
 }
