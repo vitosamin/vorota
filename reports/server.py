@@ -110,7 +110,7 @@ def do_sync(days=None):
         gate.init_db(con)
         today = dt.date.today()
         if days is None:
-            res = gate.sync_events(today.isoformat(), today.isoformat(), con=con)
+            res = {"fast_new": gate.sync_today_fast(con=con)}
             tick = str(int(time.time() // 600))
             if gate.meta_get(con, "_cfg_tick", "0") != tick:
                 gate.sync_config(con=con)
@@ -134,6 +134,18 @@ def do_sync(days=None):
         return {"error": str(exc)}
     finally:
         sync_lock.release()
+
+
+def live_sync_worker():
+    """Досинхронизация сегодняшнего журнала раз в секунду — для экрана КПП."""
+    while True:
+        try:
+            con = gate.connect()
+            gate.sync_today_fast(con=con)
+            con.close()
+        except Exception:                        # noqa: BLE001
+            pass
+        time.sleep(0.5)
 
 
 def sync_worker():
@@ -931,7 +943,7 @@ class Handler(BaseHTTPRequestHandler):
             last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
             idle = 0
             while True:
-                time.sleep(2.5)
+                time.sleep(0.5)
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break
@@ -1604,6 +1616,7 @@ def main():
     if accounts.ensure_admin(AUTH):
         print("создан администратор из gate.config.json → auth", flush=True)
     threading.Thread(target=sync_worker, daemon=True).start()
+    threading.Thread(target=live_sync_worker, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print("СКУД Gate: http://0.0.0.0:%d/  вход: %s  (Ctrl+C — стоп)" % (port, AUTH_USER), flush=True)
     try:

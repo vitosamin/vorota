@@ -685,6 +685,68 @@ def sync_config(force=False, con=None):
     return True
 
 
+def import_day_incremental(con, day, path):
+    """Дописать в SQLite только новые записи журнала (idx больше текущего максимума)."""
+    max_idx = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?",
+                          (day,)).fetchone()["m"]
+    rows = mdb_export(path, "Events")
+    prepared = []
+    for r in rows:
+        t = parse_dt(r.get("DateTime"))
+        if t is None:
+            continue
+        try:
+            idx = int(r.get("Index") or 0)
+        except ValueError:
+            idx = 0
+        if idx <= max_idx:
+            continue
+        prepared.append((
+            day, idx, t.isoformat(sep=" "),
+            _int(r.get("EventType")), _int(r.get("EventCode")),
+            _int(r.get("DevPtr")), _int(r.get("RdrPtr")), _int(r.get("UserPtr")),
+            _int(r.get("AlarmStatus")),
+            (r.get("Unit") or "").strip(), (r.get("Message") or "").strip(),
+            (r.get("Name") or "").strip(),
+        ))
+    if prepared:
+        with _lock:
+            con.executemany(
+                "INSERT OR REPLACE INTO events(day,idx,ts,event_type,event_code,dev_ptr,rdr_ptr,user_ptr,alarm_status,unit,message,name)"
+                " VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", prepared)
+            total = con.execute("SELECT COUNT(*) c FROM events WHERE day=?", (day,)).fetchone()["c"]
+            con.execute("INSERT INTO days(day,rows,imported) VALUES(?,?,?)"
+                        " ON CONFLICT(day) DO UPDATE SET rows=excluded.rows, imported=excluded.imported",
+                        (day, total, dt.datetime.now().isoformat(timespec="seconds")))
+            con.commit()
+    return len(prepared)
+
+
+def sync_today_fast(con=None):
+    """Быстрая досинхронизация сегодняшнего журнала: только если файл изменился."""
+    own = con is None
+    con = con or connect()
+    day = dt.date.today().isoformat()
+    try:
+        rem = remote_event_days()
+        if day not in rem:
+            return 0
+        name, size, mtime = rem[day]
+        stamp = "%s|%s" % (size, mtime)
+        if meta_get(con, "fast_stamp:" + day) == stamp and os.path.exists(os.path.join(EVENTS_DIR, name)):
+            return 0
+        local = os.path.join(EVENTS_DIR, name)
+        smb_get(CFG["events_remote"], name, local)
+        n = import_day_incremental(con, day, local)
+        with _lock:
+            meta_set(con, "fast_stamp:" + day, stamp)
+            con.commit()
+        return n
+    finally:
+        if own:
+            con.close()
+
+
 def remote_event_days():
     """{дата ISO: (имя файла, размер, mtime)} для всех суточных журналов."""
     out = {}

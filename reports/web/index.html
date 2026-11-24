@@ -226,13 +226,15 @@ table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
 .kpp-overlay{position:fixed;inset:0;background:rgba(8,12,18,.72);display:none;align-items:center;justify-content:center;z-index:999}
 .kpp-overlay.on{display:flex}
-.kpp-card{background:#fff;border-radius:20px;padding:26px 32px;display:flex;gap:28px;align-items:center;min-width:700px;max-width:1100px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
-.kpp-photo{width:240px;height:300px;border-radius:14px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;font-size:64px;color:#2f6fd0;font-weight:700;flex:none}
+.kpp-card{background:#fff;border-radius:22px;padding:24px 26px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;width:500px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.kpp-photo{width:300px;height:300px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#eef3fa,#dfe8f5);display:flex;align-items:center;justify-content:center;flex:none}
 .kpp-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.kpp-info{min-width:0}
-.kpp-name{font-size:34px;font-weight:700;line-height:1.1}
-.kpp-pos{font-size:19px;color:#4b5a6a;margin-top:8px}
-.kpp-meta{font-size:17px;color:#2f6fd0;margin-top:16px;display:flex;gap:18px;flex-wrap:wrap}
+.kpp-nophoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;color:#8093a8}
+.kpp-nophoto span{font-size:14px;letter-spacing:.3px}
+.kpp-info{min-width:0;text-align:center}
+.kpp-name{font-size:27px;font-weight:700;line-height:1.15}
+.kpp-pos{font-size:16px;color:#4b5a6a;margin-top:6px}
+.kpp-meta{font-size:16px;color:#2f6fd0;margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
 .kpp-meta .dir.in{color:#2e7d32} .kpp-meta .dir.out{color:#c62828}
 .photo-row{display:flex;gap:14px;align-items:center;margin:0 0 12px}
 .photo-box{width:92px;height:92px;border-radius:12px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;color:#2f6fd0;font-weight:700;font-size:28px;flex:none}
@@ -1449,7 +1451,10 @@ function kppNext(){
     + (it.number?'<span class="muted">'+esc(it.number)+'</span>':'');
   $('#kppPhoto').innerHTML = it.photo
     ? '<img src="/photo/'+it.user_ptr+'?t='+encodeURIComponent(it.ts||'')+'" alt="">'
-    : esc(initials(it.fio||''));
+    : '<div class="kpp-nophoto">'
+      + '<svg width="112" height="112" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'
+      + '<circle cx="12" cy="8.2" r="3.9"/><path d="M4.8 20.6c0-3.9 3.2-6.6 7.2-6.6s7.2 2.7 7.2 6.6"/></svg>'
+      + '<span>Нет фото</span></div>';
   $('#kppOverlay').classList.add('on');
   const sec=Math.max(1, Math.min(20, parseInt($('#kppSec').value||'3',10)));
   clearTimeout(kppItemTimer);
