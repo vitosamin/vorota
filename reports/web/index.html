@@ -1427,6 +1427,7 @@ function kppStop(){
   kppQueue=[]; kppShowing=false;
   clearTimeout(kppItemTimer);
   $('#kppOverlay').classList.remove('on');
+  $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
   $('#kppStatus').textContent='не подключено';
 }
 function kppMatch(it){
@@ -1513,12 +1514,25 @@ function kppStart(){
     if(m.type==='init'){ (m.items||[]).slice(0,20).reverse().forEach(it=>{ if(kppMatch(it)) kppFeedAdd(it); }); }
   };
 }
+function kppOnOpen(){
+  const n=mselValues('#kppPoint').length;
+  if(!kppEs){
+    $('#kppOverlay').classList.remove('on');
+    $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
+    $('#kppStatus').textContent = n ? 'точки выбраны · нажмите «Подключить»' : 'выберите точки КПП';
+  }
+}
 function kppRefreshFilter(){
   const n=mselValues('#kppPoint').length;
   try{ localStorage.setItem('kpp_points', JSON.stringify(mselValues('#kppPoint'))); }catch(e){}
-  if(kppEs){ $('#kppFeed').innerHTML=''; $('#kppStatus').textContent='подключено · точек: '+n; }
-  else if(n){ kppStart(); }
-  else { $('#kppStatus').textContent='выберите точки КПП'; }
+  if(kppEs){
+    $('#kppFeed').innerHTML='<div class="empty">Выберите точки и нажмите «Подключить»</div>';
+    $('#kppStatus').textContent='подключено · точек: '+n;
+    if(!n){ kppStop(); }
+  } else {
+    $('#kppStatus').textContent = n ? 'точки выбраны · нажмите «Подключить»' : 'выберите точки КПП';
+    $('#kppFeed').innerHTML='<div class="empty">Выберите точки КПП и нажмите «Подключить»</div>';
+  }
 }
 $('#kppPoint').addEventListener('change', ()=>kppRefreshFilter());
 $('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
@@ -1552,7 +1566,7 @@ function openTab(name, remember){
   if(name==='emp') loadEmpTab();
   if(name==='pf') loadPlanFact();
   if(name==='acc') loadAccess();
-  if(name==='kpp') kppStart();
+  if(name==='kpp') kppOnOpen();
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>openTab(b.dataset.tab);

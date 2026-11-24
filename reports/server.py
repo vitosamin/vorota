@@ -145,7 +145,7 @@ def live_sync_worker():
             con.close()
         except Exception:                        # noqa: BLE001
             pass
-        time.sleep(0.5)
+        time.sleep(0.25)
 
 
 def sync_worker():
@@ -943,7 +943,7 @@ class Handler(BaseHTTPRequestHandler):
             last = con.execute("SELECT COALESCE(MAX(idx),0) m FROM events WHERE day=?", (day,)).fetchone()["m"]
             idle = 0
             while True:
-                time.sleep(0.5)
+                time.sleep(0.25)
                 if dt.date.today().isoformat() != day:
                     send({"type": "reload"})
                     break

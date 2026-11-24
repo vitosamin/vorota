@@ -723,25 +723,25 @@ def import_day_incremental(con, day, path):
 
 
 def sync_today_fast(con=None):
-    """Быстрая досинхронизация сегодняшнего журнала: только если файл изменился."""
+    """Быстрая досинхронизация сегодняшнего журнала.
+
+    Копируем файл каждый цикл: атрибуты SMB-каталога кешируются на несколько
+    секунд, поэтому проверка mtime пропускала бы свежие записи. Имя файла
+    строим сами (nГГММДД.mdb), чтобы не запрашивать листинг каталога.
+    """
     own = con is None
     con = con or connect()
     day = dt.date.today().isoformat()
+    name = "n%s%s%s.mdb" % (day[2:4], day[5:7], day[8:10])
+    local = os.path.join(EVENTS_DIR, name)
     try:
-        rem = remote_event_days()
-        if day not in rem:
-            return 0
-        name, size, mtime = rem[day]
-        stamp = "%s|%s" % (size, mtime)
-        if meta_get(con, "fast_stamp:" + day) == stamp and os.path.exists(os.path.join(EVENTS_DIR, name)):
-            return 0
-        local = os.path.join(EVENTS_DIR, name)
         smb_get(CFG["events_remote"], name, local)
-        n = import_day_incremental(con, day, local)
-        with _lock:
-            meta_set(con, "fast_stamp:" + day, stamp)
-            con.commit()
-        return n
+    except Exception:
+        return 0
+    try:
+        return import_day_incremental(con, day, local)
+    except Exception:
+        return 0
     finally:
         if own:
             con.close()
