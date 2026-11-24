@@ -1515,6 +1515,7 @@ function kppStart(){
 }
 function kppRefreshFilter(){
   const n=mselValues('#kppPoint').length;
+  try{ localStorage.setItem('kpp_points', JSON.stringify(mselValues('#kppPoint'))); }catch(e){}
   if(kppEs){ $('#kppFeed').innerHTML=''; $('#kppStatus').textContent='подключено · точек: '+n; }
   else if(n){ kppStart(); }
   else { $('#kppStatus').textContent='выберите точки КПП'; }
@@ -2972,6 +2973,13 @@ async function loadRefs(){
       ['#rGroup','#eGroup','#aGroup','#pGroup','#tGroup','#bGroup','#pfGroup','#accGroup'].forEach(s=>$(s).innerHTML='<option value="">все</option>'+opts);
       POINTS=pts;
       ['#rPoint','#ePoint','#aPoint','#pPoint','#tInPoint','#tOutPoint','#bPoint','#kppPoint'].forEach(s=>buildMsel(s, POINTS));
+      try{
+        const saved=JSON.parse(localStorage.getItem('kpp_points')||'[]');
+        if(Array.isArray(saved) && saved.length && MSEL['#kppPoint']){
+          saved.forEach(p=>MSEL['#kppPoint'].add(p));
+          mselUpdate('#kppPoint');
+        }
+      }catch(e){}
       if(!window._bPointInit && MSEL['#bPoint'] && !MSEL['#bPoint'].size){
         // по умолчанию — проходная производства: там и курят
         POINTS.filter(p=>/произ/i.test(p.unit)).forEach(p=>MSEL['#bPoint'].add(p.unit));
