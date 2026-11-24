@@ -733,6 +733,7 @@ button .ic,a.btn .ic{opacity:.9}
         <div class="row-actions">
           <button class="primary" id="kppStart">Подключить</button>
           <button id="kppStop">Отключить</button>
+          <button id="kppDemo" title="Показать тестовую карточку">Проверить карточку</button>
           <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
         </div>
       </div>
@@ -1433,6 +1434,19 @@ $('#accPrint').onclick=()=>window.open('/print/access?'+accQS().toString(),'_bla
 
 /* ---------- КПП: карточка на мониторе охраны ---------- */
 let kppEs=null, kppQueue=[], kppShowing=false, kppItemTimer=null, kppLastMsg=0;
+function kppError(text){
+  let el=$('#kppErr');
+  if(!el){
+    el=document.createElement('div'); el.id='kppErr';
+    el.style.cssText='position:fixed;left:12px;right:12px;bottom:12px;z-index:1001;background:#fdecea;color:#b3261e;'
+      +'border:1px solid #f3b6b0;border-radius:10px;padding:10px 14px;font-size:13px;white-space:pre-wrap;display:none';
+    document.body.appendChild(el);
+  }
+  el.textContent='Ошибка на экране КПП: '+text;
+  el.style.display='block';
+}
+window.addEventListener('error', e=>{ if(document.body.classList.contains('kpp-mode')) kppError((e.message||'сбой')+' ('+(e.filename||'').split('/').pop()+':'+e.lineno+')'); });
+window.addEventListener('unhandledrejection', e=>{ if(document.body.classList.contains('kpp-mode')) kppError(String((e.reason&&e.reason.message)||e.reason||'сбой')); });
 function kppStop(){
   if(kppEs){ kppEs.close(); kppEs=null; }
   kppQueue=[]; kppShowing=false;
@@ -1574,6 +1588,11 @@ setInterval(()=>{
 },10000);
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
+$('#kppDemo').onclick=()=>{
+  const it={fio:'Тестовый Сотрудник',position:'проверка карточки',group:'охрана',time:new Date().toTimeString().slice(0,8),
+            unit:'КПП2 - Вход',direction:'in',photo:false,user_ptr:0,number:'000/00000',ts:''};
+  kppEnqueue(it);
+};
 
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
@@ -3077,8 +3096,8 @@ function initDates(){
     document.title='Пост КПП';
     const h1=document.querySelector('.top h1'); if(h1) h1.textContent='Пост КПП';
     const sub=document.querySelector('.top .sub'); if(sub) sub.textContent='экран охраны · выберите точки и нажмите «Подключить»';
-    await loadStatus();
-    await loadRefs();
+    try{ await loadStatus(); }catch(e){ console.error('status', e); }
+    try{ await loadRefs(); }catch(e){ console.error('refs', e); kppError('справочники: '+e.message); }
     openTab('kpp', false);
     kppFromUrl();
     setInterval(loadStatus,30000);

@@ -976,6 +976,8 @@ class Handler(BaseHTTPRequestHandler):
                     if idle % 8 == 0:
                         self.wfile.write(b": ping\n\n")
                         self.wfile.flush()
+                    if idle % 60 == 0:
+                        send({"type": "ping"})
         except (BrokenPipeError, ConnectionResetError, OSError):
             pass
         finally:
