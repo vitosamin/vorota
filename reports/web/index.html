@@ -211,6 +211,12 @@ tfoot td{background:#f2f5f8;font-weight:600;border:1px solid var(--line)}
 .sched-edit input[type=time]{width:auto;min-width:104px}
 .sched-edit .sched-presets{margin-top:9px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:var(--fs-xs);color:var(--muted)}
 .sched-edit .sched-presets button{min-height:26px;padding:2px 10px;font-size:var(--fs-s)}
+.brk-edit{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px;background:var(--panel)}
+.brk-edit .sched-t{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.brk-edit .brk-row{display:flex;align-items:center;gap:6px;margin:4px 0}
+.brk-edit input[type=time]{width:auto;min-width:96px}
+.brk-edit input.brk-t2{flex:1;min-width:120px}
+.brk-edit .brk-actions{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .person-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin:0 0 12px;font-size:var(--fs-s)}
 .person-details .it{display:flex;gap:6px;min-width:0}
 .person-details .k{color:var(--muted);white-space:nowrap}
@@ -1915,6 +1921,13 @@ async function openPerson(uid, from, to){
     renderPerson(d);
   }catch(e){ $('#mBody').innerHTML='<div class="empty">Ошибка: '+esc(e.message)+'</div>'; }
 }
+function brkRow(b){
+  b=b||{};
+  return '<div class="brk-row"><input type="time" class="brk-s" value="'+esc(b.start||'')+'"> — '
+    +'<input type="time" class="brk-e" value="'+esc(b.end||'')+'"> '
+    +'<input class="brk-t2" placeholder="обед / перекур" value="'+esc(b.title||'')+'"> '
+    +'<button class="brk-del" type="button" title="удалить">✕</button></div>';
+}
 function renderPerson(d){
   const u=d.user||{}, sm=d.summary||{}, rows=d.rows||[];
   const sch=d.schedule||{};
@@ -1939,6 +1952,20 @@ function renderPerson(d){
       + '<button data-sch="|">сбросить</button>'
       + '</div></div>'
     : '<div class="sched-edit"><div class="sched-t"><b>График работы</b><span class="muted" id="mSchHint" style="margin-left:auto;font-size:var(--fs-s)">'+schNow+'</span></div></div>';
+
+  const brk=(d.breaks||[]);
+  const brkRows=brk.map(brkRow).join('');
+  const brkBox = canOperate()
+    ? '<div class="brk-edit"><div class="sched-t"><b>Перерывы</b>'
+      + '<span class="muted" style="font-size:var(--fs-xs)">обед и перекуры; вычитаются из часов, если попадают в рабочее время</span>'
+      + '<span class="muted" id="mBrkHint" style="margin-left:auto;font-size:var(--fs-s)">'
+      + (brk.length ? 'задано: '+brk.length : 'не заданы')+'</span></div>'
+      + '<div id="mBrkList">'+brkRows+'</div>'
+      + '<div class="brk-actions"><button id="mBrkAdd" type="button">+ Добавить перерыв</button>'
+      + '<button class="primary" id="mBrkSave" type="button">Сохранить перерывы</button></div></div>'
+    : (brk.length ? '<div class="brk-edit"><div class="sched-t"><b>Перерывы</b></div>'
+        + brk.map(b=>'<div class="brk-row">'+esc(b.start)+' — '+esc(b.end)+' · '+esc(b.title)+'</div>').join('')
+        + '</div>' : '');
 
   const dt=d.details||{};
   const detRows=[
@@ -1974,7 +2001,7 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = details + schBox + chips + chart + table;
+  $('#mBody').innerHTML = details + schBox + brkBox + chips + chart + table;
 }
 $('#mBody').addEventListener('click', async (e)=>{
   const pre=e.target.closest('[data-sch]');
@@ -1984,6 +2011,29 @@ $('#mBody').addEventListener('click', async (e)=>{
     $('#mSchStart').value=parts[0]||'';
     $('#mSchEnd').value=parts[1]||'';
     $('#mSchHint').textContent='нажмите «Сохранить график»';
+    return;
+  }
+  if(e.target.id==='mBrkAdd'){
+    $('#mBrkList').insertAdjacentHTML('beforeend', brkRow({}));
+    return;
+  }
+  if(e.target.closest('.brk-del')){
+    e.target.closest('.brk-row').remove();
+    return;
+  }
+  if(e.target.id==='mBrkSave'){
+    const uid=$('#mBody').dataset.uid;
+    const items=[];
+    document.querySelectorAll('#mBrkList .brk-row').forEach(row=>{
+      const start=row.querySelector('.brk-s').value, end=row.querySelector('.brk-e').value;
+      const title=(row.querySelector('.brk-t2').value||'').trim();
+      if(start||end) items.push({start,end,title});
+    });
+    try{
+      const d=await postJSON('/api/employee-breaks',{user_ptr:uid, items});
+      $('#mBrkHint').textContent=(d.breaks&&d.breaks.length)? 'сохранено: '+d.breaks.length : 'перерывы очищены';
+      toast('Перерывы сохранены');
+    }catch(err){ toast('Перерывы: '+err.message, true); }
     return;
   }
   if(e.target.id!=='mSchSave') return;

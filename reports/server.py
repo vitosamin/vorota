@@ -1288,6 +1288,24 @@ class Handler(BaseHTTPRequestHandler):
             return self.admin_post(path, body)
         if path.startswith("/api/passes"):
             return self.passes_post(path, body)
+        if path == "/api/employee-breaks":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            con = gate.connect()
+            try:
+                uid = int(payload.get("user_ptr") or 0)
+                items = payload.get("items") or []
+                brk = gate.set_breaks(con, uid, items)
+                return self.send_json({"ok": True, "breaks": brk})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
         if path == "/api/schedules":
             user = self.require_role("admin", "operator")
             if not user:

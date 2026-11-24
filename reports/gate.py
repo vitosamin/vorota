@@ -198,6 +198,15 @@ CREATE TABLE IF NOT EXISTS access_table (
 );
 CREATE INDEX IF NOT EXISTS ix_access_user ON access_table(user_ptr);
 
+CREATE TABLE IF NOT EXISTS breaks (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_ptr INTEGER NOT NULL,
+    start    TEXT,
+    end_time TEXT,
+    title    TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_breaks_user ON breaks(user_ptr);
+
 CREATE TABLE IF NOT EXISTS schedules (
     user_ptr INTEGER PRIMARY KEY,
     start    TEXT,
@@ -331,6 +340,57 @@ def get_schedule(con, user_ptr):
     if not r:
         return {"start": "", "end": ""}
     return {"start": r["start"] or "", "end": r["end_time"] or ""}
+
+
+def breaks_map(con):
+    """{user_ptr: [(начало, конец, название), ...]} — перерывы по расписанию."""
+    out = {}
+    for r in con.execute("SELECT user_ptr, start, end_time, title FROM breaks ORDER BY user_ptr, start"):
+        if r["start"] and r["end_time"]:
+            out.setdefault(r["user_ptr"], []).append(
+                (r["start"], r["end_time"], r["title"] or "перерыв"))
+    return out
+
+
+def get_breaks(con, user_ptr):
+    rows = con.execute("SELECT start, end_time, title FROM breaks WHERE user_ptr=? ORDER BY start",
+                       (int(user_ptr),)).fetchall()
+    return [{"start": r["start"], "end": r["end_time"], "title": r["title"] or "перерыв"}
+            for r in rows]
+
+
+def set_breaks(con, user_ptr, items):
+    """Заменить список перерывов сотрудника. items: [{"start","end","title"}, ...]."""
+    clean = []
+    for it in items or []:
+        st = (it.get("start") or "").strip()
+        en = (it.get("end") or "").strip()
+        if not st or not en:
+            continue
+        for v in (st, en):
+            dt.time.fromisoformat(v)          # ValueError на мусоре
+        if en <= st:
+            raise ValueError("перерыв %s–%s: конец раньше начала" % (st, en))
+        clean.append((int(user_ptr), st, en, (it.get("title") or "перерыв").strip()[:40]))
+    with _lock:
+        con.execute("DELETE FROM breaks WHERE user_ptr=?", (int(user_ptr),))
+        con.executemany("INSERT INTO breaks(user_ptr,start,end_time,title) VALUES(?,?,?,?)", clean)
+        con.commit()
+    return get_breaks(con, user_ptr)
+
+
+def _break_minutes(breaks, t1, end):
+    """Минуты перерывов, попавшие в интервал [t1, end] одного дня."""
+    total = 0
+    for st, en, _title in breaks or ():
+        bs = dt.datetime.combine(t1.date(), dt.time.fromisoformat(st))
+        be = dt.datetime.combine(t1.date(), dt.time.fromisoformat(en))
+        if be <= bs:
+            be += dt.timedelta(days=1)
+        a, b = max(t1, bs), min(end, be)
+        if b > a:
+            total += int((b - a).total_seconds() // 60)
+    return total
 
 
 def set_schedule(con, user_ptr, start, end):
@@ -689,7 +749,7 @@ def _point_sql(point, column="unit"):
 def attendance(con, from_day, to_day, group=None, search=None, point=None,
                include_deleted=False, include_visitors=False,
                shift_start=None, shift_end=None, user_ptr=None,
-               in_points=None, out_points=None, personal=True):
+               in_points=None, out_points=None, personal=True, breaks=True):
     """Свод посещаемости по сотрудникам и дням.
 
     Приход — первый проход дня, уход — последний проход дня.
@@ -715,6 +775,7 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
     sh_s = dt.time.fromisoformat(shift_start)
     sh_e = dt.time.fromisoformat(shift_end)
     sched = schedules_map(con) if personal else {}
+    brk = breaks_map(con) if breaks else {}
 
     in_needles = [x.lower() for x in _points(in_points)]
     out_needles = [x.lower() for x in _points(out_points)]
@@ -771,11 +832,12 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             t1 = dt.datetime.fromisoformat(enter)
             t2 = dt.datetime.fromisoformat(exit_) if exit_ else now
             end = now if open_now else t2
-            hours = round(max(0.0, (end - t1).total_seconds() / 3600.0), 2)
+            brk_min = _break_minutes(brk.get(pid), t1, end)
+            hours = round(max(0.0, (end - t1).total_seconds() / 3600.0 - brk_min / 60.0), 2)
             late = max(0, int((dt.datetime.combine(t1.date(), t1.time())
                                - dt.datetime.combine(t1.date(), sh_s_u)).total_seconds() // 60))
         else:
-            hours, late = 0.0, 0
+            hours, late, brk_min = 0.0, 0, 0
         early = None
         if exit_ and not open_now:
             t2 = dt.datetime.fromisoformat(exit_)
@@ -793,6 +855,7 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             "first_in": rec["first_in"][11:19] if rec["first_in"] else "",
             "last_out": rec["last_out"][11:19] if rec["last_out"] else "",
             "hours": hours,
+            "break_min": brk_min,
             "passes": rec["passes"],
             "late": late,
             "early": early,
@@ -1538,7 +1601,7 @@ def person_history(con, user_ptr, from_day, to_day):
     extra["status"] = "удалён" if u["deleted"] else ("гость" if u["visitor"] else "активен")
     extra["gate_id"] = u["user_ptr"]
     return {"user": u, "from": from_day, "to": to_day, "rows": rows,
-            "summary": summary, "details": extra}
+            "summary": summary, "details": extra, "breaks": get_breaks(con, user_ptr)}
 
 
 
