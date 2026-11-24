@@ -415,6 +415,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.serve_photo(path[len("/photo/"):])
             if path == "/print/timesheet":
                 return self.print_timesheet(q)
+            if path == "/print/t13":
+                return self.print_t13(q)
             if path == "/print/breaks":
                 return self.print_breaks(q)
             if path == "/api/me":
@@ -481,6 +483,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.export_xls(q)
             if path == "/export/timesheet.xls":
                 return self.export_timesheet_xls(q)
+            if path == "/export/t13.xls":
+                return self.export_t13_xls(q)
             if path == "/export/breaks.xls":
                 return self.export_breaks_xls(q)
             if path == "/print":
@@ -1161,6 +1165,65 @@ class Handler(BaseHTTPRequestHandler):
                  "webp": "image/webp"}.get(ph["ext"], "application/octet-stream")
         return self.send_bytes(data, ctype, extra={"Cache-Control": "private, max-age=300"})
 
+    def _t13(self, q):
+        month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
+        try:
+            dt.date.fromisoformat(month + "-01")
+        except ValueError:
+            month = dt.date.today().strftime("%Y-%m")
+        group = (q.get("group") or "").strip() or None
+        user_ptr = q.get("user_ptr") or None
+        return gate.t13(gate.connect(), month, group=group, user_ptr=user_ptr), group
+
+    def _t13_table(self, d):
+        head = "<th>№</th><th>Сотрудник</th><th>Должность</th>"
+        for i in range(1, d["days"] + 1):
+            head += "<th class='d'>%d</th>" % i
+        head += "<th class='tot'>Дней</th><th class='tot'>Часов</th><th class='tot'>Неявок</th>"
+        cols = ('<col style="width:2.5%"><col style="width:17%"><col style="width:11%">'
+                + "".join('<col style="width:%.2f%%">' % (57.0 / d["days"]) for _ in range(d["days"]))
+                + '<col style="width:4%"><col style="width:4.5%"><col style="width:4%">')
+        trs = []
+        for n, r in enumerate(d["rows"], 1):
+            tds = ['<td>%d</td>' % n, '<td class="nm">%s</td>' % _esc(r["fio"]),
+                   '<td class="pos">%s</td>' % _esc(r["position"])]
+            for day in r["days"]:
+                cls = "we" if day["off"] else ""
+                if day["hours"]:
+                    tds.append('<td class="%s"><div class="c">%s</div><div class="h">%s</div></td>'
+                               % (cls, day["code"], day["hours"]))
+                else:
+                    tds.append('<td class="%s"><div class="c">%s</div></td>' % (cls, day["code"]))
+            tds.append('<td class="tot">%d</td>' % r["worked_days"])
+            tds.append('<td class="tot">%s</td>' % gate.hm(r["total_min"]))
+            tds.append('<td class="tot">%d</td>' % r["absent_days"])
+            trs.append("<tr>%s</tr>" % "".join(tds))
+        return cols, head, "".join(trs)
+
+    def print_t13(self, q):
+        d, group = self._t13(q)
+        cols, head, rows = self._t13_table(d)
+        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b>" % (
+            _esc(d["title"]), "подразделение: " + _esc(group) if group else "все подразделения", d["count"])
+        html = T13_TEMPLATE.format(title=_esc(d["title"]), sub=sub, colgroup=cols, head=head,
+                                   rows=rows, stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
+
+    def export_t13_xls(self, q):
+        d, group = self._t13(q)
+        cols, head, rows = self._t13_table(d)
+        html = ("<html><head><meta charset='utf-8'><style>"
+                "table{border-collapse:collapse;font-family:'Segoe UI',Arial;font-size:10px}"
+                "th,td{border:1px solid #b6c2cf;padding:2px 3px;text-align:center}"
+                "th{background:#eef2f6}td.nm,td.pos{text-align:left}"
+                ".we{background:#f1f4f8}.tot{font-weight:700}</style></head><body>"
+                "<h3>Табель учёта рабочего времени · %s</h3><table>"
+                "<colgroup>%s</colgroup><thead><tr>%s</tr></thead><tbody>%s</tbody></table>"
+                "</body></html>") % (_esc(d["title"]), cols, head, rows)
+        return self.send_bytes(html.encode("utf-8"), "application/vnd.ms-excel; charset=utf-8",
+                               filename="Табель_Т-13_%s.xls" % d["title"].replace(" ", "_"),
+                               ascii_name="t13_%s.xls" % d["month"])
+
     def _timesheet(self, q):
         month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
         try:
@@ -1631,6 +1694,38 @@ TIMESHEET_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-
 <tbody>{rows}</tbody>
 <tfoot>{foot}</tfoot>
 </table>
+</body></html>"""
+
+
+T13_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<title>Табель Т-13 · {title}</title>
+<style>
+ @page{{size:A4 landscape;margin:6mm 5mm}}
+ body{{font:10px/1.2 "Segoe UI",Arial,sans-serif;color:#111;margin:0}}
+ .toolbar{{display:flex;justify-content:flex-end;gap:10px;padding:0 0 6px}}
+ .toolbar .hint{{color:#667;font-size:10.5px}}
+ .toolbar button{{font:13px "Segoe UI",Arial;padding:6px 14px;border:1px solid #2f6fd0;border-radius:3px;background:#2f6fd0;color:#fff;cursor:pointer}}
+ @media print{{.toolbar{{display:none}}}}
+ h1{{font-size:14px;text-align:center;margin:0 0 2px;letter-spacing:.5px}}
+ .sub{{text-align:center;color:#555;font-size:9.5px;margin-bottom:6px}}
+ table{{width:100%;border-collapse:collapse;table-layout:fixed}}
+ th,td{{border:1px solid #b9c4d0;padding:1px 2px;text-align:center;font-size:8.5px;
+   font-family:"Arial Narrow","Liberation Sans Narrow","Segoe UI",Arial,sans-serif}}
+ th{{background:#eef2f6;font-weight:600}}
+ td.nm,td.pos{{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+ .we{{background:#f1f4f8}}
+ .tot{{font-weight:700;background:#f7f9fb}}
+ th.d{{font-size:8px}}
+ .c{{font-weight:600;line-height:1.1}}
+ .h{{font-size:7.5px;color:#445;line-height:1.1}}
+ .sign{{display:flex;justify-content:space-between;margin-top:10px;font-size:9.5px;color:#333}}
+ .sign div{{border-top:1px solid #999;padding-top:3px;width:30%;text-align:center}}
+</style></head><body>
+<div class="toolbar"><span class="hint">Проверьте форму и нажмите «Печать» (или Ctrl+P)</span><button onclick="window.print()">Печать</button></div>
+<h1>ТАБЕЛЬ УЧЁТА РАБОЧЕГО ВРЕМЕНИ</h1>
+<div class="sub">Форма по ОКУД 0301001 · {sub} · сформировано {stamp}</div>
+<table><colgroup>{colgroup}</colgroup><thead><tr>{head}</tr></thead><tbody>{rows}</tbody></table>
+<div class="sign"><div>Ответственное лицо</div><div>Начальник отдела кадров</div><div>Дата</div></div>
 </body></html>"""
 
 

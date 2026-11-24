@@ -1765,6 +1765,74 @@ def access_rights(con, group=None, search=None):
     return {"devices": [{"id": d["dev_ptr"], "name": d["name"]} for d in devs], "rows": rows}
 
 
+T13_CODES = {"отпуск": "О", "больничный": "Б", "отгул": "ДО",
+             "командировка": "К", "прогул": "ПР", "другое": "НН"}
+
+
+def t13(con, month, group=None, user_ptr=None):
+    """Табель Т-13: код и часы по каждому дню месяца."""
+    first = dt.date.fromisoformat(month + "-01")
+    last = (first.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+    ndays = last.day
+    users = _user_names(con)
+    absn = absences_map(con)
+    rows = attendance(con, first.isoformat(), last.isoformat(), group=group, user_ptr=user_ptr)
+    fact = {}
+    for r in rows:
+        fact[(r["user_ptr"], r["day"])] = r["hours"] or 0
+
+    out = []
+    for pid, u in users.items():
+        if u["deleted"] or u["visitor"] or not _real_name(u["fio"]):
+            continue
+        if user_ptr and pid != int(user_ptr):
+            continue
+        if group and group not in ("", "all") and u["group"] != group:
+            continue
+        days = []
+        worked_days = 0
+        total_min = 0
+        abs_days = 0
+        abs_dates = {}
+        for a, b, kind in absn.get(pid, ()):
+            da = dt.date.fromisoformat(a)
+            db = dt.date.fromisoformat(b)
+            while da <= db:
+                abs_dates[da] = kind
+                da += dt.timedelta(days=1)
+        for d in range(1, ndays + 1):
+            day = first.replace(day=d)
+            kind = abs_dates.get(day)
+            if kind:
+                days.append({"code": T13_CODES.get(kind, "НН"), "hours": "", "off": False})
+                abs_days += 1
+                continue
+            if day.weekday() >= 5:
+                days.append({"code": "В", "hours": "", "off": True})
+                continue
+            h = fact.get((pid, day.isoformat()))
+            if h:
+                worked_days += 1
+                total_min += int(round(h * 60))
+                hv = int(h) if abs(h - int(h)) < 0.05 else round(h, 1)
+                days.append({"code": "Я", "hours": str(hv).replace(".", ","), "off": False})
+            else:
+                days.append({"code": "НН", "hours": "", "off": False})
+        if worked_days == 0 and abs_days == 0:
+            continue                      # служебные записи без проходов и отсутствий
+        out.append({
+            "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+            "group": u["group"], "position": u["position"],
+            "days": days, "worked_days": worked_days,
+            "absent_days": abs_days, "total_min": total_min,
+        })
+    out.sort(key=lambda r: (r["group"], r["fio"]))
+    return {"month": month, "days": ndays,
+            "title": "%s %d" % (MONTHS_RU[first.month - 1], first.year),
+            "rows": out, "count": len(out),
+            "total_min": sum(r["total_min"] for r in out)}
+
+
 def late_report(con, from_day, to_day, group=None, search=None,
                 shift_start=None, shift_end=None, user_ptr=None, point=None):
     """Опоздания за период: по сотрудникам, с худшим днём."""

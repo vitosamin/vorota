@@ -743,6 +743,8 @@ button .ic,a.btn .ic{opacity:.9}
           <button class="primary" id="tGo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></svg> Показать табель</button>
           <button id="tPrint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></svg> Печать</button>
           <button id="tXls"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></svg> Excel</button>
+          <button id="tT13"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></svg> Т-13</button>
+          <button id="tT13x">Т-13 Excel</button>
           <span class="muted" id="tHint" style="font-size:var(--fs-s);align-self:center"></span>
         </div>
       </div>
@@ -1804,6 +1806,15 @@ $('#tMode').onchange=()=>{ $('#tStart').disabled=$('#tMode').value!=='first_last
 $('#tGo').onclick=loadTimesheet;
 $('#tPrint').onclick=()=>window.open('/print/timesheet?'+tshQS().toString(),'_blank');
 $('#tXls').onclick=()=>download('/export/timesheet.xls?'+tshQS().toString(),'tabel.xls');
+function t13QS(){
+  const p=new URLSearchParams();
+  p.set('month', $('#tMonth').value || todayISO().slice(0,7));
+  if($('#tGroup').value) p.set('group',$('#tGroup').value);
+  const e=empUid('#tEmp'); if(e) p.set('user_ptr',e);
+  return p;
+}
+$('#tT13').onclick=()=>window.open('/print/t13?'+t13QS().toString(),'_blank');
+$('#tT13x').onclick=()=>download('/export/t13.xls?'+t13QS().toString(),'t13.xls');
 
 /* ---------- перекуры ---------- */
 function brkQS(){
