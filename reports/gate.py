@@ -2120,10 +2120,13 @@ def _pass_status(row):
 
 def _pass_row(row):
     d = dict(row)
-    try:
-        d["doors"] = json.loads(d.get("doors") or "[]")
-    except ValueError:
-        d["doors"] = []
+    doors = d.get("doors")
+    if isinstance(doors, str):
+        try:
+            doors = json.loads(doors or "[]")
+        except ValueError:
+            doors = []
+    d["doors"] = doors or []
     try:
         d["schedule"] = json.loads(d.get("schedule") or "null") if d.get("schedule") else None
     except ValueError:

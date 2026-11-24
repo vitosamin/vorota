@@ -64,7 +64,8 @@ last_sync = {"at": None, "result": None, "error": None}
 
 def make_token(user):
     exp = int(time.time()) + SESSION_HOURS * 3600
-    payload = "%s|%d" % (user, exp)
+    # логин может быть кириллическим, а в Set-Cookie допустим только latin-1
+    payload = "%s|%d" % (urllib.parse.quote(user, safe=""), exp)
     sig = hmac.new(SECRET, payload.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
     return "%s|%s" % (payload, sig)
 
@@ -77,6 +78,7 @@ def check_token(token):
     good = hmac.new(SECRET, payload.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
     if not hmac.compare_digest(good, sig):
         return None
+    user = urllib.parse.unquote(user)
     try:
         if int(exp) < time.time():
             return None
