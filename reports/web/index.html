@@ -226,15 +226,21 @@ table.acc td.c,table.acc th.c{text-align:center}
 .ok{color:#2e7d32;font-weight:700} .no{color:#c3ccd6}
 .kpp-overlay{position:fixed;inset:0;background:rgba(8,12,18,.72);display:none;align-items:center;justify-content:center;z-index:999}
 .kpp-overlay.on{display:flex}
-.kpp-card{background:#fff;border-radius:22px;padding:24px 26px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;width:500px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
-.kpp-photo{width:300px;height:300px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#eef3fa,#dfe8f5);display:flex;align-items:center;justify-content:center;flex:none}
+.kpp-card{background:#fff;border-radius:22px;padding:28px 30px;display:flex;gap:28px;align-items:flex-start;width:880px;max-width:94vw;box-shadow:0 30px 90px rgba(0,0,0,.5)}
+.kpp-photo{width:330px;height:330px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#eef3fa,#dfe8f5);display:flex;align-items:center;justify-content:center;flex:none}
 .kpp-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .kpp-nophoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;color:#8093a8}
-.kpp-nophoto span{font-size:14px;letter-spacing:.3px}
-.kpp-info{min-width:0;text-align:center}
-.kpp-name{font-size:27px;font-weight:700;line-height:1.15}
-.kpp-pos{font-size:16px;color:#4b5a6a;margin-top:6px}
-.kpp-meta{font-size:16px;color:#2f6fd0;margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.kpp-nophoto span{font-size:15px;letter-spacing:.3px}
+.kpp-info{min-width:0;text-align:left;flex:1}
+.kpp-name{font-size:31px;font-weight:700;line-height:1.12}
+.kpp-pos{font-size:18px;color:#3d4c5c;margin-top:6px}
+.kpp-group{font-size:15px;color:#65727f;margin-top:3px}
+.kpp-details{display:grid;grid-template-columns:1fr 1fr;gap:7px 22px;margin-top:16px;font-size:15px}
+.kpp-details .it{display:flex;gap:7px;min-width:0}
+.kpp-details .it.wide{grid-column:1/-1}
+.kpp-details .k{color:#65727f;white-space:nowrap}
+.kpp-details b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpp-meta{font-size:17px;color:#2f6fd0;margin-top:18px;display:flex;gap:16px;flex-wrap:wrap;justify-content:flex-start;align-items:center}
 .kpp-meta .dir.in{color:#2e7d32} .kpp-meta .dir.out{color:#c62828}
 .photo-row{display:flex;gap:14px;align-items:center;margin:0 0 12px}
 .photo-box{width:92px;height:92px;border-radius:12px;overflow:hidden;background:#e8eef8;display:flex;align-items:center;justify-content:center;color:#2f6fd0;font-weight:700;font-size:28px;flex:none}
@@ -1014,6 +1020,8 @@ button .ic,a.btn .ic{opacity:.9}
     <div class="kpp-info">
       <div class="kpp-name" id="kppName"></div>
       <div class="kpp-pos" id="kppPos"></div>
+      <div class="kpp-group" id="kppGroup"></div>
+      <div class="kpp-details" id="kppDetails"></div>
       <div class="kpp-meta" id="kppMeta"></div>
     </div>
   </div>
@@ -1440,22 +1448,50 @@ function kppFeedAdd(it){
   while(wrap.children.length>60) wrap.lastChild.remove();
 }
 function kppEnqueue(it){ kppQueue.push(it); if(!kppShowing) kppNext(); }
+let kppToken=0;
+async function kppFillDetails(it, token){
+  if(!it.user_ptr) return;
+  try{
+    const d=await api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)
+      +'&from='+todayISO()+'&to='+todayISO());
+    if(token!==kppToken) return;
+    const u=d.user||{}, det=d.details||{}, sch=d.schedule||{};
+    const brk=(d.breaks||[]).map(b=>b.start+'–'+b.end).join(', ');
+    const rows=[
+      ['Табельный', u.number||it.number||''],
+      ['UID карты', det.number_u||''],
+      ['Статус', det.status||''],
+      ['Доступ', det.access_points!==undefined ? det.access_points+' точек' : ''],
+      ['График', sch.start ? sch.start+'–'+sch.end : 'не задан'],
+      ['Перерывы', brk||''],
+      ['Последний проход', det.last_ts ? (det.last_ts.slice(8,10)+'.'+det.last_ts.slice(5,7)+' '+det.last_ts.slice(11,16)+(det.last_unit?' · '+det.last_unit:'')) : ''],
+      ['Пропуск', det.pass ? ('№'+det.pass.number+' до '+det.pass.valid_to) : ''],
+    ].filter(r=>r[1]);
+    $('#kppDetails').innerHTML=rows.map(r=>'<div class="it'+((r[0]==='Перерывы'||r[0]==='Последний проход')?' wide':'')+'"><span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('');
+    $('#kppGroup').textContent=it.group||u.group||'';
+  }catch(e){ /* без деталей */ }
+}
 function kppNext(){
   const it=kppQueue.shift();
   if(!it){ kppShowing=false; $('#kppOverlay').classList.remove('on'); return; }
   kppShowing=true;
+  const token=++kppToken;
   $('#kppName').textContent=it.fio||'';
-  $('#kppPos').textContent=[it.position,it.group].filter(Boolean).join(' · ');
+  $('#kppPos').textContent=it.position||'';
+  $('#kppGroup').textContent=it.group||'';
+  $('#kppDetails').innerHTML='';
   const dir=it.direction==='in'?'вход':(it.direction==='out'?'выход':'');
-  $('#kppMeta').innerHTML='<span>'+esc(it.time||'')+'</span><span>'+esc(it.unit||'')+'</span><span class="dir '+(it.direction||'')+'">'+dir+'</span>'
+  $('#kppMeta').innerHTML='<span><b>'+esc(it.time||'')+'</b></span><span>'+esc(it.unit||'')+'</span>'
+    + '<span class="dir '+(it.direction||'')+'">'+dir+'</span>'
     + (it.number?'<span class="muted">'+esc(it.number)+'</span>':'');
   $('#kppPhoto').innerHTML = it.photo
     ? '<img src="/photo/'+it.user_ptr+'?t='+encodeURIComponent(it.ts||'')+'" alt="">'
     : '<div class="kpp-nophoto">'
-      + '<svg width="112" height="112" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'
+      + '<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'
       + '<circle cx="12" cy="8.2" r="3.9"/><path d="M4.8 20.6c0-3.9 3.2-6.6 7.2-6.6s7.2 2.7 7.2 6.6"/></svg>'
       + '<span>Нет фото</span></div>';
   $('#kppOverlay').classList.add('on');
+  kppFillDetails(it, token);
   const sec=Math.max(1, Math.min(20, parseInt($('#kppSec').value||'3',10)));
   clearTimeout(kppItemTimer);
   kppItemTimer=setTimeout(()=>{ kppNext(); }, sec*1000);
