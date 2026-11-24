@@ -2535,6 +2535,7 @@ function renderPerson(d){
         ? '<div class="photo-actions"><button id="mPhotoUp" type="button">Загрузить фото</button>'
           + '<button id="mPhotoDel" type="button"'+(ph?'':' style="display:none"')+'>Удалить</button>'
           + '<span class="muted" style="font-size:var(--fs-xs)">JPG, PNG или WebP, до 4 МБ</span>'
+          + '<button id="mStaffDel" type="button" style="color:var(--err-text)">Удалить сотрудника</button>'
           + '<input type="file" id="mPhotoFile" accept="image/jpeg,image/png,image/webp" style="display:none"></div>'
         : '')
     + '</div>';
@@ -2583,6 +2584,17 @@ $('#mBody').addEventListener('click', async (e)=>{
     $('#mSchStart').value=parts[0]||'';
     $('#mSchEnd').value=parts[1]||'';
     $('#mSchHint').textContent='нажмите «Сохранить график»';
+    return;
+  }
+  if(e.target.id==='mStaffDel'){
+    const uid=$('#mBody').dataset.uid;
+    if(!confirm('Удалить сотрудника? В панели он скроется сразу, в Gate — заданием (применится при синхронизации).')) return;
+    try{
+      const d=await postJSON('/api/staff/delete',{user_ptr:uid});
+      toast('Удаление поставлено: '+d.job);
+      closePerson();
+      loadEmpTab();
+    }catch(err){ toast('Удаление: '+err.message, true); }
     return;
   }
   if(e.target.id==='mPhotoUp'){

@@ -1660,6 +1660,22 @@ class Handler(BaseHTTPRequestHandler):
                 con.close()
         if path == "/api/staff/add":
             return self.api_staff_add(body)
+        if path == "/api/staff/delete":
+            user = self.require_admin()
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            con = gate.connect()
+            try:
+                res = gate.staff_delete(con, int(payload.get("user_ptr") or 0))
+                return self.send_json({"ok": True, **res})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
         if path.startswith("/api/test/"):
             return self.test_post(path, body)
         if path == "/api/absences":

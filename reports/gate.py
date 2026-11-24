@@ -16,6 +16,7 @@ import io
 import json
 import os
 import random
+import time
 import re
 import sqlite3
 import shutil
@@ -1737,6 +1738,26 @@ def queue_restart():
         fh.write(("\r\n".join(lines) + "\r\n").encode("cp1251", "replace"))
     smb_put(QUEUE_DIR, local, RESTART_JOB)
     return RESTART_JOB
+
+
+def staff_delete(con, user_ptr):
+    """Удалить сотрудника: локально — сразу, в Gate — заданием в очередь."""
+    pid = int(user_ptr)
+    u = con.execute("SELECT user_ptr FROM users WHERE user_ptr=?", (pid,)).fetchone()
+    if not u:
+        raise ValueError("сотрудник не найден")
+    with _lock:
+        con.execute("UPDATE users SET deleted=1 WHERE user_ptr=?", (pid,))
+        con.commit()
+    sql = ("DELETE FROM [AccessTable] WHERE [UserPtr]=%d\r\n"
+           "UPDATE [Users] SET [Deleted]=1 WHERE [UserPtr]=%d\r\n" % (pid, pid))
+    job = "staff_del_%d_%d" % (pid, int(time.time()))
+    queue_put(job + ".sql", sql)
+    try:
+        queue_restart()
+    except Exception:
+        pass
+    return {"user_ptr": pid, "job": job}
 
 
 def build_remove_card_sql(card):
