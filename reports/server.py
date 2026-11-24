@@ -461,6 +461,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_planfact(q)
             if path == "/api/access":
                 return self.api_access(q)
+            if path == "/api/test/people":
+                return self.api_test_people()
+            if path == "/api/test/times":
+                return self.api_test_times(q)
             if path == "/print/planfact":
                 return self.print_planfact(q)
             if path == "/print/access":
@@ -1242,6 +1246,59 @@ class Handler(BaseHTTPRequestHandler):
                                filename="Табель_Т-13_%s.xls" % d["title"].replace(" ", "_"),
                                ascii_name="t13_%s.xls" % d["month"])
 
+    def api_test_people(self):
+        if not self.require_admin():
+            return
+        con = gate.connect()
+        try:
+            return self.send_json({"items": gate.test_people_list(con)})
+        finally:
+            con.close()
+
+    def api_test_times(self, q):
+        if not self.require_admin():
+            return
+        try:
+            pid = int(q.get("person_id") or 0)
+        except ValueError:
+            pid = 0
+        con = gate.connect()
+        try:
+            return self.send_json({"items": gate.test_times_list(con, pid)})
+        finally:
+            con.close()
+
+    def test_post(self, path, body):
+        if not self.require_admin():
+            return
+        try:
+            p = json.loads(body or b"{}")
+        except ValueError:
+            p = {}
+        con = gate.connect()
+        try:
+            if path == "/api/test/people/add":
+                pid = gate.test_person_add(con, p.get("fio", ""), p.get("position", ""),
+                                           p.get("group", ""), p.get("number", ""))
+                return self.send_json({"ok": True, "id": pid})
+            if path == "/api/test/people/delete":
+                gate.test_person_delete(con, int(p.get("id") or 0))
+                return self.send_json({"ok": True})
+            if path == "/api/test/times/generate":
+                n = gate.test_times_generate(con, int(p.get("person_id") or 0),
+                                             p.get("from"), p.get("to"),
+                                             p.get("enter_from", "07:40"), p.get("enter_to", "07:55"),
+                                             p.get("exit_from", "17:00"), p.get("exit_to", "17:15"))
+                return self.send_json({"ok": True, "days": n})
+            if path == "/api/test/times/clear":
+                gate.test_times_clear(con, int(p.get("person_id") or 0))
+                return self.send_json({"ok": True})
+            return self.send_json({"error": "not found"}, code=404)
+        except (ValueError, TypeError) as exc:
+            return self.send_json({"ok": False, "error": str(exc)}, code=400)
+        finally:
+            con.close()
+
     def _timesheet(self, q):
         month = (q.get("month") or dt.date.today().strftime("%Y-%m"))[:7]
         try:
@@ -1507,6 +1564,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True, "photo": ph})
             finally:
                 con.close()
+        if path.startswith("/api/test/"):
+            return self.test_post(path, body)
         if path == "/api/absences":
             user = self.require_role("admin", "operator")
             if not user:

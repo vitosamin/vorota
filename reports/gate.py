@@ -15,6 +15,7 @@ import datetime as dt
 import io
 import json
 import os
+import random
 import re
 import sqlite3
 import shutil
@@ -202,6 +203,23 @@ CREATE TABLE IF NOT EXISTS photos (
     user_ptr INTEGER PRIMARY KEY,
     ext      TEXT,
     updated  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS test_people (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    fio      TEXT NOT NULL,
+    position TEXT,
+    group_name TEXT,
+    number   TEXT,
+    created  TEXT
+);
+CREATE TABLE IF NOT EXISTS test_times (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    person_id INTEGER NOT NULL,
+    day      TEXT NOT NULL,
+    enter    TEXT,
+    exit     TEXT,
+    UNIQUE(person_id, day)
 );
 
 CREATE TABLE IF NOT EXISTS absences (
@@ -814,6 +832,80 @@ def sync_all(days_back=7, con=None):
 PASS_TYPE, PASS_CODE = 1, 8          # «Проход совершен» — факт прохода
 
 
+def test_people_list(con):
+    rows = con.execute("SELECT * FROM test_people ORDER BY id").fetchall()
+    return [{"id": r["id"], "user_ptr": -int(r["id"]), "fio": r["fio"],
+             "position": r["position"] or "", "group": r["group_name"] or "",
+             "number": r["number"] or ""} for r in rows]
+
+
+def test_person_add(con, fio, position="", group="", number=""):
+    fio = (fio or "").strip()
+    if len(fio) < 3:
+        raise ValueError("ФИО слишком короткое")
+    with _lock:
+        cur = con.execute("INSERT INTO test_people(fio,position,group_name,number,created) VALUES(?,?,?,?,?)",
+                          (fio, position.strip(), group.strip(), number.strip(),
+                           dt.datetime.now().isoformat(timespec="seconds")))
+        con.commit()
+    return -int(cur.lastrowid)
+
+
+def test_person_delete(con, pid):
+    pid = int(pid)
+    with _lock:
+        con.execute("DELETE FROM test_times WHERE person_id=?", (pid,))
+        con.execute("DELETE FROM test_people WHERE id=?", (pid,))
+        con.commit()
+
+
+def test_times_generate(con, person_id, day_from, day_to, enter_from, enter_to, exit_from, exit_to):
+    pid = int(person_id)
+    d1 = dt.date.fromisoformat(day_from)
+    d2 = dt.date.fromisoformat(day_to)
+    ef = dt.time.fromisoformat(enter_from)
+    et = dt.time.fromisoformat(enter_to)
+    xf = dt.time.fromisoformat(exit_from)
+    xt = dt.time.fromisoformat(exit_to)
+    if et < ef or xt < xf:
+        raise ValueError("конец диапазона раньше начала")
+    made = 0
+    day = d1
+    while day <= d2:
+        if day.weekday() < 5:
+            k = random.Random("test|%d|%s" % (pid, day.isoformat()))
+            e = k.randint(ef.hour * 60 + ef.minute, et.hour * 60 + et.minute)
+            x = k.randint(xf.hour * 60 + xf.minute, xt.hour * 60 + xt.minute)
+            ent = "%02d:%02d" % (e // 60, e % 60)
+            ext = "%02d:%02d" % (x // 60, x % 60)
+            with _lock:
+                con.execute("INSERT OR REPLACE INTO test_times(person_id,day,enter,exit) VALUES(?,?,?,?)",
+                            (pid, day.isoformat(), ent, ext))
+                con.commit()
+            made += 1
+        day += dt.timedelta(days=1)
+    return made
+
+
+def test_times_list(con, person_id):
+    rows = con.execute("SELECT day, enter, exit FROM test_times WHERE person_id=? ORDER BY day",
+                       (int(person_id),)).fetchall()
+    return [{"day": r["day"], "enter": r["enter"], "exit": r["exit"]} for r in rows]
+
+
+def test_times_clear(con, person_id):
+    with _lock:
+        con.execute("DELETE FROM test_times WHERE person_id=?", (int(person_id),))
+        con.commit()
+
+
+def test_times_map(con):
+    out = {}
+    for r in con.execute("SELECT person_id, day, enter, exit FROM test_times"):
+        out[(-int(r["person_id"]), r["day"])] = (r["enter"], r["exit"])
+    return out
+
+
 def _user_names(con):
     out = {}
     for r in con.execute("SELECT u.user_ptr, u.number, u.last_name, u.first_name, u.father_name,"
@@ -829,6 +921,11 @@ def _user_names(con):
             "deleted": bool(r["deleted"]),
             "visitor": bool(r["visitor"]),
         }
+    for tp in con.execute("SELECT id, fio, position, group_name, number FROM test_people"):
+        out[-int(tp["id"])] = {"user_ptr": -int(tp["id"]), "number": tp["number"] or "",
+                               "fio": tp["fio"], "group": tp["group_name"] or "",
+                               "position": tp["position"] or "", "deleted": 0,
+                               "visitor": 0, "number_u": "", "number_mifare": ""}
     return out
 
 
@@ -1047,6 +1144,41 @@ def attendance(con, from_day, to_day, group=None, search=None, point=None,
             "out_unit": rec["out_unit"],
             "points": ", ".join(sorted(rec["points"])),
         })
+    tt = test_times_map(con)
+    if tt and not point:
+        sh_s_t = dt.time.fromisoformat(shift_start or CFG.get("shift_start", "08:00"))
+        sh_e_t = dt.time.fromisoformat(shift_end or CFG.get("shift_end", "17:00"))
+        for (pid, day), (ent, ext) in sorted(tt.items()):
+            if day < from_day or day > to_day or not ent or not ext:
+                continue
+            u = users.get(pid)
+            if not u or u.get("deleted"):
+                continue
+            if user_ptr and pid != int(user_ptr):
+                continue
+            if group and group not in ("", "all") and u["group"] != group:
+                continue
+            if search and search.lower() not in u["fio"].lower() and search.lower() not in (u["number"] or "").lower():
+                continue
+            t1 = dt.datetime.fromisoformat(day + " " + ent + ":00")
+            t2 = dt.datetime.fromisoformat(day + " " + ext + ":00")
+            if t2 <= t1:
+                continue
+            s2 = sched.get(pid)
+            sh_s_u = dt.time.fromisoformat(s2[0]) if s2 else sh_s_t
+            sh_e_u = dt.time.fromisoformat(s2[1]) if s2 else sh_e_t
+            hours = round((t2 - t1).total_seconds() / 3600.0, 2)
+            late = max(0, int((t1 - dt.datetime.combine(t1.date(), sh_s_u)).total_seconds() // 60))
+            early = max(0, int((dt.datetime.combine(t2.date(), sh_e_u) - t2).total_seconds() // 60))
+            rows.append({
+                "user_ptr": pid, "number": u["number"], "fio": u["fio"],
+                "group": u["group"], "position": u["position"], "day": day,
+                "enter": ent + ":00", "exit": ext + ":00",
+                "first_in": ent + ":00", "last_out": ext + ":00",
+                "hours": hours, "break_min": 0, "passes": 2,
+                "late": late, "early": early, "open": False,
+                "in_unit": "ТЕСТ", "out_unit": "ТЕСТ", "points": "ТЕСТ",
+            })
     rows.sort(key=lambda r: (r["day"], r["enter"], r["fio"]))
     return rows
 

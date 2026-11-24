@@ -403,6 +403,7 @@ button .ic,a.btn .ic{opacity:.9}
     <button data-tab="acc">Доступы</button>
     <button data-tab="exp">Выгрузка в 1С</button>
     <button data-tab="set" id="tabBtnSet" style="display:none">Настройки</button>
+    <button data-tab="test" id="tabBtnTest" style="display:none">Тест</button>
   </nav>
 
   <!-- ================= МОНИТОРИНГ ================= -->
@@ -947,6 +948,44 @@ button .ic,a.btn .ic{opacity:.9}
     </div>
   </section>
 
+
+  <!-- ================= ТЕСТ (только админ) ================= -->
+  <section class="tab" id="tab-test">
+    <div class="notice warn"><span class="ni"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg></span><span><b>Тестовый режим.</b> Это вымышленные сотрудники и проходы — для проверки отчётов, табеля и Т-13. Реальные люди и их данные не затрагиваются; тестового сотрудника можно удалить вместе с его днями.</span></div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="hd"><h3>Тестовые сотрудники</h3><span class="hint">появляются в списках и отчётах</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">ФИО</label><input id="tstFio" placeholder="Тестовый Сотрудник"></div>
+          <div><label class="f">Должность</label><input id="tstPos" placeholder="Проверка"></div>
+          <div><label class="f">Подразделение</label><input id="tstGrp" placeholder="Тест"></div>
+          <div><label class="f">Табельный</label><input id="tstNum" placeholder="ТЕСТ-1"></div>
+        </div>
+        <div class="row-actions"><button class="primary" id="tstAdd">Добавить сотрудника</button><span class="muted" id="tstPeopleHint"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><h3>Проходы для теста</h3><span class="hint">генерируются один раз и не меняются</span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Сотрудник</label><select id="tstWho"><option value="">—</option></select></div>
+          <div><label class="f">С даты</label><input type="date" id="tstFrom"></div>
+          <div><label class="f">По дату</label><input type="date" id="tstTo"></div>
+          <div><label class="f">Приход с</label><input type="time" id="tstEF" value="07:40"></div>
+          <div><label class="f">по</label><input type="time" id="tstET" value="07:55"></div>
+          <div><label class="f">Уход с</label><input type="time" id="tstXF" value="17:00"></div>
+          <div><label class="f">по</label><input type="time" id="tstXT" value="17:15"></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="tstGen">Сгенерировать</button>
+          <button id="tstClear">Очистить дни</button>
+          <button id="tstDel">Удалить сотрудника</button>
+          <span class="muted" id="tstHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+        <div class="tblwrap" id="tstList"><div class="empty">Выберите тестового сотрудника</div></div>
+      </div>
+    </div>
+  </section>
 
   <!-- ================= НАСТРОЙКИ (админ) ================= -->
   <section class="tab" id="tab-set">
@@ -1540,6 +1579,64 @@ $('#kppPoint').addEventListener('click', ()=>setTimeout(kppRefreshFilter, 0));
 $('#kppStart').onclick=kppStart;
 $('#kppStop').onclick=kppStop;
 
+/* ---------- тестовые сотрудники (админ) ---------- */
+let TST_PEOPLE=[];
+async function tstLoadPeople(){
+  const d=await api('/api/test/people');
+  TST_PEOPLE=d.items||[];
+  const sel=$('#tstWho');
+  sel.innerHTML='<option value="">—</option>'+TST_PEOPLE.map(p=>'<option value="'+p.id+'">'+esc(p.fio)+'</option>').join('');
+  $('#tstPeopleHint').textContent=TST_PEOPLE.length? 'всего: '+TST_PEOPLE.length : 'пока нет тестовых сотрудников';
+}
+async function tstLoadTimes(){
+  const pid=$('#tstWho').value;
+  if(!pid){ $('#tstList').innerHTML='<div class="empty">Выберите тестового сотрудника</div>'; return; }
+  const d=await api('/api/test/times?person_id='+pid);
+  const items=d.items||[];
+  if(!items.length){ $('#tstList').innerHTML='<div class="empty">Дней нет — нажмите «Сгенерировать»</div>'; return; }
+  let h='<table><thead><tr><th>День</th><th class="num">Приход</th><th class="num">Уход</th><th class="num">Часов</th></tr></thead><tbody>';
+  items.forEach(r=>{
+    const a=r.enter.split(':'), b=r.exit.split(':');
+    const mins=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);
+    h+='<tr><td>'+esc(r.day)+'</td><td class="num mono">'+esc(r.enter)+'</td><td class="num mono">'+esc(r.exit)+'</td>'
+      +'<td class="num">'+Math.floor(mins/60)+':'+String(mins%60).padStart(2,'0')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  $('#tstList').innerHTML=h;
+}
+$('#tstAdd').onclick=async ()=>{
+  try{
+    await postJSON('/api/test/people/add',{fio:$('#tstFio').value, position:$('#tstPos').value,
+      group:$('#tstGrp').value, number:$('#tstNum').value});
+    $('#tstFio').value=''; $('#tstPos').value=''; $('#tstGrp').value=''; $('#tstNum').value='';
+    await tstLoadPeople(); toast('Тестовый сотрудник добавлен');
+  }catch(e){ toast('Тест: '+e.message, true); }
+};
+$('#tstGen').onclick=async ()=>{
+  const pid=$('#tstWho').value;
+  if(!pid){ toast('Выберите тестового сотрудника', true); return; }
+  try{
+    const d=await postJSON('/api/test/times/generate',{person_id:pid,
+      from:$('#tstFrom').value, to:$('#tstTo').value,
+      enter_from:$('#tstEF').value, enter_to:$('#tstET').value,
+      exit_from:$('#tstXF').value, exit_to:$('#tstXT').value});
+    $('#tstHint').textContent='дней: '+d.days;
+    await tstLoadTimes();
+  }catch(e){ toast('Тест: '+e.message, true); }
+};
+$('#tstClear').onclick=async ()=>{
+  const pid=$('#tstWho').value; if(!pid) return;
+  try{ await postJSON('/api/test/times/clear',{person_id:pid}); await tstLoadTimes(); toast('Дни очищены'); }
+  catch(e){ toast('Тест: '+e.message, true); }
+};
+$('#tstDel').onclick=async ()=>{
+  const pid=$('#tstWho').value; if(!pid) return;
+  if(!confirm('Удалить тестового сотрудника и все его дни?')) return;
+  try{ await postJSON('/api/test/people/delete',{id:pid}); await tstLoadPeople(); $('#tstList').innerHTML=''; toast('Удалён'); }
+  catch(e){ toast('Тест: '+e.message, true); }
+};
+$('#tstWho').onchange=tstLoadTimes;
+
 /* ===================== часы ===================== */
 function tickClock(){$('#clock').textContent=new Date().toLocaleTimeString('ru-RU');}
 setInterval(tickClock,1000); tickClock();
@@ -1568,6 +1665,7 @@ function openTab(name, remember){
   if(name==='pf') loadPlanFact();
   if(name==='acc') loadAccess();
   if(name==='kpp') kppOnOpen();
+  if(name==='test'){ tstLoadPeople().then(tstLoadTimes); }
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>openTab(b.dataset.tab);
@@ -2867,6 +2965,7 @@ async function loadMe(){
     ME = await api('/api/me');
     const btn=$('#tabBtnSet');
     if(ME.role==='admin'){ btn.style.display=''; }
+    const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
     else { btn.style.display='none'; }
     const ml=$('#meLogin'); if(ml) ml.textContent=ME.login+' · '+ME.roleTitle;
     if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }
@@ -3031,6 +3130,7 @@ function initDates(){
   $('#bMonth').value=t.slice(0,7);
   $('#jFrom').value=week; $('#jTo').value=t;
   $('#pfFrom').value=t.slice(0,8)+'01'; $('#pfTo').value=t;
+  $('#tstFrom').value=t.slice(0,8)+'01'; $('#tstTo').value=t;
   $('#mDay').onchange=()=>{state.day=$('#mDay').value||t;startStream();loadMon();};
   $('#mToday').onclick=()=>{state.day=t;$('#mDay').value=t;startStream();loadMon();};
 }
