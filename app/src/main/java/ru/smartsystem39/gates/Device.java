@@ -50,6 +50,8 @@ public class Device {
     public String statusField = "";
     public String onValue = "ON";
     public boolean favorite = false;
+    /** Скрыта с главного экрана «Пульт»; в настройках и классическом виде остаётся. */
+    public boolean homeHidden = false;
 
     // Дверь Gate-IP (мост): id устройства и доступные направления
     public String gateId = "";
@@ -127,6 +129,7 @@ public class Device {
             o.put("statusField", statusField);
             o.put("onValue", onValue);
             o.put("favorite", favorite);
+            o.put("home_hidden", homeHidden);
             o.put("gateId", gateId);
             o.put("gateToken", gateToken);
             o.put("dirIn", dirIn);
@@ -156,6 +159,7 @@ public class Device {
         d.statusField = o.optString("statusField", "");
         d.onValue = o.optString("onValue", "ON");
         d.favorite = o.optBoolean("favorite", false);
+        d.homeHidden = o.optBoolean("home_hidden", false);
         d.gateId = o.optString("gateId", "");
         d.gateToken = o.optString("gateToken", "");
         d.dirIn = o.optBoolean("dirIn", false);

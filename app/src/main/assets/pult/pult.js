@@ -3,7 +3,7 @@
 
   var MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   var JKEY = 'pult_journal_v1';
-  var state = { data: null, tab: 0, sheet: null, sheetDir: 'in', filter: 'all' };
+  var state = { data: null, tab: 0, sheet: null, sheetDir: 'in', filter: 'all', hiddenPanel: false };
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function esc(v) {
@@ -106,7 +106,7 @@
     var c = conn();
     var journal = state.tab === 1;
     var eyebrow = journal ? 'История проходов' : 'Система доступа';
-    var title = journal ? 'Журнал' : 'Точки проезда';
+    var title = journal ? 'Журнал' : 'Точки доступа';
     var meta = journal ? todayLabel() : 'Мост Gate-IP';
     $('#head').innerHTML =
       '<div class="headrow"><div>' +
@@ -136,7 +136,9 @@
     renderHeader();
     renderTabs();
     renderScreen();
-    if (state.sheet) renderSheet(); else $('#sheetRoot').innerHTML = '';
+    if (state.hiddenPanel) renderHiddenPanel();
+    else if (state.sheet) renderSheet();
+    else $('#sheetRoot').innerHTML = '';
   }
 
   function renderScreen() {
@@ -147,8 +149,8 @@
     if (state.tab === 1) renderJournal(); else renderMain();
   }
 
-  function pickHero() {
-    var ds = devices().filter(function (d) { return d.configured && !d.gate; });
+  function pickHero(list) {
+    var ds = (list || devices()).filter(function (d) { return d.configured && !d.gate; });
     var i;
     for (i = 0; i < ds.length; i++) if (ds[i].favorite && ds[i].type === 'barrier') return ds[i];
     for (i = 0; i < ds.length; i++) if (ds[i].favorite) return ds[i];
@@ -182,14 +184,24 @@
       '<span class="chev">' + ic('ChevronRight', 16) + '</span></button>';
   }
 
+  function hiddenLink(n) {
+    return '<button class="hidden-link" type="button" onclick="openHidden()">' +
+      ic('EyeOff', 14) + '<span>Скрытые точки</span><span class="mono">' + n + '</span></button>';
+  }
+
   function renderMain() {
-    var ds = devices();
+    var all = devices();
+    var hidden = all.filter(function (d) { return d.hidden; });
+    var ds = all.filter(function (d) { return !d.hidden; });
     if (!ds.length) {
-      $('#screen').innerHTML = '<div class="empty"><b>Нет точек</b><span>Добавьте шлагбаум, калитку или дверь в настройках.</span>' +
-        '<button class="linkbtn" type="button" onclick="openSettings()">Открыть настройки</button></div>';
+      var msg = hidden.length
+        ? '<div class="empty"><b>Все точки скрыты</b><span>Верните нужные из списка ниже.</span></div>'
+        : '<div class="empty"><b>Нет точек</b><span>Добавьте шлагбаум, калитку или дверь в настройках.</span>' +
+          '<button class="linkbtn" type="button" onclick="openSettings()">Открыть настройки</button></div>';
+      $('#screen').innerHTML = msg + (hidden.length ? hiddenLink(hidden.length) : '');
       return;
     }
-    var hero = pickHero();
+    var hero = pickHero(ds);
     var rest = ds.filter(function (d) { return !hero || d.id !== hero.id; });
     var html = hero ? heroHtml(hero) : '';
     if (rest.length) {
@@ -197,6 +209,7 @@
         '<span class="mono count">' + ('0' + rest.length).slice(-2) + '</span></div>' +
         '<div class="list">' + rest.map(rowHtml).join('') + '</div>';
     }
+    if (hidden.length) html += hiddenLink(hidden.length);
     $('#screen').innerHTML = html;
   }
 
@@ -258,7 +271,12 @@
     } else {
       html += '<div class="mev"><span class="mono">—</span><span>Событий пока нет</span></div>';
     }
-    html += '<button class="linkrow" type="button" onclick="editDevice(\'' + esc(d.id) + '\')">Настройки устройства ' + ic('ChevronRight', 16) + '</button>' +
+    var favLabel = d.favorite ? 'Убрать из избранного' : 'В избранное';
+    html += '<button class="linkrow" type="button" onclick="toggleFav(\'' + esc(d.id) + '\')">' +
+        '<span class="linklabel">' + ic('Star', 16) + favLabel + '</span>' + ic('ChevronRight', 16) + '</button>' +
+      '<button class="linkrow danger" type="button" onclick="hideHome(\'' + esc(d.id) + '\')">' +
+        '<span class="linklabel">' + ic('EyeOff', 16) + 'Убрать с главного</span>' + ic('ChevronRight', 16) + '</button>' +
+      '<button class="linkrow" type="button" onclick="editDevice(\'' + esc(d.id) + '\')">Настройки устройства ' + ic('ChevronRight', 16) + '</button>' +
       '</aside>';
     return html;
   }
@@ -383,6 +401,46 @@
   window.editDevice = function (id) { closeSheet(); bridge('edit', id); };
   window.openSettings = function () { bridge('settings'); };
   window.openRefresh = function () { bridge('refresh'); };
+
+  function renderHiddenPanel() {
+    var hidden = devices().filter(function (d) { return d.hidden; });
+    if (!hidden.length) { state.hiddenPanel = false; $('#sheetRoot').innerHTML = ''; return; }
+    var rows = hidden.map(function (d) {
+      return '<button class="row" type="button" onclick="restoreHome(\'' + esc(d.id) + '\')">' +
+        '<span class="row-ic">' + ic(typeIcon(d), 20) + '</span>' +
+        '<span class="row-main"><span class="row-name">' + esc(d.name) + '</span>' +
+        '<span class="row-sub">' + esc(d.sub || sourceOf(d)) + '</span></span>' +
+        '<span class="state ok">Вернуть</span></button>';
+    }).join('');
+    $('#sheetRoot').innerHTML = '<div class="scrim" onclick="closeHidden()"></div><aside class="sheet">' +
+      '<div class="grab" onclick="closeHidden()"></div>' +
+      '<div class="sheet-head"><div><div class="eyebrow">Главный экран</div><h3>Скрытые точки</h3></div></div>' +
+      '<p class="meta">Верните точку — она снова появится на главном.</p>' +
+      '<div class="list" style="margin-top:16px">' + rows + '</div>' +
+      '<button class="linkrow" type="button" onclick="closeHidden()">Закрыть ' + ic('ChevronRight', 16) + '</button></aside>';
+  }
+
+  window.openHidden = function () {
+    state.sheet = null;
+    state.hiddenPanel = true;
+    renderHiddenPanel();
+  };
+  window.closeHidden = function () {
+    state.hiddenPanel = false;
+    $('#sheetRoot').innerHTML = '';
+  };
+  window.toggleFav = function (id) {
+    var d = deviceById(id);
+    if (!d) return;
+    bridge('favorite', id, !d.favorite);
+  };
+  window.hideHome = function (id) {
+    bridge('hideHome', id, true);
+    closeSheet();
+  };
+  window.restoreHome = function (id) {
+    bridge('hideHome', id, false);
+  };
 
   document.addEventListener('DOMContentLoaded', function () {
     render();

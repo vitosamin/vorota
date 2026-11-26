@@ -157,6 +157,8 @@ public class DeviceEditActivity extends Activity {
         objectIdInput.setText(device.objectId);
         pulseCheck.setChecked(device.pulse);
         favoriteCheck.setChecked(device.favorite);
+        // В «Пульта» избранное ведётся с главного экрана, а не в настройках.
+        favoriteCheck.setVisibility(cfg.pultUi() ? View.GONE : View.VISIBLE);
         openUrlInput.setText(device.openUrl);
         closeUrlInput.setText(device.closeUrl);
         statusUrlInput.setText(device.statusUrl);

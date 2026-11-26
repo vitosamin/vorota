@@ -129,7 +129,7 @@
     <string name="update_now">Установить</string>
     <string name="update_no_installer">Не найден установщик APK</string>
     <string name="update_offline">Не удалось проверить обновления</string>
-    <string name="title_points">Точки проезда</string>
+    <string name="title_points">Точки доступа</string>
     <string name="tab_points">Точки</string>
     <string name="section_more">Ещё точки</string>
     <string name="section_points">Точки</string>
@@ -141,4 +141,6 @@
     <string name="gate_choose_dir">Выберите направление</string>
     <string name="gate_no_dirs">Направления не настроены</string>
     <string name="pult_failed">Не удалось открыть «Пульт» — включён классический вид</string>
+    <string name="home_hidden">Убрано с главного экрана</string>
+    <string name="home_shown">Возвращено на главный экран</string>
 </resources>

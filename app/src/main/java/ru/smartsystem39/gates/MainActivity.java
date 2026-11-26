@@ -499,6 +499,7 @@ public class MainActivity extends Activity {
                 o.put("dirOut", d.dirOut);
                 o.put("configured", d.isConfigured() || d.isGate());
                 o.put("favorite", d.favorite);
+                o.put("hidden", d.homeHidden);
                 o.put("sub", sourceLabel(d));
                 o.put("sourceName", pultSourceName(d));
                 o.put("address", pultAddress(d));
@@ -566,6 +567,30 @@ public class MainActivity extends Activity {
         public void edit(String id) {
             runOnUiThread(() -> {
                 if (findDevice(id) != null) openEditor(id);
+            });
+        }
+
+        @JavascriptInterface
+        public void favorite(String id, boolean value) {
+            runOnUiThread(() -> {
+                Device d = findDevice(id);
+                if (d == null) return;
+                d.favorite = value;
+                cfg.upsert(d);
+                toast(getString(value ? R.string.fav_added : R.string.fav_removed));
+                pushPultData();
+            });
+        }
+
+        @JavascriptInterface
+        public void hideHome(String id, boolean value) {
+            runOnUiThread(() -> {
+                Device d = findDevice(id);
+                if (d == null) return;
+                d.homeHidden = value;
+                cfg.upsert(d);
+                toast(getString(value ? R.string.home_hidden : R.string.home_shown));
+                pushPultData();
             });
         }
 
