@@ -129,4 +129,16 @@
     <string name="update_now">Установить</string>
     <string name="update_no_installer">Не найден установщик APK</string>
     <string name="update_offline">Не удалось проверить обновления</string>
+    <string name="title_points">Точки проезда</string>
+    <string name="tab_points">Точки</string>
+    <string name="section_more">Ещё точки</string>
+    <string name="section_points">Точки</string>
+    <string name="settings_home">Главный экран</string>
+    <string name="pult_ui">Пульт: главная точка и список</string>
+    <string name="pult_ui_hint">Выключите, чтобы вернуть классические плитки. Настройка мгновенная.</string>
+    <string name="pult_on">Включён «Пульт»</string>
+    <string name="pult_off">Включён классический вид</string>
+    <string name="gate_choose_dir">Выберите направление</string>
+    <string name="gate_no_dirs">Направления не настроены</string>
+    <string name="pult_failed">Не удалось открыть «Пульт» — включён классический вид</string>
 </resources>

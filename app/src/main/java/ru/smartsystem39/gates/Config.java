@@ -19,6 +19,7 @@ public class Config {
     private static final String K_TOKEN = "ha_token";
     private static final String K_INSECURE = "ha_insecure";
     private static final String K_DEVICES = "devices";
+    private static final String K_PULT = "pult_ui";
 
     private final SharedPreferences sp;
 
@@ -82,6 +83,15 @@ public class Config {
 
     public boolean hasHa() {
         return !getHaUrl().trim().isEmpty() && !getHaToken().trim().isEmpty();
+    }
+
+    /** Главный экран «Пульт»: главная точка сверху и список. Выключение — откат. */
+    public boolean pultUi() {
+        return sp.getBoolean(K_PULT, true);
+    }
+
+    public void setPultUi(boolean v) {
+        sp.edit().putBoolean(K_PULT, v).apply();
     }
 
     public String getPromptedUpdate() {

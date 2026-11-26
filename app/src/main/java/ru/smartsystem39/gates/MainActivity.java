@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
     private Button btnGateImport;
     private TextView gateStatus;
     private CheckBox haInsecure;
+    private CheckBox pultUi;
     private Button btnTest;
     private Button btnAddDevice;
     private LinearLayout navDevices;
@@ -165,6 +166,7 @@ public class MainActivity extends Activity {
         btnGateImport = findViewById(R.id.btnGateImport);
         gateStatus = findViewById(R.id.gateStatus);
         haInsecure = findViewById(R.id.haInsecure);
+        pultUi = findViewById(R.id.pultUi);
         btnTest = findViewById(R.id.btnTest);
         btnAddDevice = findViewById(R.id.btnAddDevice);
         versionText = findViewById(R.id.versionText);
@@ -203,6 +205,15 @@ public class MainActivity extends Activity {
             }
         });
         haInsecure.setOnCheckedChangeListener((buttonView, isChecked) -> cfg.setHaInsecure(isChecked));
+
+        pultUi.setChecked(cfg.pultUi());
+        pultUi.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (cfg.pultUi() == isChecked) return;
+            cfg.setPultUi(isChecked);
+            toast(getString(isChecked ? R.string.pult_on : R.string.pult_off));
+            rebuildMain();
+            selectTab(0);
+        });
 
         gateUrl.setText(cfg.getGateUrl());
         gateToken.setText(cfg.getGateToken());
@@ -244,7 +255,8 @@ public class MainActivity extends Activity {
         boolean main = t == 0;
         scrollMain.setVisibility(main ? View.VISIBLE : View.GONE);
         scrollSettings.setVisibility(main ? View.GONE : View.VISIBLE);
-        headerTitle.setText(main ? R.string.title_main : R.string.title_settings);
+        headerTitle.setText(main ? (cfg.pultUi() ? R.string.title_points : R.string.title_main)
+                : R.string.title_settings);
         statusChip.setVisibility(main ? View.VISIBLE : View.GONE);
         btnRefresh.setVisibility(main ? View.VISIBLE : View.INVISIBLE);
 
@@ -254,6 +266,7 @@ public class MainActivity extends Activity {
         navDevicesText.setTextColor(main ? accent : secondary);
         navSettingsIcon.setColorFilter(main ? secondary : accent);
         navSettingsText.setTextColor(main ? secondary : accent);
+        navDevicesText.setText(cfg.pultUi() ? R.string.tab_points : R.string.tab_devices);
         navDevices.setBackgroundResource(main ? R.drawable.bg_nav_pill : 0);
         navSettings.setBackgroundResource(main ? 0 : R.drawable.bg_nav_pill);
 
@@ -280,6 +293,25 @@ public class MainActivity extends Activity {
     }
 
     private void rebuildMain() {
+        if (cfg.pultUi()) {
+            try {
+                rebuildPult();
+                return;
+            } catch (Throwable t) {
+                // Аварийный откат: если новый экран не собрался, показываем классический
+                // и запоминаем это, чтобы приложение открылось в следующий раз.
+                cfg.setPultUi(false);
+                if (pultUi != null) pultUi.setChecked(false);
+                if (headerTitle != null) headerTitle.setText(R.string.title_main);
+                if (navDevicesText != null) navDevicesText.setText(R.string.tab_devices);
+                toast(getString(R.string.pult_failed));
+            }
+        }
+        rebuildClassic();
+    }
+
+    /** Классический экран: компактные плитки по две в ряд. Оставлен для отката. */
+    private void rebuildClassic() {
         listMain.removeAllViews();
         cards.clear();
         if (devices.isEmpty()) {
@@ -302,6 +334,293 @@ public class MainActivity extends Activity {
             listMain.addView(buildAllHeader(allExpanded, others.size()));
             if (allExpanded) addTiles(others);
         }
+    }
+
+    /** Новый главный экран: главная точка сверху, остальные — списком. */
+    private void rebuildPult() {
+        listMain.removeAllViews();
+        cards.clear();
+        if (devices.isEmpty()) {
+            listMain.addView(buildEmptyView());
+            return;
+        }
+
+        Device hero = null;
+        // Главная точка: сначала избранный шлагбаум, потом избранное, потом любой шлагбаум.
+        for (Device d : devices) {
+            if (!d.isGate() && d.favorite && d.isConfigured()
+                    && Device.TYPE_BARRIER.equals(d.type)) { hero = d; break; }
+        }
+        if (hero == null) {
+            for (Device d : devices) {
+                if (!d.isGate() && d.favorite && d.isConfigured()) { hero = d; break; }
+            }
+        }
+        if (hero == null) {
+            for (Device d : devices) {
+                if (!d.isGate() && d.isConfigured() && Device.TYPE_BARRIER.equals(d.type)) {
+                    hero = d; break;
+                }
+            }
+        }
+        if (hero == null) {
+            for (Device d : devices) {
+                if (!d.isGate() && d.isConfigured()) { hero = d; break; }
+            }
+        }
+
+        List<Device> rest = new ArrayList<>();
+        for (Device d : devices) if (d != hero) rest.add(d);
+
+        if (hero != null) listMain.addView(buildPultHero(hero).root);
+
+        if (!rest.isEmpty()) {
+            listMain.addView(buildSection(getString(hero != null ? R.string.section_more : R.string.section_points)));
+            LinearLayout group = new LinearLayout(this);
+            group.setOrientation(LinearLayout.VERTICAL);
+            group.setBackground(Ui.cardBackground(this));
+            LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            glp.bottomMargin = dp(10);
+            group.setLayoutParams(glp);
+            for (int i = 0; i < rest.size(); i++) {
+                if (i > 0) {
+                    View line = new View(this);
+                    line.setBackgroundColor(getColor(R.color.card_stroke));
+                    line.setLayoutParams(new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
+                    group.addView(line);
+                }
+                group.addView(buildPultRow(rest.get(i)).root);
+            }
+            listMain.addView(group);
+        }
+
+        for (List<Card> list : cards.values()) {
+            for (Card c : list) {
+                Status known = lastStatus.get(c.id);
+                if (known != null) applyStatus(c, known);
+            }
+        }
+    }
+
+    private Card buildPultHero(Device d) {
+        Card c = new Card();
+        c.id = d.id;
+        c.device = d;
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(16), dp(16), dp(16), dp(16));
+        root.setBackground(Ui.cardBackground(this));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.bottomMargin = dp(14);
+        root.setLayoutParams(lp);
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        root.addView(top);
+
+        ImageView icon = new ImageView(this);
+        icon.setLayoutParams(new LinearLayout.LayoutParams(dp(22), dp(22)));
+        icon.setImageResource(Device.typeIcon(d.type));
+        icon.setColorFilter(getColor(R.color.accent));
+        top.addView(icon);
+
+        TextView type = new TextView(this);
+        type.setText(Device.typeLabel(d.type).toUpperCase(Locale.getDefault()));
+        type.setTextSize(10);
+        type.setLetterSpacing(0.12f);
+        type.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        type.setTextColor(getColor(R.color.text_muted));
+        type.setSingleLine(true);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        tlp.leftMargin = dp(8);
+        type.setLayoutParams(tlp);
+        top.addView(type);
+
+        TextView status = new TextView(this);
+        status.setTextSize(11);
+        status.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        status.setSingleLine(true);
+        status.setPadding(dp(8), dp(4), dp(8), dp(4));
+        status.setBackground(Ui.stroke(getColor(R.color.card), getColor(R.color.card_stroke), dp(999), dp(1)));
+        status.setTextColor(getColor(R.color.text_secondary));
+        status.setText(R.string.status_checking);
+        c.status = status;
+        top.addView(status);
+
+        TextView name = new TextView(this);
+        name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
+        name.setTextSize(20);
+        name.setTextColor(getColor(R.color.text_primary));
+        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        name.setMaxLines(2);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        nlp.topMargin = dp(10);
+        name.setLayoutParams(nlp);
+        c.name = name;
+        root.addView(name);
+
+        TextView meta = new TextView(this);
+        meta.setText(sourceLabel(d));
+        meta.setTextSize(12);
+        meta.setTextColor(getColor(R.color.text_secondary));
+        meta.setSingleLine(true);
+        meta.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mlp.topMargin = dp(4);
+        meta.setLayoutParams(mlp);
+        root.addView(meta);
+
+        Button action = new Button(this);
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(56));
+        alp.topMargin = dp(14);
+        action.setLayoutParams(alp);
+        action.setText(R.string.action_open);
+        action.setAllCaps(false);
+        action.setTextSize(16);
+        action.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        action.setSingleLine(true);
+        action.setMinWidth(0);
+        action.setMinHeight(0);
+        action.setMinimumWidth(0);
+        action.setMinimumHeight(0);
+        action.setPadding(dp(16), 0, dp(16), 0);
+        Ui.styleButton(this, action, R.drawable.btn_tint, R.color.accent, R.drawable.ic_log_in);
+        action.setOnClickListener(v -> onTap(d));
+        c.action = action;
+        root.addView(action);
+
+        root.setOnLongClickListener(v -> {
+            openEditor(d.id);
+            return true;
+        });
+        c.root = root;
+        registerCard(c);
+        return c;
+    }
+
+    private Card buildPultRow(Device d) {
+        Card c = new Card();
+        c.id = d.id;
+        c.device = d;
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setMinimumHeight(dp(64));
+        row.setPadding(dp(16), dp(12), dp(12), dp(12));
+        row.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        ImageView icon = new ImageView(this);
+        icon.setLayoutParams(new LinearLayout.LayoutParams(dp(20), dp(20)));
+        icon.setImageResource(Device.typeIcon(d.type));
+        icon.setColorFilter(getColor(R.color.text_secondary));
+        row.addView(icon);
+
+        LinearLayout col = new LinearLayout(this);
+        col.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        clp.leftMargin = dp(12);
+        clp.rightMargin = dp(8);
+        col.setLayoutParams(clp);
+
+        TextView name = new TextView(this);
+        name.setText(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
+        name.setTextSize(16);
+        name.setTextColor(getColor(R.color.text_primary));
+        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        name.setSingleLine(true);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        col.addView(name);
+
+        TextView status = new TextView(this);
+        status.setTextSize(12);
+        status.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        status.setSingleLine(true);
+        status.setEllipsize(TextUtils.TruncateAt.END);
+        status.setTextColor(getColor(R.color.text_secondary));
+        status.setText(R.string.status_checking);
+        LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        stlp.topMargin = dp(2);
+        status.setLayoutParams(stlp);
+        c.status = status;
+        col.addView(status);
+        row.addView(col);
+
+        if (d.isGate()) {
+            ImageView chevron = new ImageView(this);
+            chevron.setLayoutParams(new LinearLayout.LayoutParams(dp(16), dp(16)));
+            chevron.setImageResource(R.drawable.ic_chevron_right);
+            chevron.setColorFilter(getColor(R.color.text_muted));
+            row.addView(chevron);
+            row.setOnClickListener(v -> showGateActions(d));
+        } else {
+            Button action = new Button(this);
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, dp(44));
+            action.setLayoutParams(alp);
+            action.setText(R.string.action_open);
+            action.setAllCaps(false);
+            action.setTextSize(12);
+            action.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            action.setSingleLine(true);
+            action.setMinWidth(dp(64));
+            action.setMinHeight(0);
+            action.setMinimumWidth(dp(64));
+            action.setMinimumHeight(0);
+            action.setPadding(dp(12), 0, dp(12), 0);
+            Ui.styleButton(this, action, R.drawable.btn_tint, R.color.accent, R.drawable.ic_log_in);
+            action.setOnClickListener(v -> onTap(d));
+            c.action = action;
+            row.addView(action);
+            row.setOnClickListener(v -> onTap(d));
+        }
+
+        row.setOnLongClickListener(v -> {
+            openEditor(d.id);
+            return true;
+        });
+        c.root = row;
+        registerCard(c);
+        return c;
+    }
+
+    /** У двери Gate-IP направление выбирается в диалоге: у строки нет места на две кнопки. */
+    private void showGateActions(Device d) {
+        Status s = lastStatus.get(d.id);
+        String state = s == null ? getString(R.string.status_checking) : s.text;
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
+                .setTitle(d.name.isEmpty() ? Device.typeLabel(d.type) : d.name)
+                .setMessage(getString(R.string.gate_choose_dir) + "\n" + state);
+        if (d.dirIn) b.setPositiveButton(R.string.dir_in, (dialog, which) -> onTapDir(d, "in"));
+        if (d.dirOut) b.setNegativeButton(R.string.dir_out, (dialog, which) -> onTapDir(d, "out"));
+        b.setNeutralButton(R.string.device_settings, (dialog, which) -> openEditor(d.id));
+        if (!d.dirIn && !d.dirOut) {
+            b.setPositiveButton(R.string.action_setup, (dialog, which) -> openEditor(d.id));
+            b.setNeutralButton(R.string.cancel, null);
+        }
+        b.show();
+    }
+
+    private void registerCard(Card c) {
+        List<Card> list = cards.get(c.id);
+        if (list == null) {
+            list = new ArrayList<>();
+            cards.put(c.id, list);
+        }
+        list.add(c);
     }
 
     /** Раскладывает устройства компактными плитками по две в ряд. */
