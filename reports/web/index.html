@@ -178,6 +178,8 @@ pre.prev{background:var(--code-bg);border:1px solid var(--line);border-radius:va
 .presence-list .it:nth-child(even){background:var(--panel2)}
 .presence-list .it:last-child{border-bottom:none}
 .foot{margin-top:18px;color:var(--dim);font-size:var(--fs-s);text-align:center}
+#buildTag{cursor:pointer;border-bottom:1px dotted currentColor}
+#buildTag:hover{color:var(--accent)}
 .chart-box{padding:10px 12px 4px}
 .chart-box svg{width:100%;height:auto;display:block;overflow:visible}
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 12px 10px;color:var(--muted);font-size:var(--fs-s)}
@@ -1236,7 +1238,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
     </div>
   </section>
 
-  <div class="foot">СКУД Gate-IP</div>
+  <div class="foot">СКУД Gate-IP · <span id="buildTag" title="Нажмите, чтобы перезагрузить страницу">сборка …</span></div>
 </div>
 
 <div class="modal" id="modal">
