@@ -80,7 +80,7 @@
     list.unshift({ t: Date.now(), id: id, name: name, text: text, kind: kind || 'ok' });
     writeJournal(list);
     if (state.tab === 1) renderScreen();
-    if (state.sheet) renderSheet();
+    if (state.sheet) updateSheetDom();
   }
   function journalFor(id) {
     return readJournal().filter(function (e) { return e.id === id; });
@@ -163,7 +163,7 @@
     var last = lastEventFor(d.id);
     var meta = d.sub || sourceOf(d);
     if (last) meta = 'Последнее — ' + eventTime(last.t) + ', ' + last.text.toLowerCase();
-    return '<section class="hero">' +
+    return '<section class="hero" data-type="' + esc(d.type) + '">' +
       '<div class="hero-top"><span class="type">' + ic(typeIcon(d), 18) + '<span>' + esc(d.typeLabel || '') + '</span></span>' +
         '<span class="pill' + (cls === 'quiet' ? '' : ' ' + cls) + '" data-pill-for="' + esc(d.id) + '">' +
           '<span class="pill-dot"></span><span data-status-for="' + esc(d.id) + '">' + esc(statusOf(d)) + '</span></span></div>' +
@@ -176,7 +176,7 @@
 
   function rowHtml(d) {
     var cls = kindClass(d.kind);
-    return '<button class="row" type="button" onclick="openSheet(\'' + esc(d.id) + '\')">' +
+    return '<button class="row" data-type="' + esc(d.type) + '" type="button" onclick="openSheet(\'' + esc(d.id) + '\')">' +
       '<span class="row-ic">' + ic(typeIcon(d), 20) + '</span>' +
       '<span class="row-main"><span class="row-name">' + esc(d.name) + '</span>' +
         '<span class="row-sub">' + esc(d.sub || sourceOf(d)) + '</span></span>' +
@@ -213,6 +213,64 @@
     $('#screen').innerHTML = html;
   }
 
+  function sheetDirs(d) {
+    var dirs = [];
+    if (d.dirIn) dirs.push('in');
+    if (d.dirOut) dirs.push('out');
+    return dirs;
+  }
+
+  function sheetAction(d) {
+    var dirs = sheetDirs(d);
+    var dir = state.sheetDir;
+    if (dirs.indexOf(dir) < 0) dir = dirs[0] || '';
+    if (d.gate) {
+      if (dirs.length) {
+        return {
+          label: 'Открыть ' + (dir === 'out' ? 'выход' : 'вход'),
+          onclick: 'sheetOpenDir(\'' + esc(d.id) + '\',\'' + dir + '\')',
+          disabled: !isOnline(d)
+        };
+      }
+      return { label: 'Настроить', onclick: 'editDevice(\'' + esc(d.id) + '\')', disabled: false };
+    }
+    if (!d.configured) {
+      return { label: 'Настроить', onclick: 'editDevice(\'' + esc(d.id) + '\')', disabled: false };
+    }
+    return {
+      label: actionOf(d),
+      onclick: 'doAction(\'' + esc(d.id) + '\')',
+      disabled: !isOnline(d)
+    };
+  }
+
+  function updateSheetAction(d) {
+    var a = sheetAction(d);
+    var btn = document.querySelector('[data-sheet-action]');
+    if (btn) {
+      btn.disabled = a.disabled;
+      btn.setAttribute('onclick', a.onclick);
+    }
+    var lbl = document.querySelector('[data-sheet-action-label]');
+    if (lbl) lbl.textContent = a.label;
+  }
+
+  function updateSheetDom() {
+    var d = deviceById(state.sheet);
+    if (!d) return;
+    var cls = kindClass(d.kind);
+    var dot = document.querySelector('[data-sheet-dot]');
+    if (dot) dot.className = 'state-dot ' + cls;
+    var st = document.querySelector('[data-sheet-status]');
+    if (st) st.textContent = statusOf(d);
+    var conn = document.querySelector('[data-sheet-conn]');
+    if (conn) {
+      conn.className = 'sval ' + (isOnline(d) ? 'ok' : 'danger');
+      conn.textContent = isOnline(d) ? 'На связи' : 'Нет связи';
+    }
+    updateSheetAction(d);
+  }
+
   function sheetHtml(d) {
     var cls = kindClass(d.kind);
     var last = lastEventFor(d.id);
@@ -224,42 +282,23 @@
     var dir = state.sheetDir;
     if (dirs.indexOf(dir) < 0) dir = dirs[0] || '';
     var html = '<div class="scrim" onclick="closeSheet()"></div><aside class="sheet">' +
-      '<div class="grab" onclick="closeSheet()"></div>' +
+      '<div class="grab"></div>' +
       '<div class="sheet-head"><div><div class="eyebrow">' + esc(eyebrow) + '</div><h3>' + esc(d.name) + '</h3></div>' +
         '<span class="sheet-time mono">' + nowHM() + '</span></div>' +
-      '<div class="bigstate"><span class="state-dot ' + cls + '"></span><span class="bigstate-word">' + esc(statusOf(d)) + '</span></div>' +
+      '<div class="bigstate"><span class="state-dot ' + cls + '" data-sheet-dot></span><span class="bigstate-word" data-sheet-status>' + esc(statusOf(d)) + '</span></div>' +
       '<p class="meta">' + esc(meta) + '</p>';
     if (d.gate && dirs.length) {
       html += '<div class="seg">';
-      if (d.dirIn) html += '<button class="' + (dir === 'in' ? 'on' : '') + '" type="button" onclick="selectDir(\'in\')">Вход</button>';
-      if (d.dirOut) html += '<button class="' + (dir === 'out' ? 'on' : '') + '" type="button" onclick="selectDir(\'out\')">Выход</button>';
+      if (d.dirIn) html += '<button data-dir="in" class="' + (dir === 'in' ? 'on' : '') + '" type="button" onclick="selectDir(\'in\')">Вход</button>';
+      if (d.dirOut) html += '<button data-dir="out" class="' + (dir === 'out' ? 'on' : '') + '" type="button" onclick="selectDir(\'out\')">Выход</button>';
       html += '</div>';
     }
-    var label, action;
-    if (d.gate) {
-      if (dirs.length) {
-        label = 'Открыть ' + (dir === 'out' ? 'выход' : 'вход');
-        action = 'sheetOpenDir(\'' + esc(d.id) + '\',\'' + dir + '\')';
-      } else {
-        label = 'Настроить';
-        action = 'editDevice(\'' + esc(d.id) + '\')';
-      }
-    } else if (!d.configured) {
-      label = 'Настроить';
-      action = 'editDevice(\'' + esc(d.id) + '\')';
-    } else {
-      label = actionOf(d);
-      action = 'doAction(\'' + esc(d.id) + '\')';
-    }
-    var disabled = '';
-    if (d.configured && !isOnline(d)) {
-      if (!d.gate || dirs.length) disabled = ' disabled';
-    }
-    html += '<button class="action primary big"' + disabled + ' type="button" onclick="' + action + '">' +
-      ic('DoorOpen', 18) + '<span class="action-label">' + esc(label) + '</span></button>' +
+    var sa = sheetAction(d);
+    html += '<button class="action primary big" data-sheet-action' + (sa.disabled ? ' disabled' : '') + ' type="button" onclick="' + sa.onclick + '">' +
+      ic('DoorOpen', 18) + '<span class="action-label" data-sheet-action-label>' + esc(sa.label) + '</span></button>' +
       '<div class="source">' +
         '<div class="srow"><span class="slabel">Источник</span><span class="sval">' + esc(sourceOf(d)) + '</span></div>' +
-        '<div class="srow"><span class="slabel">Связь</span><span class="sval ' + (isOnline(d) ? 'ok' : 'danger') + '">' + (isOnline(d) ? 'На связи' : 'Нет связи') + '</span></div>' +
+        '<div class="srow"><span class="slabel">Связь</span><span class="sval ' + (isOnline(d) ? 'ok' : 'danger') + '" data-sheet-conn>' + (isOnline(d) ? 'На связи' : 'Нет связи') + '</span></div>' +
         '<div class="srow"><span class="slabel">Адрес</span><span class="sval mono">' + esc(addressOf(d)) + '</span></div>' +
       '</div>';
     var evs = journalFor(d.id).slice(0, 3);
@@ -286,6 +325,7 @@
     var d = deviceById(state.sheet);
     if (!d) { state.sheet = null; $('#sheetRoot').innerHTML = ''; return; }
     $('#sheetRoot').innerHTML = sheetHtml(d);
+    bindSheetDrag();
   }
 
   function renderJournal() {
@@ -328,7 +368,7 @@
       var acts = document.querySelectorAll('[data-action-for="' + d.id + '"]');
       for (var k = 0; k < acts.length; k++) acts[k].textContent = actionOf(d);
     }
-    if (state.sheet) renderSheet();
+    if (state.sheet) updateSheetDom();
   }
 
   function updateClock() {
@@ -359,7 +399,7 @@
       if (was && !u.online) { logEvent(d.id, d.name, 'Нет связи', 'danger'); changed = true; }
       else if (!was && u.online && u.kind !== 'UNKNOWN') { logEvent(d.id, d.name, 'На связи', 'ok'); changed = true; }
     }
-    renderHeader();
+    updateHeaderConn();
     updateDom();
     if (changed && state.tab === 1) renderScreen();
   };
@@ -381,7 +421,17 @@
     renderSheet();
   };
   window.closeSheet = function () { state.sheet = null; $('#sheetRoot').innerHTML = ''; };
-  window.selectDir = function (dir) { state.sheetDir = dir; renderSheet(); };
+  window.selectDir = function (dir) {
+    state.sheetDir = dir;
+    var d = deviceById(state.sheet);
+    if (!d) return;
+    var buttons = document.querySelectorAll('.seg button[data-dir]');
+    for (var i = 0; i < buttons.length; i++) {
+      var b = buttons[i];
+      if (b.getAttribute('data-dir') === dir) b.classList.add('on'); else b.classList.remove('on');
+    }
+    updateSheetAction(d);
+  };
   window.doAction = function (id) {
     var d = deviceById(id);
     if (!d) return;
@@ -413,11 +463,12 @@
         '<span class="state ok">Вернуть</span></button>';
     }).join('');
     $('#sheetRoot').innerHTML = '<div class="scrim" onclick="closeHidden()"></div><aside class="sheet">' +
-      '<div class="grab" onclick="closeHidden()"></div>' +
+      '<div class="grab"></div>' +
       '<div class="sheet-head"><div><div class="eyebrow">Главный экран</div><h3>Скрытые точки</h3></div></div>' +
       '<p class="meta">Верните точку — она снова появится на главном.</p>' +
       '<div class="list" style="margin-top:16px">' + rows + '</div>' +
       '<button class="linkrow" type="button" onclick="closeHidden()">Закрыть ' + ic('ChevronRight', 16) + '</button></aside>';
+    bindSheetDrag();
   }
 
   window.openHidden = function () {
@@ -441,6 +492,59 @@
   window.restoreHome = function (id) {
     bridge('hideHome', id, false);
   };
+
+  function updateHeaderConn() {
+    var c = conn();
+    var el = document.querySelector('#head .conn');
+    if (!el) return;
+    el.className = 'conn' + (c.danger ? ' danger' : '');
+    el.innerHTML = '<span class="conn-dot"></span>' + esc(c.text);
+  }
+
+  function closeTopSheet() {
+    if (state.hiddenPanel) closeHidden(); else closeSheet();
+  }
+
+  function bindSheetDrag() {
+    var sheet = document.querySelector('#sheetRoot .sheet');
+    if (!sheet) return;
+    var handle = sheet.querySelector('.grab');
+    if (!handle) return;
+    var startY = 0, dy = 0, dragging = false, pid = null;
+    function down(e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      dragging = true;
+      startY = e.clientY;
+      dy = 0;
+      pid = e.pointerId;
+      sheet.classList.add('dragging');
+      try { handle.setPointerCapture(pid); } catch (err) {}
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!dragging) return;
+      dy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = 'translateY(' + dy + 'px)';
+    }
+    function up() {
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove('dragging');
+      try { if (pid !== null) handle.releasePointerCapture(pid); } catch (err) {}
+      pid = null;
+      if (dy < 6) { closeTopSheet(); return; }
+      if (dy > Math.min(120, sheet.offsetHeight * 0.22)) {
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(closeTopSheet, 220);
+      } else {
+        sheet.style.transform = 'translateY(0)';
+      }
+    }
+    handle.addEventListener('pointerdown', down);
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+  }
 
   document.addEventListener('DOMContentLoaded', function () {
     render();

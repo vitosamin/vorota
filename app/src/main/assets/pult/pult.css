@@ -280,3 +280,34 @@ button{font-family:inherit}
 .linkrow .linklabel{display:inline-flex;align-items:center;gap:8px}
 .linkrow.danger{color:var(--danger)}
 .sheet .list{margin:0}
+
+/* Плавное закрытие карточки: тянем за верхний «язычок» */
+.sheet { transition: transform .22s cubic-bezier(.2,.7,.3,1); will-change: transform; }
+.sheet.dragging { transition: none; }
+.grab { width: 100%; height: 24px; margin: -4px 0 4px; display: flex; align-items: center; justify-content: center; background: none; touch-action: none; cursor: grab; }
+.grab::after { content: ""; width: 36px; height: 4px; border-radius: 999px; background: var(--line-strong); }
+
+/* В светлой теме выбранный вход/выход — тёмная плашка, а не почти белая */
+.app[data-theme="light"] .seg button.on { background: var(--text); color: var(--surface); }
+.seg button { transition: background-color .16s var(--ease), color .16s var(--ease); }
+
+/* Светлая тема: больше цвета — тип точки, статусы, карточка */
+.app[data-theme="light"] .hero { background: #F6FBF8; border-color: #D3E7DB; }
+.app[data-theme="light"] .section .eyebrow { color: #0F7A4A; }
+.app[data-theme="light"] .row[data-type="barrier"] .row-ic,
+.app[data-theme="light"] .hero[data-type="barrier"] .type .ic { color: #B45309; }
+.app[data-theme="light"] .row[data-type="gate"] .row-ic,
+.app[data-theme="light"] .row[data-type="wide"] .row-ic,
+.app[data-theme="light"] .hero[data-type="gate"] .type .ic,
+.app[data-theme="light"] .hero[data-type="wide"] .type .ic { color: #0F7A4A; }
+.app[data-theme="light"] .row[data-type="relay"] .row-ic,
+.app[data-theme="light"] .hero[data-type="relay"] .type .ic { color: #7C3AED; }
+.app[data-theme="light"] .pill { background: #F1F5F3; }
+.app[data-theme="light"] .pill.ok { background: #E6F5EC; border-color: #BFE0CD; }
+.app[data-theme="light"] .pill.warn { background: #FBF1E3; border-color: #EBD3AE; }
+.app[data-theme="light"] .pill.danger { background: #FBECEA; border-color: #E7C4BF; }
+.app[data-theme="light"] .row .state { padding: 3px 8px; border-radius: 999px; background: #F0F3F1; }
+.app[data-theme="light"] .row .state.ok { background: #E6F5EC; }
+.app[data-theme="light"] .row .state.warn { background: #FBF1E3; }
+.app[data-theme="light"] .row .state.danger { background: #FBECEA; }
+.app[data-theme="light"] .source { background: #F4F7F5; }
