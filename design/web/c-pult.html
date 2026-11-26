@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СКУД Gate · направление C «Пульт»</title>
+<style>
+:root{
+  --bg:#f3f5f7; --surface:#fff; --line:#e1e6ea; --line2:#eef1f4;
+  --ink:#111417; --muted:#5a6270; --dim:#8791a0;
+  --rail:#1d2126; --rail-ink:#e9ecef; --rail-muted:#98a2ad; --rail-line:#2b3138;
+  --accent:#8f5400; --accent-fill:#a86400; --accent-soft:#fbf1e0;
+  --in:#0f6b3f; --out:#a32a20;
+  --fs-12:12px; --fs-13:13px; --fs-14:14px; --fs-16:16px; --fs-21:21px; --fs-28:28px;
+  --s4:4px; --s8:8px; --s12:12px; --s16:16px; --s24:24px; --s32:32px;
+  --shadow-1:0 1px 2px rgb(0 0 0/.06);
+  --shadow-2:0 8px 24px rgb(0 0 0/.08);
+  --sans:"Noto Sans","Liberation Sans",Arial,sans-serif;
+  --mono:"DejaVu Sans Mono","Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:var(--fs-14)/1.45 var(--sans)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.app{display:grid;grid-template-columns:248px 1fr 360px;min-height:100vh}
+
+/* ── левая рейка ─────────────────────────────────────────────── */
+.rail{background:var(--rail);color:var(--rail-ink);padding:var(--s24) var(--s16);display:flex;flex-direction:column;gap:var(--s24)}
+.rail .mark{font-size:var(--fs-16);font-weight:700}
+.rail .mark span{color:var(--rail-muted);font-weight:400}
+.rail .shift{font-size:var(--fs-12);color:var(--rail-muted);line-height:1.6}
+.rail .shift b{color:var(--rail-ink);font-weight:600}
+.rail h3{font-size:var(--fs-12);font-weight:600;color:var(--rail-muted);margin:0 0 var(--s8)}
+.pts{list-style:none;margin:0;padding:0;font-size:var(--fs-13)}
+.pts li{display:flex;align-items:center;gap:var(--s8);padding:6px 0;border-bottom:1px solid var(--rail-line)}
+.pts li:last-child{border-bottom:0}
+.pts .dot{width:6px;height:6px;border-radius:50%;background:#5b6b7a;flex:none}
+.pts .dot.on{background:#3fbf7f}
+.pts .name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pts .n{color:var(--rail-muted);font-variant-numeric:tabular-nums}
+.rail .foot{margin-top:auto;font-size:var(--fs-12);color:var(--rail-muted);line-height:1.7}
+
+/* ── центр ───────────────────────────────────────────────────── */
+.main{padding:var(--s24) var(--s32);min-width:0}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s16);margin-bottom:var(--s24)}
+.head h1{font-size:var(--fs-21);font-weight:600;margin:0;letter-spacing:-.01em}
+.head .date{font-size:var(--fs-13);color:var(--muted)}
+.head .clock{font-size:var(--fs-21);font-weight:600;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s12);margin-bottom:var(--s24)}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:var(--s16);box-shadow:var(--shadow-1)}
+.tile .v{font-size:var(--fs-28);font-weight:600;line-height:1;letter-spacing:-.02em}
+.tile .k{font-size:var(--fs-12);color:var(--muted);margin-top:6px}
+.tile.alert{border-color:#f0dcc0;background:var(--accent-soft)}
+.tile.alert .v{color:var(--accent)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow-1);overflow:hidden}
+.panel > header{display:flex;align-items:baseline;justify-content:space-between;padding:var(--s16) var(--s16) var(--s12)}
+.panel > header h2{font-size:var(--fs-14);font-weight:600;margin:0}
+.panel > header .hint{font-size:var(--fs-12);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:var(--fs-13)}
+th{text-align:left;font-weight:400;font-size:var(--fs-12);color:var(--muted);padding:0 var(--s16) var(--s8)}
+td{padding:9px var(--s16);border-top:1px solid var(--line2)}
+td.t{font-variant-numeric:tabular-nums;width:72px;color:var(--muted)}
+td.dir{width:52px;font-size:var(--fs-12);font-weight:600}
+.d-in{color:var(--in)} .d-out{color:var(--out)}
+tr.fresh td{background:#fbfaf6}
+tr.fresh td.t{color:var(--ink);font-weight:600}
+td.u{width:200px;color:var(--muted);text-align:right;white-space:nowrap}
+th.u{text-align:right;padding-right:var(--s16)}
+.who{display:block}
+.who .src{display:block;font-size:var(--fs-12);color:var(--muted);margin-top:1px}
+.hours{display:flex;align-items:flex-end;gap:4px;height:72px;padding:var(--s16);padding-top:0}
+.hours i{flex:1;background:#cfd6dd;border-radius:1px}
+.hours i.now{background:var(--accent-fill)}
+
+/* ── правая колонка: контекст ────────────────────────────────── */
+.side{background:var(--surface);border-left:1px solid var(--line);padding:var(--s24) var(--s16);box-shadow:var(--shadow-2)}
+.side h2{font-size:var(--fs-12);font-weight:600;color:var(--muted);margin:0 0 var(--s12)}
+.person .t{font-size:var(--fs-28);font-weight:600;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.person .dir{display:inline-block;margin-top:var(--s8);font-size:var(--fs-12);font-weight:600;padding:2px 8px;border-radius:999px;background:#e7f2ea;color:var(--in)}
+.person .name{font-size:var(--fs-16);font-weight:600;margin-top:var(--s16);line-height:1.25}
+.person .pos{font-size:var(--fs-12);color:var(--muted);margin-top:2px}
+.person dl{display:grid;grid-template-columns:auto 1fr;gap:6px var(--s12);margin:var(--s16) 0 0;font-size:var(--fs-12)}
+.person dt{color:var(--muted)}
+.person dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+.onsite{list-style:none;margin:0;padding:0;font-size:var(--fs-13)}
+.onsite li{display:flex;justify-content:space-between;gap:var(--s8);padding:7px 0;border-bottom:1px solid var(--line2)}
+.onsite li:last-child{border-bottom:0}
+.onsite .g{color:var(--muted);font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.sep{height:1px;background:var(--line);margin:var(--s24) 0}
+
+@media (max-width:1180px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:column}
+  .side{border-left:0;border-top:1px solid var(--line)}
+  .main{padding:var(--s16)}
+}
+@media (max-width:700px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .head{flex-wrap:wrap;gap:var(--s8)}
+  td.u, th.u{display:none}
+  .rail .pts{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--s12)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <div>
+      <div class="mark">СКУД <span>Gate</span></div>
+      <div class="shift" style="margin-top:var(--s8)">
+        <b>Смена 20:00–08:00</b><br>
+        оператор: Смирнова О. П.
+      </div>
+    </div>
+
+    <div>
+      <h3>Контрольные точки</h3>
+      <ul class="pts">
+        <li><span class="dot on"></span><span class="name">Вход из Зала</span><span class="n">398</span></li>
+        <li><span class="dot on"></span><span class="name">Сан пропускник - Вход</span><span class="n">364</span></li>
+        <li><span class="dot on"></span><span class="name">Сан пропускник - Выход</span><span class="n">356</span></li>
+        <li><span class="dot on"></span><span class="name">КПП1 - Вход</span><span class="n">234</span></li>
+        <li><span class="dot on"></span><span class="name">Досмотровая - ВыХОД</span><span class="n">234</span></li>
+        <li><span class="dot on"></span><span class="name">Кпп произ-во выход</span><span class="n">208</span></li>
+        <li><span class="dot on"></span><span class="name">Кпп произ-во вход</span><span class="n">201</span></li>
+        <li><span class="dot on"></span><span class="name">КПП2 - Выход</span><span class="n">181</span></li>
+        <li><span class="dot on"></span><span class="name">КПП2 - Вход</span><span class="n">176</span></li>
+        <li><span class="dot"></span><span class="name">Вход из СЛ.ПОМ</span><span class="n">4</span></li>
+      </ul>
+    </div>
+
+    <div class="foot">
+      Gate-IP 192.168.2.160<br>
+      связь: есть · задержка 1,6 с<br>
+      тревог за сутки: 1 134
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <div>
+        <h1>Живая лента</h1>
+        <div class="date">26 ноября, четверг · проходов 2 356 · человек 169</div>
+      </div>
+      <div class="clock num">22:41</div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="v num">2 356</div><div class="k">проходов за сутки</div></div>
+      <div class="tile"><div class="v num">169</div><div class="k">человек за сутки</div></div>
+      <div class="tile"><div class="v num"><span style="color:var(--in)">1 377</span> <span class="muted" style="font-size:var(--fs-16)">/</span> <span style="color:var(--out)">979</span></div><div class="k">вход / выход</div></div>
+      <div class="tile alert"><div class="v num">1 134</div><div class="k">тревог, из них 357 «взлом двери»</div></div>
+    </div>
+
+    <div class="panel">
+      <header><h2>Проходы</h2><span class="hint">последние события, новые сверху</span></header>
+      <table>
+        <thead><tr><th>Время</th><th>Напр.</th><th>Сотрудник</th><th class="u">Точка</th></tr></thead>
+        <tbody>
+          <tr class="fresh"><td class="t">22:41:35</td><td class="dir d-in">вход</td><td><span class="who">Землянкин Иван Александрович<span class="src">аппаратчик · 095/02845</span></span></td><td class="u">Сан пропускник - Вход</td></tr>
+          <tr><td class="t">22:25:31</td><td class="dir d-out">выход</td><td><span class="who">Землянкин Иван Александрович<span class="src">аппаратчик · 095/02845</span></span></td><td class="u">Сан пропускник - Выход</td></tr>
+          <tr><td class="t">22:05:47</td><td class="dir d-out">выход</td><td><span class="who">Баранов Роман Борисович<span class="src">контролер · 179/03742</span></span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:05:28</td><td class="dir d-out">выход</td><td><span class="who">Чалова Елена Андреевна<span class="src">менеджер по группе товаров · 195/35709</span></span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:22</td><td class="dir d-out">выход</td><td><span class="who">Кобзарь Анжелика Анатольевна<span class="src">продавец · 159/11538</span></span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:18</td><td class="dir d-out">выход</td><td><span class="who">Терентьева Наталья Сергеевна<span class="src">продавец · 104/05636</span></span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:15</td><td class="dir d-out">выход</td><td><span class="who">Морозова Елена Витальевна<span class="src">кассир · 145/12917</span></span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">21:59:11</td><td class="dir d-in">вход</td><td><span class="who">Морозова Елена Витальевна<span class="src">кассир · 145/12917</span></span></td><td class="u">Вход из Зала</td></tr>
+          <tr><td class="t">21:58:03</td><td class="dir d-in">вход</td><td><span class="who">Баранов Роман Борисович<span class="src">контролер · 179/03742</span></span></td><td class="u">Вход из Зала</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" style="margin-top:var(--s16)">
+      <header><h2>По часам</h2><span class="hint">сегодня, 2 356 проходов</span></header>
+      <div class="hours">
+        <i style="height:6%"></i><i style="height:6%"></i><i style="height:40%"></i><i style="height:100%"></i>
+        <i style="height:44%"></i><i style="height:55%"></i><i style="height:67%"></i><i style="height:61%"></i>
+        <i style="height:58%"></i><i style="height:67%"></i><i style="height:54%"></i><i style="height:72%"></i>
+        <i style="height:58%"></i><i style="height:74%"></i><i style="height:27%"></i><i style="height:44%"></i>
+        <i style="height:18%"></i><i style="height:5%"></i><i style="height:3%"></i><i class="now" style="height:3%"></i>
+      </div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <h2>Последний проход</h2>
+    <div class="person">
+      <div class="t num">22:41:35</div>
+      <div class="dir">вход · Сан пропускник</div>
+      <div class="name">Землянкин Иван Александрович</div>
+      <div class="pos">аппаратчик · Цех термической обработки мясопродуктов</div>
+      <dl>
+        <dt>Табельный</dt><dd>095/02845</dd>
+        <dt>Доступ</dt><dd>11 точек</dd>
+        <dt>График</dt><dd>08:00–17:00</dd>
+        <dt>Пропуск</dt><dd>№П-2026-0042 до 31.12</dd>
+        <dt>В смене</dt><dd>с 22:41 · 0 ч 00 мин</dd>
+      </dl>
+    </div>
+
+    <div class="sep"></div>
+
+    <h2>Тревоги за сутки · 1 134</h2>
+    <ul class="onsite">
+      <li><span>Дверь не закрыта</span><span class="g num">365</span></li>
+      <li><span>Взлом двери</span><span class="g num">357</span></li>
+      <li><span>Тревога по входу 1</span><span class="g num">207</span></li>
+      <li><span>Тревога по входу 2</span><span class="g num">203</span></li>
+    </ul>
+
+    <div class="sep"></div>
+
+    <h2>Сейчас на территории · 7</h2>
+    <ul class="onsite">
+      <li><span>Барвинский А. В.</span><span class="g">Магазин, СК</span></li>
+      <li><span>Землянкин И. А.</span><span class="g">Цех терм. обработки</span></li>
+      <li><span>Лавшук Г. Г.</span><span class="g">Служба контроля</span></li>
+      <li><span>Павленок В. С.</span><span class="g">Дирекция</span></li>
+      <li><span>Петраков Е. В.</span><span class="g">Служба контроля</span></li>
+      <li><span>Салионова М. В.</span><span class="g">Розничная торговля</span></li>
+      <li><span>Соколов С. Н.</span><span class="g">Служба контроля</span></li>
+    </ul>
+  </aside>
+</div>
+</body>
+</html>

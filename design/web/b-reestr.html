@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СКУД Gate · направление B «Реестр»</title>
+<style>
+:root{
+  --paper:#f7f5f0; --paper2:#efece4; --ink:#1a1a17; --muted:#63615b; --dim:#8a877f;
+  --rule:#d5d0c4; --rule-ink:#1a1a17; --accent:#1b5e3a; --accent-soft:#e4ebdf;
+  --fs-12:12px; --fs-14:14px; --fs-16:16px; --fs-21:21px; --fs-28:28px; --fs-38:38px;
+  --s4:4px; --s8:8px; --s12:12px; --s16:16px; --s24:24px; --s32:32px; --s48:48px; --s64:64px;
+  --serif:"DejaVu Serif","Liberation Serif",Georgia,serif;
+  --sans:"Liberation Sans","Nimbus Sans",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:var(--fs-14)/1.5 var(--sans)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.page{max-width:1180px;margin:0 auto;padding:var(--s32)}
+
+/* шапка-мастихед */
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s24);
+      border-bottom:2px solid var(--rule-ink);padding-bottom:var(--s12)}
+.mast .mark{font-size:var(--fs-16);font-weight:700;letter-spacing:.02em}
+.mast .mark em{font-style:normal;color:var(--accent)}
+.mast .meta{text-align:right;font-size:var(--fs-12);color:var(--muted);line-height:1.6}
+.mast .meta b{color:var(--ink);font-weight:700;font-size:var(--fs-14)}
+.title{font-family:var(--serif);font-size:var(--fs-38);line-height:1.1;letter-spacing:-.01em;
+       margin:var(--s32) 0 var(--s12)}
+.lede{font-size:var(--fs-16);color:var(--muted);max-width:62ch;margin:0 0 var(--s32)}
+.lede b{color:var(--ink);font-weight:700}
+
+/* сводка строкой, а не карточками */
+.summary{display:grid;grid-template-columns:repeat(5,auto);justify-content:start;gap:var(--s48);
+         padding:var(--s16) 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.summary .v{font-family:var(--serif);font-size:var(--fs-28);font-weight:700;line-height:1}
+.summary .k{font-size:var(--fs-12);color:var(--muted);margin-top:var(--s4)}
+.summary .in .v{color:var(--accent)}
+
+.cols{display:grid;grid-template-columns:1fr 320px;gap:var(--s48);margin-top:var(--s32)}
+h2{font-family:var(--serif);font-size:var(--fs-21);font-weight:700;margin:0 0 var(--s16)}
+h2 .n{color:var(--muted);font-weight:400;font-size:var(--fs-14);font-family:var(--sans)}
+
+/* реестр */
+table{width:100%;border-collapse:collapse;font-size:var(--fs-14)}
+th.u-h{text-align:right}
+th{font-weight:400;color:var(--muted);font-size:var(--fs-12);text-align:left;
+   padding:0 0 var(--s8) 0;border-bottom:1px solid var(--rule-ink)}
+td{padding:9px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+td.t{width:76px;font-variant-numeric:tabular-nums}
+td.d{width:56px;font-size:var(--fs-12)}
+td.u{width:190px;color:var(--muted);text-align:right}
+.d-in{color:var(--accent)} .d-out{color:#8c3b2a}
+tr.mark td{font-weight:700}
+tr.mark td.t::before{content:"";display:inline-block;width:5px;height:5px;background:var(--accent);
+                     margin-right:6px;vertical-align:middle}
+
+/* карточка последнего прохода — как учётная карточка */
+.card{border:1px solid var(--rule-ink);background:var(--paper2);padding:var(--s24)}
+.card .lab{font-size:var(--fs-12);color:var(--muted)}
+.card .t{font-family:var(--serif);font-size:var(--fs-28);font-weight:700;line-height:1;margin-top:var(--s4)}
+.card .who{font-family:var(--serif);font-size:var(--fs-21);line-height:1.25;margin-top:var(--s16)}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:6px var(--s12);margin:var(--s16) 0 0;
+         padding-top:var(--s16);border-top:1px solid var(--rule);font-size:var(--fs-12)}
+.card dt{color:var(--muted)}
+.card dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+
+.alerts{list-style:none;margin:var(--s32) 0 0;padding:0;font-size:var(--fs-14)}
+.alerts li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--rule)}
+.alerts .n{font-variant-numeric:tabular-nums;font-weight:700}
+
+/* табель Т-13 — кусочек отчёта с предпросмотром */
+.report{margin-top:var(--s64);border-top:2px solid var(--rule-ink);padding-top:var(--s24)}
+.report table{font-size:var(--fs-12)}
+.report th,.report td{border:1px solid var(--rule);text-align:center;padding:5px 4px}
+.report th{background:var(--paper2);font-size:var(--fs-12);color:var(--ink)}
+.report td.nm{text-align:left;white-space:nowrap}
+.report td.pv{background:#f6ecc9;box-shadow:inset 0 0 0 1px #dcc27a}
+.legend{font-size:var(--fs-12);color:var(--muted);margin-top:var(--s12)}
+.legend .pv{display:inline-block;width:10px;height:10px;background:#f6ecc9;box-shadow:inset 0 0 0 1px #dcc27a;margin-right:6px;vertical-align:-1px}
+
+@media (max-width:880px){
+  .page{padding:var(--s16)}
+  .title{font-size:var(--fs-28);margin-top:var(--s24)}
+  .summary{grid-template-columns:repeat(2,auto);gap:var(--s24) var(--s32)}
+  .cols{grid-template-columns:1fr;gap:var(--s32)}
+  .mast{flex-wrap:wrap}
+  .mast .meta{text-align:left}
+  td.u, th.u-h{display:none}
+  .report table{font-size:10px;table-layout:fixed}
+  .report th,.report td{padding:4px 2px}
+  .report th:first-child,.report td.nm{width:32%;white-space:normal;line-height:1.2}
+  /* на телефоне оставляем шесть дней из восьми — иначе итоговые колонки слипаются */
+  .report th:nth-child(4), .report td:nth-child(4),
+  .report th:nth-child(5), .report td:nth-child(5),
+  .report th:nth-child(10), .report td:nth-child(10){display:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="mast">
+    <div>
+      <div class="mark">СКУД <em>Gate</em></div>
+      <div class="muted" style="font-size:var(--fs-12);margin-top:4px">пропускной режим и учёт рабочего времени</div>
+    </div>
+    <div class="meta">
+      <div><b>26 ноября 2026, четверг</b></div>
+      <div>смена 20:00–08:00 · оператор Смирнова О. П.</div>
+      <div>сервер Gate-IP 192.168.2.160 · связь есть</div>
+    </div>
+  </div>
+
+  <h1 class="title">Реестр проходов</h1>
+  <p class="lede">За 26 ноября зафиксировано <b>2 356 проходов</b> через <b>10 контрольных точек</b>,
+     объект посетили <b>169 человек</b>, сейчас на территории — <b>7</b>. Ниже — последние
+     предъявления ключей в том виде, в каком их пишет Gate: время, точка, сотрудник, направление.</p>
+
+  <div class="summary">
+    <div><div class="v num">2 356</div><div class="k">проходов</div></div>
+    <div><div class="v num">169</div><div class="k">человек</div></div>
+    <div class="in"><div class="v num">1 377</div><div class="k">входов</div></div>
+    <div><div class="v num">979</div><div class="k">выходов</div></div>
+    <div><div class="v num">7</div><div class="k">на объекте</div></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h2>Журнал <span class="n">последние 10 событий</span></h2>
+      <table>
+        <thead><tr><th>Время</th><th>Напр.</th><th>Сотрудник</th><th class="u-h">Точка</th></tr></thead>
+        <tbody>
+          <tr class="mark"><td class="t">22:41:35</td><td class="d d-in">вход</td><td>Землянкин Иван Александрович<br><span class="muted">аппаратчик · 095/02845</span></td><td class="u">Сан пропускник - Вход</td></tr>
+          <tr><td class="t">22:25:31</td><td class="d d-out">выход</td><td>Землянкин Иван Александрович<br><span class="muted">аппаратчик · 095/02845</span></td><td class="u">Сан пропускник - Выход</td></tr>
+          <tr><td class="t">22:05:47</td><td class="d d-out">выход</td><td>Баранов Роман Борисович<br><span class="muted">контролер · 179/03742</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:05:28</td><td class="d d-out">выход</td><td>Чалова Елена Андреевна<br><span class="muted">менеджер по группе товаров · 195/35709</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:22</td><td class="d d-out">выход</td><td>Кобзарь Анжелика Анатольевна<br><span class="muted">продавец · 159/11538</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:18</td><td class="d d-out">выход</td><td>Терентьева Наталья Сергеевна<br><span class="muted">продавец · 104/05636</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:15</td><td class="d d-out">выход</td><td>Морозова Елена Витальевна<br><span class="muted">кассир · 145/12917</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">22:04:14</td><td class="d d-out">выход</td><td>Морозова Елена Витальевна<br><span class="muted">кассир · 145/12917</span></td><td class="u">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="t">21:59:11</td><td class="d d-in">вход</td><td>Морозова Елена Витальевна<br><span class="muted">кассир · 145/12917</span></td><td class="u">Вход из Зала</td></tr>
+          <tr><td class="t">21:58:03</td><td class="d d-in">вход</td><td>Баранов Роман Борисович<br><span class="muted">контролер · 179/03742</span></td><td class="u">Вход из Зала</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="lab">последнее предъявление ключа</div>
+        <div class="t num">22:41:35</div>
+        <div class="who">Землянкин Иван Александрович</div>
+        <div class="muted" style="font-size:var(--fs-12);margin-top:6px">аппаратчик · Цех термической обработки мясопродуктов</div>
+        <dl>
+          <dt>Точка</dt><dd>Сан пропускник - Вход</dd>
+          <dt>Направление</dt><dd style="color:var(--accent)">вход</dd>
+          <dt>Табельный</dt><dd>095/02845</dd>
+          <dt>Доступ</dt><dd>11 точек</dd>
+          <dt>График</dt><dd>08:00–17:00</dd>
+          <dt>Пропуск</dt><dd>№П-2026-0042 до 31.12</dd>
+        </dl>
+      </div>
+
+      <ul class="alerts">
+        <li><span>Дверь не закрыта</span><span class="n num">365</span></li>
+        <li><span>Взлом двери</span><span class="n num">357</span></li>
+        <li><span>Тревога по входу 1</span><span class="n num">207</span></li>
+        <li><span>Тревога по входу 2</span><span class="n num">203</span></li>
+      </ul>
+      <div class="muted" style="font-size:var(--fs-12);margin-top:var(--s12)">тревог за сутки — 1 134</div>
+
+      <h2 style="margin-top:var(--s32)">Точки <span class="n">проходов за сутки</span></h2>
+      <table style="font-size:var(--fs-12)">
+        <tbody>
+          <tr><td style="border:0;padding:5px 0">Вход из Зала</td><td style="border:0;padding:5px 0;text-align:right" class="num">398</td></tr>
+          <tr><td style="border:0;padding:5px 0">Сан пропускник - Вход</td><td style="border:0;padding:5px 0;text-align:right" class="num">364</td></tr>
+          <tr><td style="border:0;padding:5px 0">Сан пропускник - Выход</td><td style="border:0;padding:5px 0;text-align:right" class="num">356</td></tr>
+          <tr><td style="border:0;padding:5px 0">КПП1 - Вход</td><td style="border:0;padding:5px 0;text-align:right" class="num">234</td></tr>
+          <tr><td style="border:0;padding:5px 0">Досмотровая - ВыХОД</td><td style="border:0;padding:5px 0;text-align:right" class="num">234</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="report">
+    <h2>Табель Т-13 <span class="n">ноябрь 2026 · фрагмент, часы по дням</span></h2>
+    <table>
+      <thead><tr><th>Сотрудник</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th><th>24</th><th>25</th><th>26</th><th>Дней</th><th>Часов</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">Баранов Роман Борисович</td><td>8</td><td>8</td><td>8</td><td>7,5</td><td>В</td><td>8</td><td>8</td><td>8</td><td>7</td><td>55:30</td></tr>
+        <tr><td class="nm">Землянкин Иван Александрович</td><td class="pv">8</td><td class="pv">8</td><td class="pv">8</td><td class="pv">8</td><td>В</td><td class="pv">8</td><td class="pv">7,5</td><td class="pv">8</td><td>7</td><td>55:30</td></tr>
+        <tr><td class="nm">Морозова Елена Витальевна</td><td>6</td><td>6</td><td>6</td><td>6</td><td>В</td><td>6</td><td>6</td><td>6</td><td>7</td><td>42:00</td></tr>
+        <tr><td class="nm">Терентьева Наталья Сергеевна</td><td>НН</td><td>НН</td><td>НН</td><td>НН</td><td>В</td><td>НН</td><td>НН</td><td>НН</td><td>0</td><td>0:00</td></tr>
+      </tbody>
+    </table>
+    <div class="legend"><span class="pv"></span>подсвечены дни из предпросмотра — в учёт и выгрузку не попадают</div>
+  </div>
+</div>
+</body>
+</html>

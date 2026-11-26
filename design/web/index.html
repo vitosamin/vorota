@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СКУД Gate — три направления дизайна</title>
+<style>
+:root{
+  --bg:#f6f6f4; --card:#fff; --ink:#16181b; --muted:#5c6066; --line:#dcdcd8;
+  --fs-13:13px; --fs-15:15px; --fs-19:19px; --fs-28:28px;
+  --s8:8px; --s12:12px; --s16:16px; --s24:24px; --s32:32px; --s48:48px; --s64:64px;
+  --sans:"Liberation Sans","Nimbus Sans",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:var(--fs-15)/1.55 var(--sans)}
+.wrap{max-width:1280px;margin:0 auto;padding:var(--s48) var(--s32) var(--s64)}
+h1{font-size:var(--fs-28);line-height:1.2;margin:0 0 var(--s8);letter-spacing:-.01em}
+.lede{color:var(--muted);max-width:70ch;margin:0 0 var(--s48)}
+.muted{color:var(--muted)}
+hr{border:0;border-top:1px solid var(--line);margin:var(--s48) 0}
+
+.dir{display:grid;grid-template-columns:1fr 1fr;gap:var(--s32);align-items:start;margin-bottom:var(--s64)}
+.dir:nth-child(even) .shot{order:-1}
+.shot a{display:block;border:1px solid var(--line);background:var(--card);overflow:hidden}
+.shot img{display:block;width:100%;height:auto}
+.shot .row{display:flex;gap:var(--s16);margin-top:var(--s12)}
+.shot .row a{flex:none;width:104px;height:210px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+.shot .row img{width:100%;display:block}
+.tag{font-size:var(--fs-13);color:var(--muted);letter-spacing:.04em;text-transform:none}
+.dir h2{font-size:var(--fs-19);margin:var(--s8) 0 var(--s12);line-height:1.25}
+.dir .idea{font-size:var(--fs-15);margin:0 0 var(--s16)}
+.dir ul{margin:0 0 var(--s16);padding-left:18px}
+.dir li{margin-bottom:6px}
+.dir li b{font-weight:700}
+.open{font-size:var(--fs-13);color:var(--muted)}
+.open a{color:var(--ink)}
+
+table{width:100%;border-collapse:collapse;font-size:var(--fs-13);margin-top:var(--s16)}
+th,td{text-align:left;padding:10px 12px 10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:400;color:var(--muted);font-size:var(--fs-13)}
+td b{font-weight:700}
+.note{background:var(--card);border:1px solid var(--line);padding:var(--s16) var(--s24);font-size:var(--fs-13);color:var(--muted)}
+.note b{color:var(--ink)}
+@media (max-width:900px){
+  .wrap{padding:var(--s24) var(--s16) var(--s48)}
+  .dir{grid-template-columns:1fr;gap:var(--s16)}
+  .dir:nth-child(even) .shot{order:0}
+  table{font-size:12px}
+  th,td{padding-right:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>СКУД Gate — три направления дизайна</h1>
+  <p class="lede">Макеты к текущей панели: мониторинг, лента проходов, карточка сотрудника, отчёт Т-13.
+     Данные настоящие (26 ноября 2026, 2 356 проходов), вёрстка — только HTML/CSS, в проект ничего не внедрено.
+     Выберите направление — из него сделаю токены и перенесу на живые экраны.</p>
+
+  <!-- 1 -->
+  <div class="dir">
+    <div>
+      <div class="tag">направление A</div>
+      <h2>«Табло» — рабочее место на посту охраны</h2>
+      <p class="idea">Экран дежурного, а не админка: один взгляд с двух-трёх метров. Цвет отдан только событию —
+        вход, выход, тревога; иерархию держат размер и линейки, а не карточки и тени.</p>
+      <ul>
+        <li><b>Последний проход — главный блок:</b> время в 56 px, фамилия, точка, реквизиты одной строкой.</li>
+        <li><b>Без карточек и теней:</b> KPI на линейках, лента — таблица, точки и тревоги — списки.</li>
+        <li><b>Два радиуса (2 px и круг), ни одного эмодзи</b>; шрифты Liberation Sans / Narrow, цифры табличные.</li>
+      </ul>
+      <p class="open">Открыть: <a href="a-tablo.html">a-tablo.html</a></p>
+    </div>
+    <div class="shot">
+      <a href="a-tablo.html"><img src="shots/skud-a.png" alt="Направление A «Табло», десктоп"></a>
+      <div class="row"><a href="a-tablo.html"><img src="shots/skud-a-mobile.png" alt="Направление A на телефоне"></a></div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="dir">
+    <div>
+      <div class="tag">направление B</div>
+      <h2>«Реестр» — для кадров, бухгалтерии и отчётов</h2>
+      <p class="idea">Суточный журнал предприятия как учётный реестр: бумажная подложка, крупный наборный заголовок,
+        тонкие линейки вместо карточек. Один акцент — тёмно-зелёный, как в приложении «Доступ».</p>
+      <ul>
+        <li><b>Таблица и текст — главные</b>: журнал, Т-13 и карточка выглядят как документ, который можно распечатать.</li>
+        <li><b>Числа-выводы строкой</b> («2 356 проходов, 169 человек») вместо плиток с иконками.</li>
+        <li><b>Предпросмотр в Т-13</b> подсвечен охрой — видно, что в учёт не идёт.</li>
+      </ul>
+      <p class="open">Открыть: <a href="b-reestr.html">b-reestr.html</a></p>
+    </div>
+    <div class="shot">
+      <a href="b-reestr.html"><img src="shots/skud-b.png" alt="Направление B «Реестр», десктоп"></a>
+      <div class="row"><a href="b-reestr.html"><img src="shots/skud-b-mobile.png" alt="Направление B на телефоне"></a></div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="dir">
+    <div>
+      <div class="tag">направление C</div>
+      <h2>«Пульт» — три зоны, ничего не открывается поверх</h2>
+      <p class="idea">Рабочее место начальника смены: слева точки и смена, в центре живая лента, справа контекст —
+        кто это, его день, тревоги. Карточка сотрудника не модальное окно, а постоянная колонка.</p>
+      <ul>
+        <li><b>Плотно, но с воздухом:</b> 13–14 px, компактные плитки KPI, один поднятый слой с мягкой тенью.</li>
+        <li><b>Тёмная рейка слева</b> держит навигацию и статус связи, светлая рабочая область — данные.</li>
+        <li><b>Акцент — охра (не синий и не индиго):</b> тревоги и «сейчас» не путаются с обычным текстом.</li>
+      </ul>
+      <p class="open">Открыть: <a href="c-pult.html">c-pult.html</a></p>
+    </div>
+    <div class="shot">
+      <a href="c-pult.html"><img src="shots/skud-c.png" alt="Направление C «Пульт», десктоп"></a>
+      <div class="row"><a href="c-pult.html"><img src="shots/skud-c-mobile.png" alt="Направление C на телефоне"></a></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h1 style="font-size:var(--fs-19)">Чем отличаются</h1>
+  <table>
+    <thead><tr><th></th><th>A «Табло»</th><th>B «Реестр»</th><th>C «Пульт»</th></tr></thead>
+    <tbody>
+      <tr><td class="muted">Для кого</td><td><b>пост охраны</b>, большой монитор</td><td><b>кадры и бухгалтерия</b>, отчёты и печать</td><td><b>начальник смены</b>, разбор ситуации</td></tr>
+      <tr><td class="muted">Фон и акцент</td><td>тёплый серый, сигнальные зелёный/красный</td><td>бумага, тёмно-зелёный</td><td>холодный светлый, охра</td></tr>
+      <tr><td class="muted">Типографика</td><td>Liberation Sans Narrow в цифрах</td><td>DejaVu Serif в заголовках</td><td>Noto Sans, табличные цифры</td></tr>
+      <tr><td class="muted">Плотность</td><td>средняя, крупные размеры</td><td>редакционная, много воздуха</td><td>высокая, три колонки</td></tr>
+      <tr><td class="muted">Карточка сотрудника</td><td>блок в потоке страницы</td><td>учётная карточка сбоку</td><td>постоянная колонка справа</td></tr>
+      <tr><td class="muted">Радиусы / тени</td><td>2 px, теней нет</td><td>2 px, теней нет</td><td>8 px и круг, две мягкие тени</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <div class="note">
+    <b>Что проверено:</b> все три макета сняты в 1440 px и в 390 px, контраст текста проверен скриптом
+    (минимум 5,3:1 — AA, крупные цифры AAA), эмодзи и «рыбного» текста нет, данные настоящие.
+    <b>Что не сделано:</b> это макеты одного экрана — навигация на 14 разделов, состояния загрузки/ошибки
+    и тёмная тема появятся при переносе выбранного направления в панель.
+  </div>
+</div>
+</body>
+</html>

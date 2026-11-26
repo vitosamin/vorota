@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>СКУД Gate · направление A «Табло»</title>
+<style>
+:root{
+  --ground:#e9e7e2; --panel:#f4f3ef; --panel2:#eceae5; --rule:#cfccc4; --rule2:#dedbd4;
+  --ink:#15171a; --muted:#5f5d57; --dim:#7a7770;
+  --in:#1d6b3c; --out:#94301f; --alarm:#8f5400;
+  --fs-11:11px; --fs-13:13px; --fs-15:15px; --fs-19:19px; --fs-26:26px; --fs-40:40px; --fs-56:56px;
+  --s4:4px; --s8:8px; --s12:12px; --s16:16px; --s24:24px; --s32:32px; --s48:48px;
+  --num:"Liberation Sans Narrow","Nimbus Sans Narrow",Arial,sans-serif;
+  --sans:"Liberation Sans","Nimbus Sans",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ground);color:var(--ink);font:var(--fs-15)/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.wrap{max-width:1440px;margin:0 auto;padding:var(--s24)}
+
+/* ── верхняя полоса ─────────────────────────────────────────── */
+.top{display:flex;align-items:baseline;gap:var(--s24);padding-bottom:var(--s16);border-bottom:2px solid var(--ink)}
+.brand{font-size:var(--fs-19);font-weight:700;letter-spacing:-.01em}
+.brand span{font-weight:400;color:var(--muted)}
+.top .day{color:var(--muted);font-size:var(--fs-13)}
+.top .right{margin-left:auto;display:flex;align-items:baseline;gap:var(--s16)}
+.live{display:flex;align-items:center;gap:var(--s8);font-size:var(--fs-13)}
+.live i{width:8px;height:8px;background:var(--in);border-radius:50%;display:block}
+.clock{font-size:var(--fs-26);font-weight:700}
+
+/* ── KPI: цифры на линейках, без карточек ───────────────────── */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+.kpi > div{padding:var(--s16) var(--s24) var(--s16) 0;border-right:1px solid var(--rule)}
+.kpi > div:last-child{border-right:0}
+.kpi .v{font-size:var(--fs-56);line-height:1;font-weight:700;white-space:nowrap}
+.kpi .v small{font-size:var(--fs-19);font-weight:400;color:var(--muted);margin-left:var(--s8)}
+.kpi .k{font-size:var(--fs-13);color:var(--muted);margin-top:var(--s8)}
+.kpi .v.in{color:var(--in)} .kpi .v.out{color:var(--out)}
+
+/* ── сетка ──────────────────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:1fr 360px;gap:var(--s32);padding-top:var(--s24)}
+h2{font-size:var(--fs-15);margin:0 0 var(--s12);font-weight:700}
+h2 .muted{font-weight:400;margin-left:var(--s8);font-size:var(--fs-13)}
+
+/* последний проход — главный блок экрана */
+.last{border:2px solid var(--ink);background:var(--panel);padding:var(--s24);margin-bottom:var(--s32)}
+.last .t{display:flex;justify-content:space-between;align-items:baseline}
+.last .time{font-size:var(--fs-56);font-weight:700;line-height:1}
+.last .dir{font-size:var(--fs-26);font-weight:700;color:var(--in);text-align:right;line-height:1.1}
+.last .who{font-size:var(--fs-26);font-weight:700;margin-top:var(--s16);line-height:1.2}
+.last .pos{color:var(--muted);margin-top:var(--s4)}
+.last .meta{display:flex;flex-wrap:wrap;gap:var(--s24);margin-top:var(--s16);padding-top:var(--s16);border-top:1px solid var(--rule);font-size:var(--fs-13)}
+.last .meta b{display:block;font-size:var(--fs-15);font-weight:700;margin-top:2px}
+.u-in{display:none}
+
+/* лента */
+table{width:100%;border-collapse:collapse;font-size:var(--fs-13)}
+th{text-align:left;font-weight:400;color:var(--muted);padding:0 var(--s12) var(--s8) 0;border-bottom:1px solid var(--rule);font-size:var(--fs-13)}
+th.u{text-align:right;padding-right:0}
+td{padding:10px var(--s12) 10px 0;border-bottom:1px solid var(--rule2);vertical-align:baseline}
+td.time{font-family:var(--num);font-size:var(--fs-15);font-variant-numeric:tabular-nums;width:78px}
+td.dir{width:64px;font-size:var(--fs-13);font-weight:700}
+.d-in{color:var(--in)} .d-out{color:var(--out)}
+td.unit{color:var(--muted);width:210px;text-align:right}
+tr.now td{background:#dddad2}
+tr.now td:first-child{box-shadow:inset 3px 0 0 var(--in)}
+
+/* правая колонка */
+.side{display:flex;flex-direction:column;gap:var(--s32)}
+.box{background:var(--panel);border:1px solid var(--rule);padding:var(--s16)}
+.onsite{list-style:none;margin:0;padding:0;font-size:var(--fs-13)}
+.onsite li{display:flex;justify-content:space-between;gap:var(--s12);padding:7px 0;border-bottom:1px solid var(--rule2)}
+.onsite li:last-child{border-bottom:0}
+.onsite .g{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.alerts{list-style:none;margin:0;padding:0;font-size:var(--fs-13)}
+.alerts li{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--rule2)}
+.alerts .n{font-family:var(--num);font-size:var(--fs-15);font-weight:700;color:var(--alarm)}
+
+/* часы */
+.hours{display:flex;align-items:flex-end;gap:3px;height:96px;margin-top:var(--s8)}
+.hours i{flex:1;background:var(--ink);opacity:.55;display:block}
+.hours i.now{background:var(--in);opacity:1}
+.axis{display:flex;justify-content:space-between;color:var(--dim);font-size:var(--fs-11);margin-top:var(--s4)}
+
+@media (max-width:900px){
+  .wrap{padding:var(--s16)}
+  .grid{grid-template-columns:1fr;gap:var(--s24)}
+  .kpi{grid-template-columns:repeat(2,1fr)}
+  .kpi > div:nth-child(2){border-right:0}
+  .kpi .v{font-size:var(--fs-40)}
+  .kpi .v small{font-size:var(--fs-13)}
+  .last .time{font-size:var(--fs-40)}
+  .top{flex-wrap:wrap}
+  td.unit, th.u{display:none}
+  .u-in{display:block;color:var(--muted);font-size:var(--fs-12);margin-top:2px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">СКУД Gate <span>· пост охраны</span></div>
+    <div class="day">26 ноября, четверг · смена 20:00–08:00</div>
+    <div class="right">
+      <span class="live"><i></i>Gate на связи</span>
+      <span class="clock num">22:41</span>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div><div class="v num">2 356</div><div class="k">проходов за сутки · вчера 2 351</div></div>
+    <div><div class="v num">169</div><div class="k">человек было на объекте</div></div>
+    <div><div class="v num in">1 377 <small>/</small> <span class="out">979</span></div><div class="k">вход / выход</div></div>
+    <div><div class="v num">7</div><div class="k">сейчас на территории</div></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="last">
+        <div class="t">
+          <div>
+            <div class="time num">22:41:35</div>
+            <div class="muted" style="font-size:var(--fs-13);margin-top:6px">Сан пропускник - Вход</div>
+          </div>
+          <div class="dir">вход</div>
+        </div>
+        <div class="who">Землянкин Иван Александрович</div>
+        <div class="pos">аппаратчик · Цех термической обработки мясопродуктов</div>
+        <div class="meta">
+          <div>Табельный<b class="num">095/02845</b></div>
+          <div>Доступ<b>11 точек</b></div>
+          <div>График<b>08:00–17:00</b></div>
+          <div>Пропуск<b>№П-2026-0042 до 31.12</b></div>
+        </div>
+      </div>
+
+      <h2>Лента проходов <span class="muted">последние события</span></h2>
+      <table>
+        <thead><tr><th>Время</th><th></th><th>Сотрудник</th><th class="u">Точка</th></tr></thead>
+        <tbody>
+          <tr class="now"><td class="time">22:41:35</td><td class="dir d-in">вход</td><td><b>Землянкин Иван Александрович</b><div class="muted">аппаратчик</div><span class="u-in">Сан пропускник - Вход</span></td><td class="unit">Сан пропускник - Вход</td></tr>
+          <tr><td class="time">22:25:31</td><td class="dir d-out">выход</td><td>Землянкин Иван Александрович<div class="muted">аппаратчик</div><span class="u-in">Сан пропускник - Выход</span></td><td class="unit">Сан пропускник - Выход</td></tr>
+          <tr><td class="time">22:05:47</td><td class="dir d-out">выход</td><td>Баранов Роман Борисович<div class="muted">контролер</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">22:05:28</td><td class="dir d-out">выход</td><td>Чалова Елена Андреевна<div class="muted">менеджер по группе товаров</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">22:04:22</td><td class="dir d-out">выход</td><td>Кобзарь Анжелика Анатольевна<div class="muted">продавец</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">22:04:18</td><td class="dir d-out">выход</td><td>Терентьева Наталья Сергеевна<div class="muted">продавец</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">22:04:15</td><td class="dir d-out">выход</td><td>Морозова Елена Витальевна<div class="muted">кассир</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">22:04:14</td><td class="dir d-out">выход</td><td>Морозова Елена Витальевна<div class="muted">кассир</div><span class="u-in">Досмотровая - ВыХОД</span></td><td class="unit">Досмотровая - ВыХОД</td></tr>
+          <tr><td class="time">21:59:11</td><td class="dir d-in">вход</td><td>Морозова Елена Витальевна<div class="muted">кассир</div><span class="u-in">Вход из Зала</span></td><td class="unit">Вход из Зала</td></tr>
+          <tr><td class="time">21:58:03</td><td class="dir d-in">вход</td><td>Баранов Роман Борисович<div class="muted">контролер</div><span class="u-in">Вход из Зала</span></td><td class="unit">Вход из Зала</td></tr>
+        </tbody>
+      </table>
+
+      <h2 style="margin-top:var(--s32)">Проходы по часам <span class="muted">сегодня, 2 356</span></h2>
+      <div class="hours">
+        <i style="height:6%"></i><i style="height:6%"></i><i style="height:40%"></i><i style="height:100%"></i>
+        <i style="height:44%"></i><i style="height:55%"></i><i style="height:67%"></i><i style="height:61%"></i>
+        <i style="height:58%"></i><i style="height:67%"></i><i style="height:54%"></i><i style="height:72%"></i>
+        <i style="height:58%"></i><i style="height:74%"></i><i style="height:27%"></i><i style="height:44%"></i>
+        <i style="height:18%"></i><i style="height:5%"></i><i style="height:3%"></i><i class="now" style="height:3%"></i>
+      </div>
+      <div class="axis"><span>05</span><span>09</span><span>13</span><span>17</span><span>21</span></div>
+    </div>
+
+    <div class="side">
+      <div>
+        <h2>На территории <span class="muted">7 человек</span></h2>
+        <div class="box">
+          <ul class="onsite">
+            <li><span>Барвинский А. В.</span><span class="g">Магазин, СК</span></li>
+            <li><span>Землянкин И. А.</span><span class="g">Цех терм. обработки</span></li>
+            <li><span>Лавшук Г. Г.</span><span class="g">Служба контроля</span></li>
+            <li><span>Павленок В. С.</span><span class="g">Дирекция</span></li>
+            <li><span>Петраков Е. В.</span><span class="g">Служба контроля</span></li>
+            <li><span>Салионова М. В.</span><span class="g">Розничная торговля</span></li>
+            <li><span>Соколов С. Н.</span><span class="g">Служба контроля</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <h2>Точки <span class="muted">проходов за сутки</span></h2>
+        <div class="box">
+          <ul class="onsite">
+            <li><span>Вход из Зала</span><span class="num">398</span></li>
+            <li><span>Сан пропускник - Вход</span><span class="num">364</span></li>
+            <li><span>Сан пропускник - Выход</span><span class="num">356</span></li>
+            <li><span>КПП1 - Вход</span><span class="num">234</span></li>
+            <li><span>Досмотровая - ВыХОД</span><span class="num">234</span></li>
+            <li><span>Кпп произ-во выход</span><span class="num">208</span></li>
+            <li><span>Кпп произ-во вход</span><span class="num">201</span></li>
+            <li><span>КПП2 - Выход</span><span class="num">181</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <h2>Тревоги <span class="muted">1 134 за сутки</span></h2>
+        <div class="box">
+          <ul class="alerts">
+            <li><span>Дверь не закрыта</span><span class="n num">365</span></li>
+            <li><span>Взлом двери</span><span class="n num">357</span></li>
+            <li><span>Тревога по входу 1</span><span class="n num">207</span></li>
+            <li><span>Тревога по входу 2</span><span class="n num">203</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
