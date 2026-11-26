@@ -54,6 +54,15 @@
       'Стоп':'Остановлено','Нажать':'Нажато','Запустить':'Запущено'};
     return map[label] || label;
   }
+  /** Подпись под названием на главной: у дверей не показываем технический Gate-IP. */
+  function cardSub(d) {
+    var sub = d.sub || sourceOf(d);
+    if ((d.type === 'gate' || d.type === 'wide') && /^Gate-IP\b/i.test(sub)) {
+      sub = sub.replace(/^Gate-IP\s*·\s*/i, '').replace(/^Gate-IP\s*/i, '');
+    }
+    return sub;
+  }
+
   function sourceOf(d) { return d.sourceName || 'Источник'; }
   function addressOf(d) { return d.address || '—'; }
   function deviceById(id) {
@@ -161,7 +170,7 @@
   function heroHtml(d) {
     var cls = kindClass(d.kind);
     var last = lastEventFor(d.id);
-    var meta = d.sub || sourceOf(d);
+    var meta = cardSub(d);
     if (last) meta = 'Последнее — ' + eventTime(last.t) + ', ' + last.text.toLowerCase();
     return '<section class="hero" data-type="' + esc(d.type) + '">' +
       '<div class="hero-top"><span class="type">' + ic(typeIcon(d), 18) + '<span>' + esc(d.typeLabel || '') + '</span></span>' +
@@ -179,7 +188,7 @@
     return '<button class="row" data-type="' + esc(d.type) + '" type="button" onclick="openSheet(\'' + esc(d.id) + '\')">' +
       '<span class="row-ic">' + ic(typeIcon(d), 20) + '</span>' +
       '<span class="row-main"><span class="row-name">' + esc(d.name) + '</span>' +
-        '<span class="row-sub">' + esc(d.sub || sourceOf(d)) + '</span></span>' +
+        '<span class="row-sub">' + esc(cardSub(d)) + '</span></span>' +
       '<span class="state ' + cls + '" data-status-for="' + esc(d.id) + '">' + esc(statusOf(d)) + '</span>' +
       '<span class="chev">' + ic('ChevronRight', 16) + '</span></button>';
   }
@@ -459,7 +468,7 @@
       return '<button class="row" type="button" onclick="restoreHome(\'' + esc(d.id) + '\')">' +
         '<span class="row-ic">' + ic(typeIcon(d), 20) + '</span>' +
         '<span class="row-main"><span class="row-name">' + esc(d.name) + '</span>' +
-        '<span class="row-sub">' + esc(d.sub || sourceOf(d)) + '</span></span>' +
+        '<span class="row-sub">' + esc(cardSub(d)) + '</span></span>' +
         '<span class="state ok">Вернуть</span></button>';
     }).join('');
     $('#sheetRoot').innerHTML = '<div class="scrim" onclick="closeHidden()"></div><aside class="sheet">' +
