@@ -105,6 +105,7 @@ public class MainActivity extends Activity {
     private WebView pultWeb;
     private boolean pultWebReady = false;
     private boolean pultWebFailed = false;
+    private boolean pultSheetOpen = false;
     private Button btnTest;
     private Button btnAddDevice;
     private LinearLayout navDevices;
@@ -592,6 +593,11 @@ public class MainActivity extends Activity {
                 toast(getString(value ? R.string.home_hidden : R.string.home_shown));
                 pushPultData();
             });
+        }
+
+        @JavascriptInterface
+        public void sheet(boolean open) {
+            runOnUiThread(() -> pultSheetOpen = open);
         }
 
         @JavascriptInterface
@@ -2104,6 +2110,12 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        // Жест «назад» сначала сворачивает открытую карточку/скрытые точки.
+        if (cfg.pultUi() && pultWeb != null && pultWebReady && pultSheetOpen) {
+            pultSheetOpen = false;
+            pultWeb.evaluateJavascript("window.pultBack && window.pultBack()", null);
+            return;
+        }
         if (tab == 1) {
             selectTab(0);
             return;

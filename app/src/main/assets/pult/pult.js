@@ -415,9 +415,12 @@
 
   window.switchTab = function (tab) {
     if (tab === 2) { openSettings(); return; }
+    var hadSheet = state.sheet != null || state.hiddenPanel;
     state.tab = tab;
     state.sheet = null;
+    state.hiddenPanel = false;
     $('#sheetRoot').innerHTML = '';
+    if (hadSheet) bridge('sheet', false);
     render();
   };
   window.setFilter = function (f) { state.filter = f; renderScreen(); };
@@ -428,8 +431,14 @@
       state.sheetDir = d.dirIn ? 'in' : (d.dirOut ? 'out' : '');
     }
     renderSheet();
+    bridge('sheet', true);
   };
-  window.closeSheet = function () { state.sheet = null; $('#sheetRoot').innerHTML = ''; };
+  window.closeSheet = function () {
+    var had = state.sheet != null;
+    state.sheet = null;
+    $('#sheetRoot').innerHTML = '';
+    if (had) bridge('sheet', false);
+  };
   window.selectDir = function (dir) {
     state.sheetDir = dir;
     var d = deviceById(state.sheet);
@@ -484,10 +493,13 @@
     state.sheet = null;
     state.hiddenPanel = true;
     renderHiddenPanel();
+    bridge('sheet', true);
   };
   window.closeHidden = function () {
+    var had = state.hiddenPanel;
     state.hiddenPanel = false;
     $('#sheetRoot').innerHTML = '';
+    if (had) bridge('sheet', false);
   };
   window.toggleFav = function (id) {
     var d = deviceById(id);
@@ -517,31 +529,47 @@
   function bindSheetDrag() {
     var sheet = document.querySelector('#sheetRoot .sheet');
     if (!sheet) return;
-    var handle = sheet.querySelector('.grab');
-    if (!handle) return;
-    var startY = 0, dy = 0, dragging = false, pid = null;
+    var startY = 0, dy = 0, pointerDown = false, dragging = false, pid = null;
+    var startScroll = 0;
+    function isControl(el) {
+      return !!(el && el.closest && el.closest('button, a, input, textarea, select, .seg'));
+    }
     function down(e) {
       if (e.button !== undefined && e.button !== 0) return;
-      dragging = true;
+      if (isControl(e.target)) return;
+      pointerDown = true;
+      dragging = false;
       startY = e.clientY;
+      startScroll = sheet.scrollTop;
       dy = 0;
       pid = e.pointerId;
-      sheet.classList.add('dragging');
-      try { handle.setPointerCapture(pid); } catch (err) {}
-      e.preventDefault();
     }
     function move(e) {
-      if (!dragging) return;
-      dy = Math.max(0, e.clientY - startY);
-      sheet.style.transform = 'translateY(' + dy + 'px)';
+      if (!pointerDown) return;
+      dy = e.clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dy) < 8) return;
+        // Вверх или уже прокрученная карточка — не мешаем скроллу.
+        if (dy < 0 || startScroll > 0) { pointerDown = false; return; }
+        dragging = true;
+        sheet.classList.add('dragging');
+        try { sheet.setPointerCapture(pid); } catch (err) {}
+      }
+      e.preventDefault();
+      sheet.style.transform = 'translateY(' + Math.max(0, dy) + 'px)';
     }
-    function up() {
-      if (!dragging) return;
+    function up(e) {
+      if (!pointerDown) return;
+      pointerDown = false;
+      if (!dragging) {
+        // Тап по верхнему язычку по-прежнему закрывает.
+        if (dy < 6 && e.target && e.target.closest && e.target.closest('.grab')) closeTopSheet();
+        return;
+      }
       dragging = false;
       sheet.classList.remove('dragging');
-      try { if (pid !== null) handle.releasePointerCapture(pid); } catch (err) {}
+      try { if (pid !== null) sheet.releasePointerCapture(pid); } catch (err) {}
       pid = null;
-      if (dy < 6) { closeTopSheet(); return; }
       if (dy > Math.min(120, sheet.offsetHeight * 0.22)) {
         sheet.style.transform = 'translateY(100%)';
         setTimeout(closeTopSheet, 220);
@@ -549,11 +577,18 @@
         sheet.style.transform = 'translateY(0)';
       }
     }
-    handle.addEventListener('pointerdown', down);
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', up);
-    handle.addEventListener('pointercancel', up);
+    sheet.addEventListener('pointerdown', down);
+    sheet.addEventListener('pointermove', move, { passive: false });
+    sheet.addEventListener('pointerup', up);
+    sheet.addEventListener('pointercancel', up);
   }
+
+  window.pultBack = function () {
+    if (state.hiddenPanel) { closeHidden(); return true; }
+    if (state.sheet) { closeSheet(); return true; }
+    return false;
+  };
+
 
   document.addEventListener('DOMContentLoaded', function () {
     render();
