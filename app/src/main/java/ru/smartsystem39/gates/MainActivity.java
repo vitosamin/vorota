@@ -1970,7 +1970,7 @@ public class MainActivity extends Activity {
                         if (auth) gateAuth = true;
                     }
                     if (ok) {
-                        results.put(d.id, new Status(Status.READY, "Мост доступен"));
+                        results.put(d.id, new Status(Status.READY, "Доступен"));
                     } else {
                         gateFailed = true;
                         results.put(d.id, new Status(Status.OFFLINE,
