@@ -351,3 +351,6 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
 }
 .collapse-btn .ic { color: var(--muted); }
 .app[data-theme="light"] .collapse-btn { background: #F0F3F1; }
+
+/* Карточка открывается на половину экрана, содержимое прокручивается */
+.sheet { height: 50%; max-height: 50%; }
