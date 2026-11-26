@@ -320,3 +320,34 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Кнопка «Свернуть» по центру внизу карточки */
+.sheet-footer {
+  position: sticky;
+  bottom: -18px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  margin: 14px -16px -18px;
+  padding: 10px 16px 18px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.collapse-btn .ic { color: var(--muted); }
+.app[data-theme="light"] .collapse-btn { background: #F0F3F1; }

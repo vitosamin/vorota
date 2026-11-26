@@ -325,6 +325,8 @@
       '<button class="linkrow danger" type="button" onclick="hideHome(\'' + esc(d.id) + '\')">' +
         '<span class="linklabel">' + ic('EyeOff', 16) + 'Убрать с главного</span>' + ic('ChevronRight', 16) + '</button>' +
       '<button class="linkrow" type="button" onclick="editDevice(\'' + esc(d.id) + '\')">Настройки устройства ' + ic('ChevronRight', 16) + '</button>' +
+      '<div class="sheet-footer"><button class="collapse-btn" type="button" onclick="closeSheet()">' +
+        ic('ChevronDown', 16) + 'Свернуть</button></div>' +
       '</aside>';
     return html;
   }
@@ -529,47 +531,31 @@
   function bindSheetDrag() {
     var sheet = document.querySelector('#sheetRoot .sheet');
     if (!sheet) return;
-    var startY = 0, dy = 0, pointerDown = false, dragging = false, pid = null;
-    var startScroll = 0;
-    function isControl(el) {
-      return !!(el && el.closest && el.closest('button, a, input, textarea, select, .seg'));
-    }
+    var handle = sheet.querySelector('.grab');
+    if (!handle) return;
+    var startY = 0, dy = 0, dragging = false, pid = null;
     function down(e) {
       if (e.button !== undefined && e.button !== 0) return;
-      if (isControl(e.target)) return;
-      pointerDown = true;
-      dragging = false;
+      dragging = true;
       startY = e.clientY;
-      startScroll = sheet.scrollTop;
       dy = 0;
       pid = e.pointerId;
+      sheet.classList.add('dragging');
+      try { handle.setPointerCapture(pid); } catch (err) {}
+      e.preventDefault();
     }
     function move(e) {
-      if (!pointerDown) return;
-      dy = e.clientY - startY;
-      if (!dragging) {
-        if (Math.abs(dy) < 8) return;
-        // Вверх или уже прокрученная карточка — не мешаем скроллу.
-        if (dy < 0 || startScroll > 0) { pointerDown = false; return; }
-        dragging = true;
-        sheet.classList.add('dragging');
-        try { sheet.setPointerCapture(pid); } catch (err) {}
-      }
-      e.preventDefault();
-      sheet.style.transform = 'translateY(' + Math.max(0, dy) + 'px)';
+      if (!dragging) return;
+      dy = Math.max(0, e.clientY - startY);
+      sheet.style.transform = 'translateY(' + dy + 'px)';
     }
-    function up(e) {
-      if (!pointerDown) return;
-      pointerDown = false;
-      if (!dragging) {
-        // Тап по верхнему язычку по-прежнему закрывает.
-        if (dy < 6 && e.target && e.target.closest && e.target.closest('.grab')) closeTopSheet();
-        return;
-      }
+    function up() {
+      if (!dragging) return;
       dragging = false;
       sheet.classList.remove('dragging');
-      try { if (pid !== null) sheet.releasePointerCapture(pid); } catch (err) {}
+      try { if (pid !== null) handle.releasePointerCapture(pid); } catch (err) {}
       pid = null;
+      if (dy < 6) { closeTopSheet(); return; }
       if (dy > Math.min(120, sheet.offsetHeight * 0.22)) {
         sheet.style.transform = 'translateY(100%)';
         setTimeout(closeTopSheet, 220);
@@ -577,11 +563,12 @@
         sheet.style.transform = 'translateY(0)';
       }
     }
-    sheet.addEventListener('pointerdown', down);
-    sheet.addEventListener('pointermove', move, { passive: false });
-    sheet.addEventListener('pointerup', up);
-    sheet.addEventListener('pointercancel', up);
+    handle.addEventListener('pointerdown', down);
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
   }
+
 
   window.pultBack = function () {
     if (state.hiddenPanel) { closeHidden(); return true; }
