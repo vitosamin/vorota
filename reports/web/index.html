@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>СКУД Gate — мониторинг и отчёты</title>
+<script>try{var _t=localStorage.getItem('skud_theme');if(_t)document.documentElement.dataset.theme=_t}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23f2c200'/><path d='M8 22V10h4l4 6 4-6h4v12h-3.4v-6.6L16.4 21h-.8L11.4 15.4V22z' fill='%2312325c'/></svg>">
 <style>
 :root{
@@ -69,9 +70,9 @@ button:hover,.btn:hover{background:var(--neutral-btn-hi);border-color:var(--bord
 button:active,.btn:active{background:var(--neutral-btn-hi)}
 button:focus-visible,.btn:focus-visible{outline:none;box-shadow:var(--ring)}
 /* главная кнопка — мягкая голубая подложка (как .btn.warn в панели, но в синем) */
-button.primary{background:rgba(43,98,217,.12);border-color:var(--accent-line);color:var(--accent);font-weight:600}
-button.primary:hover{background:rgba(43,98,217,.18);border-color:var(--accent);color:var(--accent2)}
-button.primary:active{background:rgba(43,98,217,.24)}
+button.primary{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600}
+button.primary:hover{background:var(--accent-soft-2);border-color:var(--accent);color:var(--accent2)}
+button.primary:active{background:var(--accent-soft-2)}
 button.ghost{background:transparent;border-color:transparent}
 button.ghost:hover{background:var(--neutral-btn);border-color:var(--line)}
 button:disabled{opacity:.5;cursor:not-allowed}
@@ -368,6 +369,122 @@ tbody tr.pick td{background:var(--accent-soft)}
 .notice>span.ni{display:inline-flex;align-items:center;color:var(--accent)}
 .notice>span.ni.warn{color:var(--amber)}
 button .ic,a.btn .ic{opacity:.9}
+/* выбор оформления */
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.theme{display:block;height:auto;padding:10px;text-align:left;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius-m);cursor:pointer}
+.theme:hover{border-color:var(--border-hi);background:var(--panel)}
+.theme.on{border-color:var(--accent);box-shadow:var(--ring)}
+.theme .sw{display:flex;gap:6px;height:44px;margin-bottom:8px}
+.theme .sw i{display:block;border-radius:2px}
+.theme .sw .ground{flex:1}
+.theme .sw .side{width:16px}
+.theme .sw .chip{width:34px}
+.theme b{display:block;font-size:var(--fs-m);color:var(--text);font-weight:600}
+.theme span{display:block;color:var(--muted);font-size:var(--fs-xs);margin-top:1px}
+.theme.on b::after{content:" · выбрано";color:var(--accent);font-weight:500}
+
+html[data-theme="tablo"]{--chart-in:#1d6b3c; --chart-out:#94301f; --chart-grid:#d6d3cb; --chart-axis:#6f6c66;
+  --gold:#8f5400; --gold2:#7a4700; --ok-bg:#e3ecdf; --ok-text:#1d6b3c; --ok-line:#c3d6bc;
+  --err-bg:#f2e2de; --err-text:#94301f; --err-line:#dcc0b8}
+html[data-theme="reestr"]{--chart-in:#1b5e3a; --chart-out:#8c3b2a; --chart-grid:#e0dccf; --chart-axis:#79766e;
+  --gold:#1b5e3a; --gold2:#124429; --ok-bg:#e6ecdf; --ok-text:#1b5e3a; --ok-line:#c8d6bf;
+  --err-bg:#f0e6e2; --err-text:#8c3b2a; --err-line:#dcc9c1}
+html[data-theme="pult"]{--chart-in:#a86400; --chart-out:#a32a20; --chart-grid:#e6eaee; --chart-axis:#8791a0;
+  --gold:#a86400; --gold2:#8f5400; --ok-bg:#e7f2ea; --ok-text:#0f6b3f; --ok-line:#c3ddcb;
+  --err-bg:#f6e6e3; --err-text:#a32a20; --err-line:#e6c3bd}
+
+/* ══ Оформление панели: «как сейчас» + три варианта из макетов ══════════
+   Переключается в «Настройках», помнится за пользователем.
+   Скин меняет токены (цвет, шрифт, радиусы, тени) — разметка и разделы те же. */
+
+/* A «Табло» — пост охраны: тёплый серый, линейки вместо карточек */
+html[data-theme="tablo"]{
+  --bg:#f1efea; --bg-side:#e9e5de; --panel:#ffffff; --panel2:#f7f5f0; --head:#fbfaf7;
+  --line:#d3cfc6; --line2:#e3dfd7; --border-hi:#bdb8ae;
+  --text:#15171a; --muted:#5f5d57; --dim:#7a7770;
+  --accent:#1d6b3c; --accent2:#155229; --accent-fill:#1d6b3c; --accent-hi:#2a8a4f;
+  --accent-soft:rgba(29,107,60,.08); --accent-soft-2:rgba(29,107,60,.14);
+  --accent-line:rgba(29,107,60,.38); --ring:0 0 0 3px rgba(29,107,60,.20);
+  --shadow:none; --shadow-accent:none;
+  --radius-xs:2px; --radius-s:2px; --radius-m:2px; --radius-l:2px; --radius-xl:2px; --radius:2px;
+}
+html[data-theme="tablo"] .card{box-shadow:none;border-color:var(--line)}
+html[data-theme="tablo"] .card .hd{background:transparent;border-bottom:1px solid var(--line)}
+html[data-theme="tablo"] .kpi{background:#ffffff;box-shadow:none;border:1px solid var(--line);border-top:3px solid var(--line);
+  border-radius:0;padding:10px 12px}
+html[data-theme="tablo"] .kpi.g,html[data-theme="tablo"] .kpi.a,
+html[data-theme="tablo"] .kpi.r,html[data-theme="tablo"] .kpi.c{border-top:0}
+html[data-theme="tablo"] .kpi .val{font-family:"Liberation Sans Narrow","Nimbus Sans Narrow",Arial,sans-serif;
+  font-size:34px;font-weight:700}
+html[data-theme="tablo"] .kpi .lbl{text-transform:none;letter-spacing:0;font-size:var(--fs-s);color:var(--muted)}
+html[data-theme="tablo"] nav.tabs button.active{box-shadow:none;border-bottom-color:var(--accent)}
+html[data-theme="tablo"] button.primary{background:transparent;border-color:var(--accent);color:var(--accent)}
+html[data-theme="tablo"] header.top{background:transparent;border:0;border-bottom:2px solid var(--text);border-radius:0;padding-left:0}
+
+/* B «Реестр» — бумага, линейки, засечки в заголовках */
+html[data-theme="reestr"]{
+  --bg:#faf6ec; --bg-side:#f3eee1; --panel:#ffffff; --panel2:#f9f5ea; --head:#fdfbf4;
+  --line:#d8d2c3; --line2:#e9e4d6; --border-hi:#c2bbaa;
+  --text:#1a1a17; --muted:#63615b; --dim:#8a877f;
+  --accent:#1b5e3a; --accent2:#124429; --accent-fill:#1b5e3a; --accent-hi:#26794c;
+  --accent-soft:rgba(27,94,58,.07); --accent-soft-2:rgba(27,94,58,.13);
+  --accent-line:rgba(27,94,58,.35); --ring:0 0 0 3px rgba(27,94,58,.18);
+  --shadow:none; --shadow-accent:none;
+  --radius-xs:2px; --radius-s:2px; --radius-m:2px; --radius-l:2px; --radius-xl:2px; --radius:2px;
+}
+html[data-theme="reestr"] .brand h1,html[data-theme="reestr"] h3,html[data-theme="reestr"] h2,
+html[data-theme="reestr"] .card .hd h3{
+  font-family:"DejaVu Serif","Liberation Serif",Georgia,serif;font-weight:700;letter-spacing:-.01em}
+html[data-theme="reestr"] .card{background:#fff;border:1px solid var(--line);border-top:2px solid var(--text);
+  border-radius:0;box-shadow:none;margin-bottom:22px}
+html[data-theme="reestr"] .card .hd{background:#fdfbf4;border-bottom:1px solid var(--line);
+  border-radius:0;padding:10px 14px}
+html[data-theme="reestr"] .card .bd{padding:14px}
+html[data-theme="reestr"] .kpi{background:#fff;border:1px solid var(--line);border-top:2px solid var(--text);
+  border-radius:0;box-shadow:none;padding:10px 12px}
+html[data-theme="reestr"] .kpi.g,html[data-theme="reestr"] .kpi.a,
+html[data-theme="reestr"] .kpi.r,html[data-theme="reestr"] .kpi.c{border-top:0}
+html[data-theme="reestr"] .kpi .lbl{text-transform:none;letter-spacing:0;font-size:var(--fs-s)}
+html[data-theme="reestr"] .kpi .val{font-family:"DejaVu Serif","Liberation Serif",Georgia,serif;
+  font-size:28px;font-weight:700}
+html[data-theme="reestr"] header.top{background:transparent;border:0;border-bottom:2px solid var(--text);
+  border-radius:0;padding-left:0}
+html[data-theme="reestr"] nav.tabs button.active{box-shadow:none}
+html[data-theme="reestr"] th{font-weight:400;color:var(--muted)}
+
+/* C «Пульт» — холодный светлый, охра, тёмная шапка и рейка вкладок */
+html[data-theme="pult"]{
+  --bg:#f7f8fa; --bg-side:#eef1f4; --panel:#ffffff; --panel2:#f8fafb; --head:#fff;
+  --line:#dde3e9; --line2:#eff2f5; --border-hi:#c3ccd5;
+  --text:#111417; --muted:#5a6270; --dim:#8791a0;
+  --accent:#8f5400; --accent2:#6f4100; --accent-fill:#a86400; --accent-hi:#a86400;
+  --accent-soft:#fbf1e0; --accent-soft-2:#f6e6cb;
+  --accent-line:rgba(143,84,0,.38); --ring:0 0 0 3px rgba(143,84,0,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.06); --shadow-accent:0 8px 24px rgba(0,0,0,.08);
+  --radius-xs:6px; --radius-s:8px; --radius-m:8px; --radius-l:8px; --radius-xl:10px; --radius:8px;
+  --gold:#a86400;
+}
+html[data-theme="pult"] header.top{background:#1d2126;border-color:#1d2126;border-radius:8px}
+html[data-theme="pult"] header.top .brand h1{color:#e9ecef}
+html[data-theme="pult"] header.top .brand .sub,
+html[data-theme="pult"] header.top .pill{color:#98a2ad}
+html[data-theme="pult"] header.top .pill{background:#262b31;border-color:#343b43}
+html[data-theme="pult"] header.top .pill b,
+html[data-theme="pult"] header.top .clock{color:#e9ecef}
+html[data-theme="pult"] header.top button.ghost,
+html[data-theme="pult"] header.top a.btn.ghost{color:#dfe4e9}
+html[data-theme="pult"] header.top button.ghost:hover,
+html[data-theme="pult"] header.top a.btn.ghost:hover{background:#2b3138;border-color:#3b434c}
+html[data-theme="pult"] nav.tabs{background:#1d2126;border-bottom:2px solid var(--accent-fill);
+  border-radius:8px 8px 0 0;padding:5px 6px 0;gap:2px}
+html[data-theme="pult"] nav.tabs button{background:transparent;border:0;border-bottom:2px solid transparent;
+  color:#a6b0ba;border-radius:8px 8px 0 0;margin:0}
+html[data-theme="pult"] nav.tabs button:hover{background:#262b31;color:#e9ecef}
+html[data-theme="pult"] nav.tabs button.active{background:#f7f8fa;color:#111417;box-shadow:none;font-weight:600}
+html[data-theme="pult"] .kpi{border-top:3px solid var(--accent-fill)}
+html[data-theme="pult"] .kpi .lbl{text-transform:none;letter-spacing:0;font-size:var(--fs-s)}
+html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
 </style>
 </head>
 <body>
@@ -1008,6 +1125,16 @@ button .ic,a.btn .ic{opacity:.9}
 
   <!-- ================= НАСТРОЙКИ (админ) ================= -->
   <section class="tab" id="tab-set">
+    <div class="card">
+      <div class="hd"><h3>Оформление</h3><span class="hint">вид панели для вашей учётной записи, применяется сразу</span></div>
+      <div class="bd">
+        <div class="themes" id="themeList"></div>
+        <div class="muted" id="themeNote" style="font-size:var(--fs-s);margin-top:10px">
+          Оформление меняет цвета, шрифты, радиусы и плотность — разделы и данные те же.
+          Макеты-первоисточники: <code>design/web/</code> в репозитории.
+        </div>
+      </div>
+    </div>
     <div class="grid2">
       <div class="card">
         <div class="hd"><h3>Пользователи</h3><span class="hint" id="accCount">—</span></div>
@@ -3128,9 +3255,47 @@ let ME={login:'',role:'viewer'};
 const canOperate = ()=>['admin','operator'].includes(ME.role);
 const isAdmin    = ()=>ME.role==='admin';
 
+/* ---------- оформление панели ---------- */
+const THEMES=[
+  {id:'classic', name:'Как сейчас', note:'синий акцент, карточки с тенями',
+   sw:{ground:'#f1f2f4', side:'#2b62d9', chip:'#ffffff'}},
+  {id:'tablo',   name:'Табло', note:'тёплый серый, линейки, крупные цифры',
+   sw:{ground:'#e9e7e2', side:'#1d6b3c', chip:'#f4f3ef'}},
+  {id:'reestr',  name:'Реестр', note:'бумага, засечки, тонкие линейки',
+   sw:{ground:'#f7f5f0', side:'#1b5e3a', chip:'#efece4'}},
+  {id:'pult',    name:'Пульт', note:'тёмная шапка, охра, мягкие тени',
+   sw:{ground:'#f3f5f7', side:'#1d2126', chip:'#ffffff'}},
+];
+function themeRender(){
+  const cur=document.documentElement.dataset.theme||'classic';
+  const box=$('#themeList'); if(!box) return;
+  box.innerHTML=THEMES.map(t=>
+    '<button class="theme'+(t.id===cur?' on':'')+'" data-theme-pick="'+t.id+'">'
+    + '<span class="sw"><i class="ground" style="background:'+t.sw.ground+';box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></i>'
+    + '<i class="side" style="background:'+t.sw.side+'"></i>'
+    + '<i class="chip" style="background:'+t.sw.chip+';box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)"></i></span>'
+    + '<b>'+t.name+'</b><span>'+t.note+'</span></button>').join('');
+  box.querySelectorAll('[data-theme-pick]').forEach(b=>{
+    b.onclick=()=>applyTheme(b.dataset.themePick, true);
+  });
+}
+function applyTheme(t, save){
+  t=(t||'classic');
+  if(t==='classic') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.dataset.theme=t;
+  try{ localStorage.setItem('skud_theme', t); }catch(e){}
+  themeRender();
+  if(save){
+    postJSON('/api/prefs',{theme:t})
+      .then(()=>{ const n=$('#themeNote'); if(n) n.textContent='Оформление сохранено для '+((ME&&ME.login)||'вашей учётной записи')+'.'; })
+      .catch(()=>{ const n=$('#themeNote'); if(n) n.textContent='Оформление применено в этом браузере, но на сервер не сохранилось.'; });
+  }
+}
+
 async function loadMe(){
   try{
     ME = await api('/api/me');
+    if(ME.theme && ME.theme!==(document.documentElement.dataset.theme||'classic')) applyTheme(ME.theme, false);
     const btn=$('#tabBtnSet');
     if(ME.role==='admin'){ btn.style.display=''; }
     const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
@@ -3305,6 +3470,7 @@ function initDates(){
 }
 (async function start(){
   initDates();
+  themeRender();
   await loadMe();
   await loadStatus();
   setupCardReader();

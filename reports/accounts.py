@@ -171,6 +171,29 @@ def set_role(login, role):
     return True
 
 
+def theme_of(login):
+    """Выбранное оформление панели (classic/tablo/reestr/pult)."""
+    u = get(login)
+    return (u or {}).get("theme", "") or ""
+
+
+def set_theme(login, theme):
+    theme = (theme or "").strip()
+    if theme not in ("", "classic", "tablo", "reestr", "pult"):
+        raise ValueError("неизвестное оформление")
+    with _lock:
+        data = load()
+        for u in data["users"]:
+            if u.get("login", "").lower() == (login or "").lower():
+                if theme:
+                    u["theme"] = theme
+                else:
+                    u.pop("theme", None)
+                save(data)
+                return True
+    raise ValueError("пользователь не найден")
+
+
 def set_name(login, name):
     with _lock:
         data = load()

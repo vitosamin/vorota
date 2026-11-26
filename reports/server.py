@@ -518,6 +518,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.print_t13(q)
             if path == "/print/breaks":
                 return self.print_breaks(q)
+            if path == "/api/prefs":
+                return self.api_prefs()
             if path == "/api/me":
                 return self.api_me()
             if path == "/api/accounts":
@@ -896,6 +898,24 @@ class Handler(BaseHTTPRequestHandler):
             stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"))
         return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
 
+    def api_prefs(self, body=None):
+        """Оформление панели: GET — текущее, POST — сохранить выбранное."""
+        user = self.current_user()
+        if not user:
+            return self.send_json({"error": "unauthorized"}, code=401)
+        if body is None:
+            return self.send_json({"theme": accounts.theme_of(user) or "classic"})
+        try:
+            p = json.loads(body or b"{}")
+        except ValueError:
+            return self.send_json({"error": "bad json"}, code=400)
+        theme = (p.get("theme") or "").strip()
+        try:
+            accounts.set_theme(user, theme)
+        except ValueError as exc:
+            return self.send_json({"error": str(exc)}, code=400)
+        return self.send_json({"ok": True, "theme": theme or "classic"})
+
     def api_me(self):
         user = self.current_user()
         if not user:
@@ -905,6 +925,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_json({"login": user, "role": role,
                                "roleTitle": accounts.ROLE_TITLES.get(role, "—"),
                                "name": acc.get("name", user),
+                               "theme": accounts.theme_of(user),
                                "gate_user": gate.SMB_USER if role == "admin" else None})
 
     def api_accounts(self):
@@ -1752,6 +1773,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.redirect("/login?e=1")
         if not self.current_user():
             return self.send_json({"error": "unauthorized"}, code=401)
+        if path == "/api/prefs":
+            return self.api_prefs(body)
         if path == "/api/sync":
             try:
                 payload = json.loads(body or b"{}")
