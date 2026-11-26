@@ -37,14 +37,20 @@ public final class Http {
     private Http() {}
 
     public static Response get(String url, String token, boolean insecure) {
-        return request("GET", url, token, null, insecure);
+        return request("GET", url, token, null, insecure, 6000, 9000);
+    }
+
+    /** Для проверки обновлений: мобильная сеть до GitHub бывает медленной. */
+    public static Response getSlow(String url) {
+        return request("GET", url, null, null, false, 12000, 20000);
     }
 
     public static Response post(String url, String token, String json, boolean insecure) {
-        return request("POST", url, token, json, insecure);
+        return request("POST", url, token, json, insecure, 6000, 9000);
     }
 
-    private static Response request(String method, String url, String token, String json, boolean insecure) {
+    private static Response request(String method, String url, String token, String json,
+                                    boolean insecure, int connectTimeout, int readTimeout) {
         Response r = new Response();
         HttpURLConnection conn = null;
         try {
@@ -53,8 +59,8 @@ public final class Http {
                 allowAll((HttpsURLConnection) conn);
             }
             conn.setRequestMethod(method);
-            conn.setConnectTimeout(6000);
-            conn.setReadTimeout(9000);
+            conn.setConnectTimeout(connectTimeout);
+            conn.setReadTimeout(readTimeout);
             conn.setInstanceFollowRedirects(true);
             conn.setUseCaches(false);
             conn.setRequestProperty("Accept", "application/json, text/plain, */*");

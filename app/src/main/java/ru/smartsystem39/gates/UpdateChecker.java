@@ -12,6 +12,8 @@ public final class UpdateChecker {
 
     public static final String REPO = "vitosamin/vorota";
     public static final String API_URL = "https://api.github.com/repos/" + REPO + "/releases/latest";
+    /** Запасной канал без GitHub API: Atom-лента релизов (не упирается в лимит 60/час). */
+    public static final String ATOM_URL = "https://github.com/" + REPO + "/releases.atom";
 
     public static class Info {
         public final String tag;
@@ -36,7 +38,16 @@ public final class UpdateChecker {
     private UpdateChecker() {}
 
     public static Info check(String currentVersion) {
-        Http.Response r = Http.get(API_URL, null, false);
+        Info api = checkApi(currentVersion);
+        if (api.error == null) return api;
+        // API может быть недоступен/упереться в лимит — пробуем ленту релизов.
+        Info atom = checkAtom(currentVersion);
+        if (atom.error == null) return atom;
+        return Info.err(api.error + "; лента: " + atom.error);
+    }
+
+    private static Info checkApi(String currentVersion) {
+        Http.Response r = Http.getSlow(API_URL);
         if (!r.ok()) {
             String reason = r.code == 403 ? "превышен лимит запросов GitHub"
                     : (r.error == null ? "HTTP " + r.code : r.error);
@@ -63,6 +74,22 @@ public final class UpdateChecker {
         } catch (Exception e) {
             return Info.err("некорректный ответ GitHub");
         }
+    }
+
+    private static Info checkAtom(String currentVersion) {
+        Http.Response r = Http.getSlow(ATOM_URL);
+        if (!r.ok()) {
+            return Info.err(r.error == null ? "HTTP " + r.code : r.error);
+        }
+        int start = r.body.indexOf("<entry>");
+        int end = start < 0 ? -1 : r.body.indexOf("</entry>", start);
+        if (start < 0 || end < 0) return Info.err("в ленте нет релизов");
+        String entry = r.body.substring(start, end);
+        Matcher m = Pattern.compile("/releases/tag/([^\"<]+)").matcher(entry);
+        if (!m.find()) return Info.err("в ленте нет тега");
+        String tag = m.group(1);
+        String apkUrl = "https://github.com/" + REPO + "/releases/download/" + tag + "/Vorota.apk";
+        return new Info(tag, "", apkUrl, isNewer(currentVersion, tag), null);
     }
 
     public static String download(String url, File out) {
