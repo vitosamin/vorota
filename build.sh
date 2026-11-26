@@ -32,6 +32,7 @@ echo "== aapt2 link"
   --min-sdk-version 26 \
   --target-sdk-version 34 \
   --auto-add-overlay \
+  -A "$PROJ/app/src/main/assets" \
   --version-code "$VERSION_CODE" \
   --version-name "$VERSION_NAME"
 

@@ -20,6 +20,7 @@ public class Config {
     private static final String K_INSECURE = "ha_insecure";
     private static final String K_DEVICES = "devices";
     private static final String K_PULT = "pult_ui";
+    private static final String K_UI_VERSION = "ui_version";
 
     private final SharedPreferences sp;
 
@@ -92,6 +93,14 @@ public class Config {
 
     public void setPultUi(boolean v) {
         sp.edit().putBoolean(K_PULT, v).apply();
+    }
+
+    public int getUiVersion() {
+        return sp.getInt(K_UI_VERSION, 0);
+    }
+
+    public void setUiVersion(int v) {
+        sp.edit().putInt(K_UI_VERSION, v).apply();
     }
 
     public String getPromptedUpdate() {

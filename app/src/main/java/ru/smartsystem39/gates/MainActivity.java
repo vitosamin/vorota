@@ -10,6 +10,14 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.net.Uri;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -94,6 +102,9 @@ public class MainActivity extends Activity {
     private TextView gateStatus;
     private CheckBox haInsecure;
     private CheckBox pultUi;
+    private WebView pultWeb;
+    private boolean pultWebReady = false;
+    private boolean pultWebFailed = false;
     private Button btnTest;
     private Button btnAddDevice;
     private LinearLayout navDevices;
@@ -135,12 +146,19 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         cfg = new Config(this);
+        // 3.17: один раз включаем веб-«Пульт», даже если 3.16 успела откатиться
+        // в классический вид. Дальше решение пользователя не перетираем.
+        if (cfg.getUiVersion() < 1) {
+            cfg.setPultUi(true);
+            cfg.setUiVersion(1);
+        }
         io = Executors.newSingleThreadExecutor();
         commands = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_main);
         bind();
         setupSettings();
         setupNav();
+        if (cfg.pultUi()) ensurePultWeb();
         reloadDevices();
         selectTab(0);
         ui.postDelayed(() -> checkUpdates(true), 1500);
@@ -270,6 +288,12 @@ public class MainActivity extends Activity {
         navDevices.setBackgroundResource(main ? R.drawable.bg_nav_pill : 0);
         navSettings.setBackgroundResource(main ? 0 : R.drawable.bg_nav_pill);
 
+        if (cfg.pultUi()) {
+            if (main) showPultWeb(); else hidePultWeb();
+        } else {
+            hidePultWeb();
+        }
+
         if (!main) {
             rebuildSettings();
         } else {
@@ -294,20 +318,266 @@ public class MainActivity extends Activity {
 
     private void rebuildMain() {
         if (cfg.pultUi()) {
-            try {
-                rebuildPult();
-                return;
-            } catch (Throwable t) {
-                // Аварийный откат: если новый экран не собрался, показываем классический
-                // и запоминаем это, чтобы приложение открылось в следующий раз.
-                cfg.setPultUi(false);
-                if (pultUi != null) pultUi.setChecked(false);
-                if (headerTitle != null) headerTitle.setText(R.string.title_main);
-                if (navDevicesText != null) navDevicesText.setText(R.string.tab_devices);
-                toast(getString(R.string.pult_failed));
-            }
+            // Главный экран «Пульт» — локальный WebView с макетом 1:1.
+            // Родной список очищаем, чтобы под ним ничего не мигало.
+            listMain.removeAllViews();
+            cards.clear();
+            ensurePultWeb();
+            if (pultWebReady) pushPultData();
+            return;
         }
+        hidePultWeb();
         rebuildClassic();
+    }
+
+    /** Локальный WebView с макетом «Пульт». */
+    private void ensurePultWeb() {
+        if (!cfg.pultUi()) return;
+        if (pultWeb != null) {
+            if (!pultWebFailed) return;
+            ViewGroup parent = (ViewGroup) pultWeb.getParent();
+            if (parent != null) parent.removeView(pultWeb);
+            pultWeb.destroy();
+            pultWeb = null;
+            pultWebFailed = false;
+            pultWebReady = false;
+        }
+        ViewGroup content = findViewById(android.R.id.content);
+        if (content == null) return;
+        final WebView web = new WebView(this);
+        pultWeb = web;
+        web.setBackgroundColor(getColor(R.color.bg));
+        web.setVisibility(View.GONE);
+        WebSettings ws = web.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);
+        ws.setAllowFileAccess(true);
+        ws.setAllowContentAccess(true);
+        ws.setAllowFileAccessFromFileURLs(true);
+        ws.setSupportZoom(false);
+        ws.setBuiltInZoomControls(false);
+        ws.setDisplayZoomControls(false);
+        ws.setJavaScriptCanOpenWindowsAutomatically(false);
+        web.setVerticalScrollBarEnabled(false);
+        web.setHorizontalScrollBarEnabled(false);
+        web.addJavascriptInterface(new PultBridge(), "Android");
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return !request.getUrl().toString().startsWith("file:///android_asset/pult/");
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return !url.startsWith("file:///android_asset/pult/");
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) runOnUiThread(MainActivity.this::pultFail);
+            }
+        });
+        content.addView(web, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        web.loadUrl("file:///android_asset/pult/index.html");
+        ui.postDelayed(() -> {
+            if (!pultWebReady && !pultWebFailed && cfg.pultUi() && pultWeb == web) pultFail();
+        }, 7000);
+    }
+
+    private void showPultWeb() {
+        if (pultWeb == null || !pultWebReady || !cfg.pultUi()) return;
+        pultWeb.setVisibility(View.VISIBLE);
+        applyPultSystemBars();
+    }
+
+    private void hidePultWeb() {
+        if (pultWeb != null) pultWeb.setVisibility(View.GONE);
+    }
+
+    private void applyPultSystemBars() {
+        boolean night = isNight();
+        int bg = getColor(R.color.bg);
+        getWindow().setStatusBarColor(bg);
+        getWindow().setNavigationBarColor(bg);
+        int flags = getWindow().getDecorView().getSystemUiVisibility();
+        if (night) {
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        } else {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        }
+        getWindow().getDecorView().setSystemUiVisibility(flags);
+    }
+
+    private boolean isNight() {
+        int mode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return mode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    private void pultFail() {
+        if (pultWebFailed) return;
+        pultWebFailed = true;
+        pultWebReady = false;
+        cfg.setPultUi(false);
+        if (pultUi != null) pultUi.setChecked(false);
+        if (pultWeb != null) pultWeb.setVisibility(View.GONE);
+        toast(getString(R.string.pult_failed));
+        rebuildClassic();
+        selectTab(0);
+    }
+
+    private Device findDevice(String id) {
+        if (id == null) return null;
+        for (Device d : devices) if (id.equals(d.id)) return d;
+        return null;
+    }
+
+    private static String kindName(int kind) {
+        switch (kind) {
+            case Status.READY: return "READY";
+            case Status.OPEN: return "OPEN";
+            case Status.CLOSED: return "CLOSED";
+            case Status.MOVING: return "MOVING";
+            case Status.ON: return "ON";
+            case Status.OFF: return "OFF";
+            case Status.OFFLINE: return "OFFLINE";
+            default: return "UNKNOWN";
+        }
+    }
+
+    private String pultStatus(Device d, Status s) {
+        if (!d.isConfigured() && !d.isGate()) return getString(R.string.not_configured_short);
+        return s == null ? getString(R.string.status_checking) : s.text;
+    }
+
+    private String pultKind(Device d, Status s) {
+        if (!d.isConfigured() && !d.isGate()) return "UNKNOWN";
+        return s == null ? "UNKNOWN" : kindName(s.kind);
+    }
+
+    private boolean pultOnline(Device d, Status s) {
+        return (d.isConfigured() || d.isGate()) && s != null
+                && s.kind != Status.OFFLINE && s.kind != Status.UNKNOWN;
+    }
+
+    private String pultAction(Device d, Status s) {
+        if (!d.isConfigured() && !d.isGate()) return getString(R.string.action_setup);
+        if (d.isGate()) return getString(R.string.action_open);
+        return actionLabel(d, s == null ? new Status(Status.UNKNOWN, "") : s);
+    }
+
+    private String pultSourceName(Device d) {
+        if (d.isGate()) return "Мост Gate-IP";
+        if (Device.SRC_HA.equals(d.source)) return "Home Assistant";
+        return Device.protocolLabel(d.protocol);
+    }
+
+    private String pultAddress(Device d) {
+        if (d.isGate()) return hostOf(cfg.getGateUrl());
+        if (Device.SRC_HA.equals(d.source)) return hostOf(cfg.getHaUrl());
+        return hostOf(d.address);
+    }
+
+    private void pushPultData() {
+        if (!pultWebReady || pultWeb == null) return;
+        try {
+            JSONObject root = new JSONObject();
+            root.put("theme", isNight() ? "dark" : "light");
+            JSONArray arr = new JSONArray();
+            for (Device d : devices) {
+                Status s = lastStatus.get(d.id);
+                JSONObject o = new JSONObject();
+                o.put("id", d.id);
+                o.put("name", d.name.isEmpty() ? Device.typeLabel(d.type) : d.name);
+                o.put("type", d.type);
+                o.put("typeLabel", Device.typeLabel(d.type));
+                o.put("gate", d.isGate());
+                o.put("dirIn", d.dirIn);
+                o.put("dirOut", d.dirOut);
+                o.put("configured", d.isConfigured() || d.isGate());
+                o.put("favorite", d.favorite);
+                o.put("sub", sourceLabel(d));
+                o.put("sourceName", pultSourceName(d));
+                o.put("address", pultAddress(d));
+                o.put("status", pultStatus(d, s));
+                o.put("kind", pultKind(d, s));
+                o.put("action", pultAction(d, s));
+                o.put("online", pultOnline(d, s));
+                arr.put(o);
+            }
+            root.put("devices", arr);
+            pultWeb.evaluateJavascript("window.pultData(" + root.toString() + ")", null);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void pushPultState() {
+        if (!pultWebReady || pultWeb == null) return;
+        try {
+            JSONArray arr = new JSONArray();
+            for (Device d : devices) {
+                Status s = lastStatus.get(d.id);
+                JSONObject o = new JSONObject();
+                o.put("id", d.id);
+                o.put("status", pultStatus(d, s));
+                o.put("kind", pultKind(d, s));
+                o.put("action", pultAction(d, s));
+                o.put("online", pultOnline(d, s));
+                arr.put(o);
+            }
+            JSONObject root = new JSONObject();
+            root.put("devices", arr);
+            pultWeb.evaluateJavascript("window.pultState(" + root.toString() + ")", null);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private final class PultBridge {
+        @JavascriptInterface
+        public void ready() {
+            runOnUiThread(() -> {
+                if (!cfg.pultUi()) return;
+                pultWebReady = true;
+                if (tab == 0) showPultWeb();
+                pushPultData();
+            });
+        }
+
+        @JavascriptInterface
+        public void open(String id) {
+            runOnUiThread(() -> {
+                Device d = findDevice(id);
+                if (d != null) onTap(d);
+            });
+        }
+
+        @JavascriptInterface
+        public void openDir(String id, String dir) {
+            runOnUiThread(() -> {
+                Device d = findDevice(id);
+                if (d != null) onTapDir(d, dir);
+            });
+        }
+
+        @JavascriptInterface
+        public void edit(String id) {
+            runOnUiThread(() -> {
+                if (findDevice(id) != null) openEditor(id);
+            });
+        }
+
+        @JavascriptInterface
+        public void settings() {
+            runOnUiThread(() -> selectTab(1));
+        }
+
+        @JavascriptInterface
+        public void refresh() {
+            runOnUiThread(MainActivity.this::pollOnce);
+        }
     }
 
     /** Классический экран: компактные плитки по две в ряд. Оставлен для отката. */
@@ -1712,6 +1982,7 @@ public class MainActivity extends Activity {
                         }
                     }
                     updateHeader(hasHa, fFailed, fGateFailed);
+                    pushPultState();
                     if (fGateAuth) askGateKey(getString(R.string.gate_key_bad));
                     else if (fGateKeyMissing) askGateKey(null);
                 });
@@ -1817,6 +2088,12 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (pultWeb != null) {
+            ViewGroup parent = (ViewGroup) pultWeb.getParent();
+            if (parent != null) parent.removeView(pultWeb);
+            pultWeb.destroy();
+            pultWeb = null;
+        }
         stopPolling();
         stopPulse();
         stopCardPulse();
