@@ -369,6 +369,40 @@ tbody tr.pick td{background:var(--accent-soft)}
 .notice>span.ni{display:inline-flex;align-items:center;color:var(--accent)}
 .notice>span.ni.warn{color:var(--amber)}
 button .ic,a.btn .ic{opacity:.9}
+/* КПП: лента слева, карточка справа */
+.kpp-grid{display:grid;grid-template-columns:1fr 400px;gap:12px;align-items:start}
+.kpp-main{min-width:0}
+.kpp-side{position:sticky;top:12px}
+.kpp-feed{max-height:calc(100vh - 320px)}
+.kpp-card-panel .bd{padding:0}
+.kpp-card-panel .empty{padding:34px 18px;text-align:center}
+.pcard{display:flex;flex-direction:column}
+.lastpass-card .pcard .ph{height:150px}
+.pcard .ph{height:230px;background:linear-gradient(160deg,var(--panel2),var(--bg));
+  display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--line)}
+.pcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard .ph.empty-ph{color:var(--dim);font-size:var(--fs-s)}
+.pcard .body{padding:14px}
+.pcard .t{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pcard .time{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.pcard .dir{font-size:var(--fs-s);font-weight:600;padding:3px 9px;border-radius:var(--radius-pill);
+  border:1px solid transparent;white-space:nowrap}
+.pcard .dir.in{background:var(--ok-bg);color:var(--ok-text);border-color:var(--ok-line)}
+.pcard .dir.out{background:var(--err-bg);color:var(--err-text);border-color:var(--err-line)}
+.pcard .nm{font-size:var(--fs-xl);font-weight:600;line-height:1.25;margin-top:12px}
+.pcard .ps{color:var(--muted);font-size:var(--fs-m);margin-top:3px}
+.pcard .un{color:var(--muted);font-size:var(--fs-s);margin-top:2px}
+.pcard dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:12px 0 0;
+  padding-top:12px;border-top:1px solid var(--line2);font-size:var(--fs-s)}
+.pcard dt{color:var(--muted)}
+.pcard dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+@media(max-width:1180px){
+  .kpp-grid{grid-template-columns:1fr}
+  .kpp-side{position:static}
+  .kpp-feed{max-height:520px}
+  .pcard .ph{height:180px}
+}
+
 /* выбор оформления */
 .themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
 .theme{display:block;height:auto;padding:10px;text-align:left;background:var(--panel);
@@ -551,6 +585,10 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
         <div class="feed" id="feed"><div class="empty">Загрузка…</div></div>
       </div>
       <div class="right-col">
+        <div class="card lastpass-card">
+          <div class="hd"><h3>Последний проход</h3><span class="hint" id="lpState">ожидание</span></div>
+          <div class="bd" id="lastPass" style="padding:0"><div class="empty" style="padding:28px 18px;text-align:center">Ждём событий…</div></div>
+        </div>
         <div class="card chart-card">
           <div class="hd"><h3>Проходы по часам</h3><span class="hint" id="chartDay"></span></div>
           <div class="chart-box" id="chHour"></div>
@@ -828,26 +866,38 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
 
   <!-- ================= КПП (пост охраны) ================= -->
   <section class="tab" id="tab-kpp">
-    <div class="card" style="margin-bottom:12px">
-      <div class="bd">
-        <div class="filters">
-          <div><label class="f">Точки КПП</label>
-            <div class="msel" id="kppPoint" data-ph="все точки">
-              <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
-              <div class="msel-list"></div>
-            </div></div>
-          <div><label class="f">Показ, секунд</label><input type="number" id="kppSec" min="1" max="20" step="0.5" value="4.5"></div>
+    <div class="kpp-grid">
+      <div class="kpp-main">
+        <div class="card" style="margin-bottom:12px">
+          <div class="bd">
+            <div class="filters">
+              <div><label class="f">Точки КПП</label>
+                <div class="msel" id="kppPoint" data-ph="все точки">
+                  <button type="button" class="msel-btn"><span class="msel-txt">все точки</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
+                  <div class="msel-list"></div>
+                </div></div>
+              <div><label class="f">Показ, секунд</label><input type="number" id="kppSec" min="1" max="20" step="0.5" value="4.5"></div>
+            </div>
+            <div class="row-actions">
+              <button class="primary" id="kppStart">Подключить</button>
+              <button id="kppStop">Отключить</button>
+              <label class="chk" style="align-self:center"><input type="checkbox" id="kppFull"> во весь экран</label>
+              <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
+            </div>
+          </div>
         </div>
-        <div class="row-actions">
-          <button class="primary" id="kppStart">Подключить</button>
-          <button id="kppStop">Отключить</button>
-          <span class="muted" id="kppStatus" style="font-size:var(--fs-s);align-self:center">не подключено</span>
+        <div class="card">
+          <div class="hd"><h3>Проход сотрудников</h3><span class="hint">новые сверху · только по выбранным точкам</span></div>
+          <div class="bd"><div class="tblwrap kpp-feed" id="kppFeed"><div class="empty">Нет событий</div></div></div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="hd"><h3>Проход сотрудников</h3><span class="hint">новые сверху · только по выбранным точкам</span></div>
-      <div class="bd"><div class="tblwrap" id="kppFeed"><div class="empty">Нет событий</div></div></div>
+
+      <aside class="kpp-side">
+        <div class="card kpp-card-panel">
+          <div class="hd"><h3>Карточка сотрудника</h3><span class="hint" id="kppPanelState">ожидание</span></div>
+          <div class="bd" id="kppPanel"><div class="empty">Как только кто-то приложит ключ, здесь появится его карточка</div></div>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -1679,43 +1729,56 @@ function kppPrefetch(it){
   if(kppCache.size>200) kppCache.delete(kppCache.keys().next().value);
 }
 let kppToken=0;
-function kppRenderDetails(d, it){
-  const u=d.user||{}, det=d.details||{}, sch=d.schedule||{};
-  const brk=(d.breaks||[]).map(b=>b.start+'–'+b.end).join(', ');
-  const rows=[
+
+/* Карточка человека: одна разметка для правой панели и для полноэкранного режима */
+function pcardRows(d, it){
+  const u=(d&&d.user)||{}, det=(d&&d.details)||{}, sch=(d&&d.schedule)||{};
+  const brk=((d&&d.breaks)||[]).map(b=>b.start+'–'+b.end).join(', ');
+  return [
     ['Табельный', u.number||it.number||''],
     ['UID карты', det.number_u||''],
     ['Статус', det.status||''],
     ['Доступ', det.access_points!==undefined ? det.access_points+' точек' : ''],
-    ['График', sch.start ? sch.start+'–'+sch.end : 'не задан'],
+    ['График', sch.start ? sch.start+'–'+sch.end : ''],
     ['Перерывы', brk||''],
-    ['Последний проход', det.last_ts ? (det.last_ts.slice(8,10)+'.'+det.last_ts.slice(5,7)+' '+det.last_ts.slice(11,16)+(det.last_unit?' · '+det.last_unit:'')) : ''],
     ['Пропуск', det.pass ? ('№'+det.pass.number+' до '+det.pass.valid_to) : ''],
   ].filter(r=>r[1]);
-  $('#kppDetails').innerHTML=rows.map(r=>'<div class="it'+((r[0]==='Перерывы'||r[0]==='Последний проход')?' wide':'')+'"><span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('');
-  $('#kppGroup').textContent=it.group||u.group||'';
 }
-async function kppFillDetails(it, token){
-  if(!it.user_ptr) return;
-  const ready=kppCache.get(it.user_ptr);
-  if(ready){ if(token===kppToken) kppRenderDetails(ready, it); return; }
-  try{
-    const d=await api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)
-      +'&from='+todayISO()+'&to='+todayISO());
-    kppCache.set(it.user_ptr, d);
-    if(token!==kppToken) return;
-    kppRenderDetails(d, it);
-  }catch(e){ /* без деталей */ }
+function pcardHTML(it, d){
+  const u=(d&&d.user)||{};
+  const dir=it.direction==='in'?'вход':(it.direction==='out'?'выход':'проход');
+  const rows=pcardRows(d, it);
+  return '<div class="pcard">'
+    + '<div class="ph'+(it.photo?'':' empty-ph')+'">'
+    +   (it.photo
+        ? '<img src="/photo/'+it.user_ptr+'?t='+encodeURIComponent(it.ts||'')+'" alt="">'
+        : '<span>'+(d?'нет фото в картотеке':'фото загружается')+'</span>')
+    + '</div>'
+    + '<div class="body">'
+    +   '<div class="t"><span class="time">'+esc(it.time||'')+'</span>'
+    +     '<span class="dir '+(it.direction||'')+'">'+dir+'</span></div>'
+    +   '<div class="nm">'+esc(it.fio||'—')+'</div>'
+    +   '<div class="ps">'+esc(it.position||u.position||'')+'</div>'
+    +   '<div class="un">'+esc(it.unit||'')+(it.group||u.group?' · '+esc(it.group||u.group):'')+'</div>'
+    +   (rows.length
+        ? '<dl>'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>'
+        : '<dl><dt>Картотека</dt><dd>загружается…</dd></dl>')
+    + '</div></div>';
 }
-function kppNext(){
-  const it=kppQueue.shift();
-  if(!it){ kppShowing=false; $('#kppOverlay').classList.remove('on'); return; }
-  kppShowing=true;
-  const token=++kppToken;
+function kppPanelPaint(it, d){
+  const box=$('#kppPanel'); if(!box) return;
+  box.innerHTML=pcardHTML(it, d||kppCache.get(it.user_ptr)||null);
+  const st=$('#kppPanelState');
+  if(st) st.textContent=(it.unit||'')+' · '+((it.direction==='in')?'вход':(it.direction==='out'?'выход':''));
+}
+function kppOverlayPaint(it, d){
+  const u=(d&&d.user)||{};
   $('#kppName').textContent=it.fio||'';
-  $('#kppPos').textContent=it.position||'';
-  $('#kppGroup').textContent=it.group||'';
-  $('#kppDetails').innerHTML='';
+  $('#kppPos').textContent=it.position||u.position||'';
+  $('#kppGroup').textContent=it.group||u.group||'';
+  const rows=pcardRows(d, it);
+  $('#kppDetails').innerHTML=rows.map(r=>'<div class="it'+((r[0]==='Перерывы')?' wide':'')+'">'
+    + '<span class="k">'+esc(r[0])+':</span><b>'+esc(r[1])+'</b></div>').join('');
   const dir=it.direction==='in'?'вход':(it.direction==='out'?'выход':'');
   $('#kppMeta').innerHTML='<span><b>'+esc(it.time||'')+'</b></span><span>'+esc(it.unit||'')+'</span>'
     + '<span class="dir '+(it.direction||'')+'">'+dir+'</span>'
@@ -1726,7 +1789,35 @@ function kppNext(){
       + '<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">'
       + '<circle cx="12" cy="8.2" r="3.9"/><path d="M4.8 20.6c0-3.9 3.2-6.6 7.2-6.6s7.2 2.7 7.2 6.6"/></svg>'
       + '<span>Нет фото</span></div>';
-  $('#kppOverlay').classList.add('on');
+}
+async function kppFillDetails(it, token){
+  if(!it.user_ptr) return;
+  const ready=kppCache.get(it.user_ptr);
+  if(ready){
+    if(token===kppToken){ kppPanelPaint(it, ready); if(kppFullOn()) kppOverlayPaint(it, ready); }
+    return;
+  }
+  try{
+    const d=await api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)
+      +'&from='+todayISO()+'&to='+todayISO());
+    kppCache.set(it.user_ptr, d);
+    if(token!==kppToken) return;
+    kppPanelPaint(it, d);
+    if(kppFullOn()) kppOverlayPaint(it, d);
+  }catch(e){ /* без деталей */ }
+}
+function kppFullOn(){ const c=$('#kppFull'); return !!(c && c.checked); }
+function kppNext(){
+  const it=kppQueue.shift();
+  if(!it){
+    kppShowing=false;
+    if($('#kppOverlay').classList.contains('on')) $('#kppOverlay').classList.remove('on');
+    return;
+  }
+  kppShowing=true;
+  const token=++kppToken;
+  kppPanelPaint(it, null);
+  if(kppFullOn()){ kppOverlayPaint(it, null); $('#kppOverlay').classList.add('on'); }
   kppFillDetails(it, token);
   const secRaw=parseFloat(String($('#kppSec').value||'4.5').replace(',','.'));
   const base=Math.max(1, Math.min(20, isNaN(secRaw)?4.5:secRaw));
@@ -1734,8 +1825,7 @@ function kppNext(){
   // реальности. При пустой очереди — обычная выдержка из «Показ, секунд».
   const q=kppQueue.length;
   const sec = q>=6 ? Math.max(1.2, base/3) : (q>=3 ? Math.max(1.5, base/2) : base);
-  if(q) $('#kppMeta').insertAdjacentHTML('beforeend',
-    '<span class="muted">в очереди: '+q+'</span>');
+  if(q && $('#kppPanelState')) $('#kppPanelState').textContent='в очереди: '+q;
   clearTimeout(kppItemTimer);
   kppItemTimer=setTimeout(()=>{ kppNext(); }, sec*1000);
 }
@@ -2012,6 +2102,25 @@ function renderFeed(items, newCount){
   if(!feedItems.length){feed.innerHTML='<div class="empty">Сегодня проходов ещё нет</div>';return;}
   feed.innerHTML=feedItems.map((it,i)=>feedRow(it, newCount&&i<newCount)).join('');
   if(newCount) feed.scrollTop=0;
+  lastPassPaint(feedItems[0]);
+}
+/* «Последний проход» на мониторинге: та же карточка, что на КПП */
+let lpShown='';
+function lastPassPaint(it){
+  const box=$('#lastPass'); if(!box || !it) return;
+  lpShown=it.ts+'|'+it.user_ptr+'|'+it.unit;
+  if(!it.user_ptr){ box.innerHTML=pcardHTML(it, null); return; }
+  kppPrefetch(it);
+  box.innerHTML=pcardHTML(it, kppCache.get(it.user_ptr)||null);
+  const st=$('#lpState'); if(st) st.textContent=it.unit||'';
+  if(kppCache.get(it.user_ptr)) return;
+  const mine=lpShown;
+  api('/api/person?user_ptr='+encodeURIComponent(it.user_ptr)+'&from='+todayISO()+'&to='+todayISO())
+    .then(d=>{
+      kppCache.set(it.user_ptr, d);
+      if(lpShown===mine){ const b=$('#lastPass'); if(b) b.innerHTML=pcardHTML(it, d); }
+    })
+    .catch(()=>{});
 }
 function setLive(on, txt){
   $('#liveDot').className='dot '+(on?'ok':'err');
@@ -3285,6 +3394,9 @@ function applyTheme(t, save){
   else document.documentElement.dataset.theme=t;
   try{ localStorage.setItem('skud_theme', t); }catch(e){}
   themeRender();
+  // графики читают цвета из CSS-переменных один раз — после смены скина
+  // берём палитру заново и перерисовываем открытую вкладку
+  if(typeof chartPalette==='function'){ C=chartPalette(); if(state && state.tab) openTab(state.tab, false); }
   if(save){
     postJSON('/api/prefs',{theme:t})
       .then(()=>{ const n=$('#themeNote'); if(n) n.textContent='Оформление сохранено для '+((ME&&ME.login)||'вашей учётной записи')+'.'; })
