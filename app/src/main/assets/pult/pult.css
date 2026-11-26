@@ -311,3 +311,12 @@ button{font-family:inherit}
 .app[data-theme="light"] .row .state.warn { background: #FBF1E3; }
 .app[data-theme="light"] .row .state.danger { background: #FBECEA; }
 .app[data-theme="light"] .source { background: #F4F7F5; }
+
+/* Android WebView по умолчанию подсвечивает нажатие синим — убираем */
+* { -webkit-tap-highlight-color: transparent; }
+button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
