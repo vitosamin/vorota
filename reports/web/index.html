@@ -738,7 +738,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
   <!-- ================= ПОСЕЩАЕМОСТЬ ================= -->
   <section class="tab" id="tab-rep">
     <div class="card" style="margin-bottom:18px">
-      <div class="hd"><h3>Параметры отчёта</h3><span class="hint">приход — первый проход дня, уход — последний</span></div>
+      <div class="hd"><h3>Параметры отчёта</h3><span class="hint">приход — первый проход дня, уход — последний · учтены личные графики работы и перерывы (обед)</span></div>
       <div class="bd">
         <div class="filters">
           <div><label class="f">С даты</label><input type="date" id="rFrom"></div>
@@ -800,7 +800,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <div><label class="f">Дата приёма</label><input type="date" id="passVisit"></div>
           <div><label class="f">Карта</label>
             <div class="cardcap">
-              <input id="passCard" autocomplete="off" placeholder="приложите карту">
+              <input id="passCard" autocomplete="off" placeholder="введите номер карты">
               <button type="button" id="passCardRead" title="Считать с USB-считывателя"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2" /> <line x1="2" x2="22" y1="10" y2="10" /> <path d="M6 14h2" /></svg></button>
             </div></div>
           <div><label class="f">График работы</label>
@@ -825,7 +825,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
         </div>
         <div class="row-actions">
           <button class="primary" id="passAdd">Выдать пропуск</button>
-          <span class="muted" id="passHint" style="font-size:var(--fs-s);align-self:center">считыватель карт работает как клавиатура — приложите карту в поле «Карта»</span>
+          <span class="muted" id="passHint" style="font-size:var(--fs-s);align-self:center">можно ввести номер вручную или приложить карту к считывателю — он печатает номер в это поле</span>
         </div>
       </div>
     </div>
@@ -961,6 +961,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
             <input type="number" id="tStart" min="0" max="23" value="0" disabled title="Только для режима «первое — последнее за день»"></div>
         </div>
         <div class="row-actions">
+          <span class="muted" id="tNote" style="font-size:var(--fs-s);align-self:center">учтены личные графики работы и перерывы (обед)</span>
           <button class="primary" id="tGo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></svg> Показать табель</button>
           <button id="tPrint"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></svg> Печать</button>
           <button id="tXls"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></svg> Excel</button>
@@ -1021,6 +1022,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <div><label class="f">Сотрудник</label><div class="combo"><input type="text" id="pfEmp" autocomplete="off" placeholder="все сотрудники"><div class="combo-list" id="pfEmpList"></div></div></div>
         </div>
         <div class="row-actions">
+          <span class="muted" id="pfNote" style="font-size:var(--fs-s);align-self:center">учтены личные графики работы и перерывы (обед)</span>
           <button class="primary" id="pfGo">Рассчитать</button>
           <button id="pfPrint">Печать</button>
           <span class="muted" id="pfHint" style="font-size:var(--fs-s);align-self:center"></span>
@@ -1153,7 +1155,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <div><label class="f">ФИО</label><input id="tstFio" placeholder="Тестовый Сотрудник"></div>
           <div><label class="f">Должность</label><input id="tstPos" placeholder="Проверка"></div>
           <div><label class="f">Подразделение</label><input id="tstGrp" placeholder="Тест"></div>
-          <div><label class="f">Табельный</label><input id="tstNum" placeholder="ТЕСТ-1"></div>
+          <div><label class="f">Номер пропуска</label><input id="tstNum" placeholder="ТЕСТ-1"></div>
         </div>
         <div class="row-actions"><button class="primary" id="tstAdd">Добавить сотрудника</button><span class="muted" id="tstPeopleHint"></span></div>
       </div>
@@ -1611,7 +1613,7 @@ function renderEmpTab(){
   $('#empCount').textContent=items.length+' из '+EMP_TAB.length;
   if(!items.length){ $('#empWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
   $('#empWrap').innerHTML='<table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Должность</th>'
-    +'<th>Табельный</th><th>График работы</th></tr></thead><tbody>'
+    +'<th>Номер пропуска</th><th>График работы</th></tr></thead><tbody>'
     + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+esc(initials(x.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(x.fio)+'</div></div></div></td>'
       +'<td class="tag">'+esc(x.group||'')+'</td><td class="tag">'+esc(x.position||'')+'</td>'
@@ -1744,7 +1746,7 @@ function pcardRows(d, it){
   const u=(d&&d.user)||{}, det=(d&&d.details)||{}, sch=(d&&d.schedule)||{};
   const brk=((d&&d.breaks)||[]).map(b=>b.start+'–'+b.end).join(', ');
   return [
-    ['Табельный', u.number||it.number||''],
+    ['Номер пропуска', u.number||it.number||''],
     ['UID карты', det.number_u||''],
     ['Статус', det.status||''],
     ['Доступ', det.access_points!==undefined ? det.access_points+' точек' : ''],
@@ -2639,7 +2641,7 @@ function renderReport(d,view){
   if(!rows.length){$('#repWrap').innerHTML='<div class="empty">Нет данных за выбранный период</div>';return;}
   let head,body,foot='';
   if(view==='late'){
-    head=['Сотрудник','Табельный','Подразделение','Дней','Дней с опозданием','Минут всего','Средне','Максимум','Худший день'];
+    head=['Сотрудник','Номер пропуска','Подразделение','Дней','Дней с опозданием','Минут всего','Средне','Максимум','Худший день'];
     body=rows.map(r=>'<tr><td><div class="person" data-uid="'+r.user_ptr+'"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
       +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
@@ -2653,7 +2655,7 @@ function renderReport(d,view){
       +'<td class="num">'+rows.reduce((a,x)=>a+x.late_days,0)+'</td>'
       +'<td class="num">'+rows.reduce((a,x)=>a+x.late_total,0)+'</td><td colspan="3"></td></tr>';
   }else if(view==='absent'){
-    head=['Сотрудник','Табельный','Подразделение','Должность','Дней в периоде','Проходов'];
+    head=['Сотрудник','Номер пропуска','Подразделение','Должность','Дней в периоде','Проходов'];
     body=rows.map(r=>'<tr><td><div class="person"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div></div></div></td>'
       +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
@@ -2675,7 +2677,7 @@ function renderReport(d,view){
       +'<td class="num">'+late+'</td><td class="num mono">'+early+'</td>'
       +'<td class="tag">'+esc(r.points||'')+'</td></tr>';}).join('');
   }else{
-    head=['Сотрудник','Табельный','Подразделение','Дней','Часов','Средне/день','Проходов','Опозданий'];
+    head=['Сотрудник','Номер пропуска','Подразделение','Дней','Часов','Средне/день','Проходов','Опозданий'];
     body=rows.map(r=>'<tr><td><div class="person" data-uid="'+r.user_ptr+'"><div class="avatar">'+esc(initials(r.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(r.fio)+'</div><div class="pos">'+esc(r.position||'')+'</div></div></div></td>'
       +'<td class="mono tag">'+esc(r.number)+'</td><td class="tag">'+esc(r.group)+'</td>'
@@ -2696,7 +2698,7 @@ function renderReport(d,view){
         +'<td colspan="3"></td></tr>';
     }
   }
-  const NUMH=new Set(['Дата','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Дней','Средне/день','Опозданий','Дней в периоде','Табельный','Дней с опозданием','Минут всего','Средне','Максимум']);
+  const NUMH=new Set(['Дата','Приход','Уход','Часов','Проходов','Опоздание','Ранний уход','Дней','Средне/день','Опозданий','Дней в периоде','Номер пропуска','Дней с опозданием','Минут всего','Средне','Максимум']);
   $('#repWrap').innerHTML='<table><thead><tr>'+head.map(h=>'<th'+(NUMH.has(h)?' class="num"':'')+'>'+h+'</th>').join('')
     +'</tr></thead><tbody>'+body+'</tbody><tfoot>'+foot+'</tfoot></table>';
 }
@@ -2831,7 +2833,7 @@ function renderPerson(d){
 
   const dt=d.details||{};
   const detRows=[
-    ['Табельный номер', u.number||''],
+    ['Номер пропуска', u.number||''],
     ['Номер карты', (u.number||'').indexOf('/')>=0 ? u.number.split('/')[1] : ''],
     ['UID карты', dt.number_u||''],
     ['Mifare', dt.number_mifare||''],
@@ -3250,7 +3252,7 @@ $('#passByCard').onchange=()=>{
   const on=$('#passByCard').checked;
   $('#passVisitorLbl').textContent = on ? 'ФИО (необязательно)' : 'ФИО';
   $('#passVisitor').placeholder = on ? 'можно не заполнять' : 'Иванов Иван Иванович';
-  $('#passCard').placeholder = on ? 'номер карты — обязателен' : 'приложите карту';
+  $('#passCard').placeholder = on ? 'номер карты — обязателен' : 'введите номер карты';
 };
 
 $('#passFilter').onclick=loadPasses;

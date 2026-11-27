@@ -248,6 +248,10 @@ def live_buf_worker():
 # выгрузки
 # --------------------------------------------------------------------------
 
+# Подпись в шапке отчётов и печатных форм: сразу видно, что часы считаются
+# по личному графику и с вычетом перерывов.
+NOTE = "учтены личные графики работы и перерывы (обед)"
+
 COLS_1C = [
     ("number", "ТабельныйНомер"),
     ("fio", "ФИО"),
@@ -264,7 +268,7 @@ COLS_1C = [
 ]
 
 COLS_SUM = [
-    ("number", "ТабельныйНомер"),
+    ("number", "НомерПропуска"),
     ("fio", "ФИО"),
     ("group", "Подразделение"),
     ("position", "Должность"),
@@ -277,7 +281,7 @@ COLS_SUM = [
 ]
 
 COLS_USERS = [
-    ("number", "ТабельныйНомер"), ("fio", "ФИО"), ("group", "Подразделение"),
+    ("number", "НомерПропуска"), ("fio", "ФИО"), ("group", "Подразделение"),
     ("position", "Должность"), ("status", "Статус"),
     ("last_day", "ПоследнийПроходДата"), ("last_used", "ПоследнийПроходВремя"),
     ("last_unit", "Точка"),
@@ -289,7 +293,7 @@ COLS_EVENTS = [
 ]
 
 COLS_LATE = [
-    ("number", "ТабельныйНомер"),
+    ("number", "НомерПропуска"),
     ("fio", "ФИО"),
     ("group", "Подразделение"),
     ("position", "Должность"),
@@ -302,7 +306,7 @@ COLS_LATE = [
 ]
 
 COLS_ABS = [
-    ("number", "ТабельныйНомер"),
+    ("number", "НомерПропуска"),
     ("fio", "ФИО"),
     ("group", "Подразделение"),
     ("position", "Должность"),
@@ -310,10 +314,15 @@ COLS_ABS = [
     ("passes", "Проходов"),
 ]
 
+# Печатный вид подробного отчёта: ключи те же, что в файле 1С, но заголовок
+# «Номер пропуска» (в CSV для 1С оставляем «ТабельныйНомер» — это формат обмена).
+COLS_REPORT = [(k, "НомерПропуска" if k == "number" else t) for k, t in COLS_1C]
+
 # Заголовки для печати и Excel — человеческие, с пробелами.
 # В CSV для 1С остаются «слитные» имена: это формат обмена, его не трогаем.
 PRETTY_COLS = {
     "ТабельныйНомер": "Табельный номер",
+    "НомерПропуска": "Номер пропуска",
     "ФИО": "ФИО",
     "Подразделение": "Подразделение",
     "Должность": "Должность",
@@ -1149,7 +1158,7 @@ class Handler(BaseHTTPRequestHandler):
         con.close()
         if view == "summary":
             return gate.attendance_summary(rows), COLS_SUM, frm, to
-        return rows, COLS_1C, frm, to
+        return rows, COLS_REPORT, frm, to
 
     def export_1c(self, q):
         rows, cols, frm, to = self._export_rows(q)
@@ -1381,8 +1390,9 @@ class Handler(BaseHTTPRequestHandler):
     def print_t13(self, q):
         d, group = self._t13(q)
         cols, head, rows = self._t13_table(d)
-        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b>" % (
-            _esc(d["title"]), "подразделение: " + _esc(group) if group else "все подразделения", d["count"])
+        sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b> · %s" % (
+            _esc(d["title"]), "подразделение: " + _esc(group) if group else "все подразделения",
+            d["count"], NOTE)
         if str(q.get("preview") or "") in ("1", "true", "yes"):
             sub += (' <span style="color:#b26a00;font-weight:700">· ПРЕДПРОСМОТР: '
                     'сгенерированные дни подсвечены, в учёт и выгрузку не попадают</span>')
@@ -1638,6 +1648,7 @@ class Handler(BaseHTTPRequestHandler):
         rows, foot = self._ts_body(d)
         how = ("первое — последнее предъявление за сутки с %d:00" % start
                if mode == "first_last" else "с выбором точек входа и выхода")
+        how += " · " + NOTE
         sub = "Период: <b>%s</b> · %s · сотрудников: <b>%d</b> · %s" % (
             _esc(d["title"]),
             "подразделение: " + _esc(group) if group else "все подразделения",
@@ -1700,7 +1711,7 @@ class Handler(BaseHTTPRequestHandler):
             rows, cols, frm, to = self._export_rows(q)
             if view == "summary":
                 title = "Свод посещаемости по сотрудникам"
-                subtitle = "Дни, часы и опоздания за период"
+                subtitle = "Дни, часы и опоздания за период · " + NOTE
                 stats = [("Сотрудников", len(rows)),
                          ("Человеко-дней", sum(r["days"] for r in rows)),
                          ("Часов всего", round(sum(r["hours"] or 0 for r in rows), 2)),
@@ -1708,7 +1719,7 @@ class Handler(BaseHTTPRequestHandler):
                 orient = "portrait"
             elif view == "late":
                 title = "Опоздания"
-                subtitle = "Приход позже начала смены"
+                subtitle = "Приход позже начала смены (по личному графику) · " + NOTE
                 stats = [("Сотрудников", len(rows)),
                          ("Дней с опозданием", sum(r["late_days"] for r in rows)),
                          ("Минут всего", sum(r["late_total"] for r in rows)),
@@ -1721,7 +1732,7 @@ class Handler(BaseHTTPRequestHandler):
                 orient = "portrait"
             else:
                 title = "Учёт рабочего времени"
-                subtitle = "Приход, уход и часы по каждому сотруднику"
+                subtitle = "Приход, уход и часы по каждому сотруднику · " + NOTE
                 stats = [("Записей", len(rows)),
                          ("Сотрудников", len({r["user_ptr"] for r in rows})),
                          ("Часов всего", round(sum(r["hours"] or 0 for r in rows), 2)),
