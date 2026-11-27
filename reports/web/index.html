@@ -1255,6 +1255,9 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <button id="tabImportApply" disabled>Применить</button>
           <span class="muted" id="tabImportHint" style="font-size:var(--fs-s);align-self:center"></span>
         </div>
+        <div class="muted" id="tabImportAuto" style="font-size:var(--fs-s);margin-top:8px">
+          Автозагрузка: проверяем файл выгрузки 1С в общей папке раз в 10 минут.
+        </div>
         <div class="tblwrap" id="tabImportList" style="max-height:340px;margin-top:10px"></div>
       </div>
     </div>
@@ -2040,7 +2043,7 @@ function openTab(name, remember){
   if(name==='mon') loadMon();
   if(name==='ana') loadAnalytics();
   if(name==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
-  if(name==='set'){ if(ME && ME.role==='admin'){ ROLES_CACHE=[]; loadAccounts(); } }
+  if(name==='set'){ if(ME && ME.role==='admin'){ ROLES_CACHE=[]; loadAccounts(); tabImportStatus(); } }
   if(name==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
   if(name==='tsh') loadTimesheet();
   if(name==='brk') loadBreaks();
@@ -3535,6 +3538,18 @@ function applyTheme(t, save){
   }
 }
 
+async function tabImportStatus(){
+  try{
+    const d=await api('/api/import/tab',1);
+    const box=$('#tabImportAuto'); if(!box) return;
+    if(!d.configured){
+      box.textContent='Автозагрузка не настроена: в конфигурации не указан путь к выгрузке 1С. '
+        +'Пока можно вставлять выгрузку вручную.';
+      return;
+    }
+    box.textContent='Автозагрузка из '+d.dir+'\\'+d.name+' — '+((d.state||'ещё не запускалась'));
+  }catch(e){ /* тихо */ }
+}
 $('#tabImportCheck').onclick=()=>tabImportRun(false);
 $('#tabImportApply').onclick=()=>tabImportRun(true);
 

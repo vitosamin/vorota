@@ -2396,6 +2396,75 @@ def import_tab_numbers(con, rows, apply=False):
             "applied": len(plan) if apply else 0}
 
 
+# --- автозагрузка табельных номеров из выгрузки 1С ---------------------------
+# 1С кладёт CSV в общую папку (например Server\1c\staff.csv), мы забираем файл
+# по SMB, когда он изменился, и проставляем номера. Ничего в 1С не меняем —
+# только читаем файл, который сформировала сама 1С.
+
+def tab_import_target():
+    """(каталог, имя файла) выгрузки 1С из конфигурации; (None, None) если не задано."""
+    d = (CFG.get("tab_import_remote") or "").strip()
+    n = (CFG.get("tab_import_name") or "").strip()
+    return (d or None, n or None)
+
+
+def tab_import_remote_stamp():
+    """Размер и mtime файла выгрузки на шаре — чтобы не перечитывать без изменений."""
+    d, n = tab_import_target()
+    if not d or not n:
+        return None
+    try:
+        items = smb_list(d)
+    except Exception:                            # noqa: BLE001
+        return None
+    if n not in items:
+        return None
+    size, mtime, isdir = items[n]
+    if isdir:
+        return None
+    return "%s|%s" % (size, mtime)
+
+
+def tab_import_from_file(con):
+    """Забрать выгрузку 1С и проставить номера. Возвращает отчёт или None."""
+    d, n = tab_import_target()
+    if not d or not n:
+        return None
+    stamp = tab_import_remote_stamp()
+    if not stamp:
+        meta_set(con, "tab_import_state", "файл выгрузки не найден: %s / %s" % (d, n))
+        con.commit()
+        return None
+    if meta_get(con, "tab_import_stamp") == stamp:
+        return None                              # файл не менялся
+    local = os.path.join(DATA, "tab_import.csv")
+    smb_get(d, n, local)
+    try:
+        text = open(local, "rb").read().decode("utf-8")
+    except UnicodeDecodeError:
+        text = open(local, "rb").read().decode("cp1251", "replace")
+    rows = parse_tab_import(text)
+    if not rows:
+        meta_set(con, "tab_import_state", "в файле не нашлось строк «ФИО; табельный»")
+        con.commit()
+        return None
+    res = import_tab_numbers(con, rows, apply=True)
+    stamp_result = "%s | строк %d, записано %d, не найдено %d, неоднозначно %d" % (
+        dt.datetime.now().strftime("%d.%m.%Y %H:%M"), len(rows), res["applied"],
+        len(res["unmatched"]), len(res["ambiguous"]))
+    meta_set(con, "tab_import_stamp", stamp)
+    meta_set(con, "tab_import_state", stamp_result)
+    con.commit()
+    return res
+
+
+def tab_import_status(con):
+    d, n = tab_import_target()
+    return {"configured": bool(d and n), "dir": d or "", "name": n or "",
+            "state": meta_get(con, "tab_import_state", "") or "",
+            "stamp": meta_get(con, "tab_import_stamp", "") or ""}
+
+
 def users_report(con, group=None, search=None, include_deleted=False, user_ptr=None):
     """Отчёт о пользователях: табельный, ФИО, подразделение, должность, последний проход."""
     users = _user_names(con)

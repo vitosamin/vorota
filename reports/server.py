@@ -175,6 +175,21 @@ def live_sync_worker():
         time.sleep(0.5)
 
 
+def tab_import_worker():
+    """Раз в 10 минут проверяем выгрузку 1С в общей папке и проставляем номера."""
+    while True:
+        try:
+            if gate.tab_import_target()[0]:
+                con = gate.connect()
+                try:
+                    gate.tab_import_from_file(con)
+                finally:
+                    con.close()
+        except Exception:                        # noqa: BLE001
+            pass
+        time.sleep(600)
+
+
 def sync_worker():
     while True:
         try:
@@ -532,6 +547,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self.print_breaks(q)
             if path == "/api/prefs":
                 return self.api_prefs()
+            if path == "/api/import/tab":
+                con = gate.connect()
+                try:
+                    return self.send_json(gate.tab_import_status(con))
+                finally:
+                    con.close()
             if path == "/api/me":
                 return self.api_me()
             if path == "/api/accounts":
@@ -2029,6 +2050,7 @@ def main():
     threading.Thread(target=sync_worker, daemon=True).start()
     threading.Thread(target=live_sync_worker, daemon=True).start()
     threading.Thread(target=live_buf_worker, daemon=True).start()
+    threading.Thread(target=tab_import_worker, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print("СКУД Gate: http://0.0.0.0:%d/  вход: %s  (Ctrl+C — стоп)" % (port, AUTH_USER), flush=True)
     try:
