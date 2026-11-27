@@ -275,6 +275,13 @@ CREATE TABLE IF NOT EXISTS users (
     visitor    INTEGER DEFAULT 0,
     tab_number TEXT
 );
+CREATE TABLE IF NOT EXISTS tab_numbers (
+    user_ptr   INTEGER PRIMARY KEY,
+    tab_number TEXT NOT NULL,
+    source     TEXT,
+    updated    TEXT
+);
+
 CREATE TABLE IF NOT EXISTS refs (
     kind   TEXT NOT NULL,          -- position | department
     name   TEXT NOT NULL,
@@ -347,6 +354,14 @@ def _migrate(con):
         if ucols and "tab_number" not in ucols:
             con.execute("ALTER TABLE users ADD COLUMN tab_number TEXT")
             con.commit()
+    except Exception:                            # noqa: BLE001
+        pass
+    try:
+        con.execute("INSERT OR IGNORE INTO tab_numbers(user_ptr, tab_number, source, updated)"
+                    " SELECT user_ptr, tab_number, 'users', ? FROM users"
+                    " WHERE tab_number IS NOT NULL AND trim(tab_number) <> ''",
+                    (dt.datetime.now().isoformat(timespec="seconds"),))
+        con.commit()
     except Exception:                            # noqa: BLE001
         pass
     try:
@@ -995,8 +1010,9 @@ def test_times_map(con):
 def _user_names(con):
     out = {}
     for r in con.execute("SELECT u.user_ptr, u.number, u.last_name, u.first_name, u.father_name,"
-                         " u.position, u.deleted, u.visitor, u.tab_number, g.name AS grp"
-                         " FROM users u LEFT JOIN groups g ON g.group_ptr=u.group_ptr"):
+                         " u.position, u.deleted, u.visitor, t.tab_number, g.name AS grp"
+                         " FROM users u LEFT JOIN groups g ON g.group_ptr=u.group_ptr"
+                         " LEFT JOIN tab_numbers t ON t.user_ptr=u.user_ptr"):
         fio = " ".join(x for x in (r["last_name"], r["first_name"], r["father_name"]) if x).strip()
         out[r["user_ptr"]] = {
             "user_ptr": r["user_ptr"],
@@ -2397,11 +2413,22 @@ def refs_rename(con, kind, old_name, new_name):
     return refs_list(con, kind)
 
 
-def set_tab_number(con, user_ptr, value):
-    """Табельный номер из 1С — вводится вручную или приходит из выгрузки 1С."""
+def set_tab_number(con, user_ptr, value, source="manual"):
+    """Табельный номер из 1С — вводится вручную или приходит из выгрузки 1С.
+
+    Хранится в отдельной таблице: users пересоздаётся при каждой синхронизации
+    картотеки, и номер в ней бы не выжил.
+    """
     value = (value or "").strip()[:32]
     with _lock:
-        con.execute("UPDATE users SET tab_number=? WHERE user_ptr=?", (value or None, int(user_ptr)))
+        if value:
+            con.execute("INSERT INTO tab_numbers(user_ptr, tab_number, source, updated)"
+                        " VALUES(?,?,?,?) ON CONFLICT(user_ptr) DO UPDATE SET"
+                        " tab_number=excluded.tab_number, source=excluded.source,"
+                        " updated=excluded.updated",
+                        (int(user_ptr), value, source, dt.datetime.now().isoformat(timespec="seconds")))
+        else:
+            con.execute("DELETE FROM tab_numbers WHERE user_ptr=?", (int(user_ptr),))
         con.commit()
     return value
 
@@ -2477,7 +2504,7 @@ def import_tab_numbers(con, rows, apply=False):
             plan.append({"fio": users[pid]["fio"], "tab": tab, "user_ptr": pid,
                          "was": users[pid].get("tab_number") or ""})
             if apply:
-                set_tab_number(con, pid, tab)
+                set_tab_number(con, pid, tab, source="1c")
         elif not hits:
             unmatched.append({"fio": fio, "tab": tab})
         else:
