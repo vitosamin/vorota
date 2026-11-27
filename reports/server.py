@@ -332,6 +332,19 @@ COLS_ABS = [
 
 # Печатный вид подробного отчёта: ключи те же, что в файле 1С, но заголовок
 # «Номер пропуска» (в CSV для 1С оставляем «ТабельныйНомер» — это формат обмена).
+# Свод для 1С (зарплата): во главе табельный номер из 1С, дальше часы за период.
+COLS_1C_SUM = [
+    ("tab_number", "ТабельныйНомер"),
+    ("fio", "ФИО"),
+    ("group", "Подразделение"),
+    ("position", "Должность"),
+    ("days", "Дней"),
+    ("hours", "Часов"),
+    ("late_total", "ОпозданиеМинВсего"),
+    ("late_days", "ДнейСОпозданием"),
+    ("number", "НомерПропуска"),
+]
+
 COLS_REPORT = ([("number", "НомерПропуска"), ("tab_number", "ТабельныйНомер1С")]
                + [(k, t) for k, t in COLS_1C if k not in ("number", "tab_number")])
 
@@ -543,10 +556,21 @@ class Handler(BaseHTTPRequestHandler):
                 return self.print_timesheet(q)
             if path == "/print/t13":
                 return self.print_t13(q)
+            if path == "/print/passes-expiring":
+                return self.print_passes_expiring(q)
             if path == "/print/breaks":
                 return self.print_breaks(q)
             if path == "/api/prefs":
                 return self.api_prefs()
+            if path == "/api/passes/expiring":
+                frm = q.get("from") or dt.date.today().isoformat()
+                to = q.get("to") or (dt.date.today() + dt.timedelta(days=30)).isoformat()
+                con = gate.connect()
+                try:
+                    items = gate.passes_expiring(con, frm, to)
+                finally:
+                    con.close()
+                return self.send_json({"from": frm, "to": to, "count": len(items), "items": items})
             if path == "/api/refs":
                 kind = (q.get("kind") or "position").strip()
                 con = gate.connect()
@@ -1193,12 +1217,15 @@ class Handler(BaseHTTPRequestHandler):
         for r in rows:
             r["tab_number"] = tabs.get(r.get("user_ptr"), "")
         if view == "summary":
-            return gate.attendance_summary(rows), COLS_SUM, frm, to
+            summary = gate.attendance_summary(rows)
+            for r in summary:
+                r["tab_number"] = tabs.get(r.get("user_ptr"), "")
+            return summary, COLS_SUM, frm, to
         return rows, COLS_REPORT, frm, to
 
     def export_1c(self, q):
         rows, cols, frm, to = self._export_rows(q)
-        cols = COLS_1C
+        cols = COLS_1C_SUM if (q.get("view") or "detail") == "summary" else COLS_1C
         enc = q.get("enc", "cp1251")
         sep = {"tab": "\t", "comma": ",", "semicolon": ";"}.get(q.get("sep", "semicolon"), ";")
         dec = q.get("dec", ",")
@@ -1252,6 +1279,42 @@ class Handler(BaseHTTPRequestHandler):
                 "out": r["out"], "in": r["in"], "min": r["minutes"],
             } for r in d["rows"][-300:]],
         })
+
+    def print_passes_expiring(self, q):
+        frm = q.get("from") or dt.date.today().isoformat()
+        to = q.get("to") or (dt.date.today() + dt.timedelta(days=30)).isoformat()
+        con = gate.connect()
+        try:
+            items = gate.passes_expiring(con, frm, to)
+        finally:
+            con.close()
+
+        def esc(v):
+            return (str(v if v is not None else "")
+                    .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+        rows = []
+        for p in items:
+            rows.append(
+                "<tr><td class=\"num\">%s</td><td>%s</td><td>%s</td><td>%s</td>"
+                "<td class=\"num\">%s</td><td class=\"num\">%s</td><td>%s</td></tr>" % (
+                    esc(p.get("number")), esc(p.get("visitor")), esc(p.get("org") or "—"),
+                    esc(p.get("host") or "—"), esc(p.get("card") or "—"),
+                    esc(p.get("valid_to")), esc(p.get("days_left_text"))))
+        head = ("<th class='num'>Номер</th><th>Кто</th><th>Организация</th>"
+                "<th>Подразделение</th><th class='num'>Карта</th>"
+                "<th class='num'>Действует до</th><th>Срок</th>")
+        stats = [("Пропусков", len(items)),
+                 ("Уже истекли", sum(1 for p in items if p.get("days_left", 0) < 0)),
+                 ("Истекают в срок", sum(1 for p in items if p.get("days_left", 0) >= 0))]
+        stats_html = "".join('<div class="stat"><span>%s</span><b>%s</b></div>' % (esc(l), esc(v))
+                             for l, v in stats)
+        html = PRINT_TEMPLATE.format(
+            title="Сроки окончания пропусков", subtitle="когда заканчивается доступ по пропускам",
+            period=esc(frm if frm == to else "%s — %s" % (frm, to)), head=head,
+            rows="\n".join(rows), stats=stats_html, n=len(items),
+            stamp=dt.datetime.now().strftime("%d.%m.%Y %H:%M"),
+            orient="landscape", src=esc(gate.CFG.get("share", "")))
+        return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
 
     def print_breaks(self, q):
         d, first, last, group, points, mins = self._breaks(q)

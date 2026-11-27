@@ -2996,6 +2996,28 @@ def pass_get(con, pid):
     return _pass_row(r) if r else None
 
 
+def passes_expiring(con, from_day, to_day):
+    """Пропуска, у которых срок заканчивается в периоде (и уже истёкшие)."""
+    today = dt.date.today().isoformat()
+    out = []
+    for r in con.execute(
+            "SELECT * FROM passes WHERE valid_to IS NOT NULL AND valid_to <> ''"
+            " AND valid_to <= ? ORDER BY valid_to, visitor", (to_day,)):
+        p = _pass_row(r)
+        if p["valid_to"] < from_day:
+            continue
+        try:
+            left = (dt.date.fromisoformat(p["valid_to"]) - dt.date.today()).days
+        except ValueError:
+            left = 0
+        p["days_left"] = left
+        p["days_left_text"] = ("сегодня" if left == 0 else
+                               ("просрочен на %d дн." % -left if left < 0 else "осталось %d дн." % left))
+        out.append(p)
+    out.sort(key=lambda x: (x["valid_to"], x["visitor"]))
+    return out
+
+
 def pass_create(con, data, created_by=""):
     visitor = (data.get("visitor") or "").strip()
     card = (data.get("card") or "").strip()
