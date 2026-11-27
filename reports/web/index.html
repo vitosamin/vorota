@@ -155,6 +155,10 @@ input,select{width:100%;font:inherit;color:var(--text);background:var(--bg);bord
   outline:none;transition:border-color .15s,box-shadow .15s}
 input[type=checkbox],input[type=radio]{height:auto;line-height:normal;padding:0;width:auto}
 input[type=date],input[type=time]{padding-right:6px}
+textarea{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);
+  border-radius:var(--radius-s);padding:8px 11px;font-size:var(--fs-m);outline:none;resize:vertical;
+  font-family:ui-monospace,Consolas,monospace}
+textarea:focus{border-color:var(--accent);box-shadow:var(--ring)}
 input:focus,select:focus{border-color:var(--accent);box-shadow:var(--ring)}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .chk{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:var(--fs-s);cursor:pointer;user-select:none}
@@ -1235,6 +1239,22 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
       </div>
     </div>
 
+    <div class="card" id="tabImportCard">
+      <div class="hd"><h3>Табельные номера из 1С</h3><span class="hint">вставьте выгрузку 1С: «ФИО; табельный номер»</span></div>
+      <div class="bd">
+        <div class="filters" style="grid-template-columns:1fr">
+          <div><label class="f">Выгрузка из 1С (CSV, скопировать и вставить)</label>
+            <textarea id="tabImportText" rows="6" placeholder="ФИО;Табельный номер&#10;Иванов Иван Иванович;00123&#10;Петрова Мария Сергеевна;00124"></textarea></div>
+        </div>
+        <div class="row-actions">
+          <button class="primary" id="tabImportCheck">Проверить сопоставление</button>
+          <button id="tabImportApply" disabled>Применить</button>
+          <span class="muted" id="tabImportHint" style="font-size:var(--fs-s);align-self:center"></span>
+        </div>
+        <div class="tblwrap" id="tabImportList" style="max-height:340px;margin-top:10px"></div>
+      </div>
+    </div>
+
     <div class="card" style="max-width:560px">
       <div class="hd"><h3>Мой пароль</h3><span class="hint" id="meLogin2"></span></div>
       <div class="bd">
@@ -1613,11 +1633,12 @@ function renderEmpTab(){
   $('#empCount').textContent=items.length+' из '+EMP_TAB.length;
   if(!items.length){ $('#empWrap').innerHTML='<div class="empty">Никого не найдено</div>'; return; }
   $('#empWrap').innerHTML='<table><thead><tr><th>Сотрудник</th><th>Подразделение</th><th>Должность</th>'
-    +'<th>Номер пропуска</th><th>График работы</th></tr></thead><tbody>'
+    +'<th>Номер пропуска</th><th>Таб. № 1С</th><th>График работы</th></tr></thead><tbody>'
     + items.map(x=>'<tr><td><div class="person" data-uid="'+x.user_ptr+'"><div class="avatar">'+esc(initials(x.fio))+'</div>'
       +'<div style="min-width:0"><div class="nm">'+esc(x.fio)+'</div></div></div></td>'
       +'<td class="tag">'+esc(x.group||'')+'</td><td class="tag">'+esc(x.position||'')+'</td>'
       +'<td class="mono tag">'+esc(x.number||'')+'</td>'
+      +'<td class="mono tag">'+(x.tab_number? esc(x.tab_number) : '<span class="dim">—</span>')+'</td>'
       +'<td class="mono">'+(x.schedule_start? esc(x.schedule_start)+'–'+esc(x.schedule_end) : '<span class="dim">не задан</span>')+'</td></tr>').join('')
     +'</tbody></table>';
 }
@@ -2832,8 +2853,20 @@ function renderPerson(d){
     + '</div>';
 
   const dt=d.details||{};
+  const tabNo=(u.tab_number||'').trim();
+  const tabBox = canOperate()
+    ? '<div class="sched-edit">'
+      + '<div class="sched-t"><b>Табельный номер 1С</b>'
+      + '<span class="muted" style="font-size:var(--fs-xs)">своё, внутреннее; приходит из выгрузки 1С или вводится вручную</span>'
+      + '<span class="muted" id="mTabHint" style="margin-left:auto;font-size:var(--fs-s)">'+(tabNo?'сейчас: '+esc(tabNo):'не задан')+'</span></div>'
+      + '<div class="sched-row">'
+      + '<label>Номер<input id="mTabNo" autocomplete="off" value="'+esc(tabNo)+'" placeholder="например 00123"></label>'
+      + '<button class="primary" id="mTabSave">Сохранить номер</button>'
+      + '</div></div>'
+    : '';
   const detRows=[
     ['Номер пропуска', u.number||''],
+    ['Табельный номер 1С', tabNo],
     ['Номер карты', (u.number||'').indexOf('/')>=0 ? u.number.split('/')[1] : ''],
     ['UID карты', dt.number_u||''],
     ['Mifare', dt.number_mifare||''],
@@ -2865,7 +2898,7 @@ function renderPerson(d){
         +'<td class="num">'+(r.late?'<span class="badge late">+'+r.late+'</span>':'<span class="dim">—</span>')+'</td></tr>').join('')
       + '</tbody></table></div>'
     : '<div class="empty">Проходов за период нет</div>';
-  $('#mBody').innerHTML = photoBox + details + schBox + brkBox + absBox + chips + chart + table;
+  $('#mBody').innerHTML = photoBox + details + tabBox + schBox + brkBox + absBox + chips + chart + table;
 }
 $('#mBody').addEventListener('click', async (e)=>{
   const pre=e.target.closest('[data-sch]');
@@ -2947,6 +2980,17 @@ $('#mBody').addEventListener('click', async (e)=>{
       $('#mBrkHint').textContent=(d.breaks&&d.breaks.length)? 'сохранено: '+d.breaks.length : 'перерывы очищены';
       toast('Перерывы сохранены');
     }catch(err){ toast('Перерывы: '+err.message, true); }
+    return;
+  }
+  if(e.target.id==='mTabSave'){
+    const uid=$('#mBody').dataset.uid;
+    const val=($('#mTabNo').value||'').trim();
+    try{
+      const d=await postJSON('/api/employee-tab',{user_ptr:uid, tab_number:val});
+      $('#mTabHint').textContent = d.tab_number ? 'сейчас: '+d.tab_number : 'не задан';
+      toast(d.tab_number ? 'Табельный номер сохранён' : 'Табельный номер очищен');
+      if(typeof loadEmpTab==='function') loadEmpTab(true);
+    }catch(err){ toast('Номер 1С: '+err.message, true); }
     return;
   }
   if(e.target.id!=='mSchSave') return;
@@ -3417,6 +3461,35 @@ let ME={login:'',role:'viewer'};
 const canOperate = ()=>['admin','operator'].includes(ME.role);
 const isAdmin    = ()=>ME.role==='admin';
 
+/* ---------- табельные номера из 1С ---------- */
+let TAB_PLAN=null;
+function tabPlanRender(d){
+  const box=$('#tabImportList');
+  const rows=[];
+  (d.matched||[]).forEach(m=>rows.push('<tr><td>'+esc(m.fio)+'</td><td class="mono">'+esc(m.tab)+'</td>'
+    +'<td class="num"><span class="badge in">найден</span></td></tr>'));
+  (d.ambiguous||[]).forEach(a=>rows.push('<tr><td>'+esc(a.fio)+'</td><td class="mono">'+esc(a.tab)+'</td>'
+    +'<td class="num"><span class="badge late">несколько: '+esc((a.candidates||[]).join(', '))+'</span></td></tr>'));
+  (d.unmatched||[]).forEach(u=>rows.push('<tr><td>'+esc(u.fio)+'</td><td class="mono">'+esc(u.tab)+'</td>'
+    +'<td class="num"><span class="badge out">не найден</span></td></tr>'));
+  box.innerHTML='<table><thead><tr><th>ФИО из 1С</th><th>Табельный</th><th class="num">Результат</th></tr></thead><tbody>'
+    + rows.join('') + '</tbody></table>';
+}
+async function tabImportRun(apply){
+  const text=$('#tabImportText').value.trim();
+  if(!text){ toast('Вставьте выгрузку из 1С', true); return; }
+  try{
+    const d=await postJSON('/api/import/tab',{text, apply:!!apply});
+    tabPlanRender(d);
+    const n=(d.matched||[]).length, u=(d.unmatched||[]).length, a=(d.ambiguous||[]).length;
+    $('#tabImportHint').textContent='строк: '+(d.rows||0)+' · найдено: '+n+' · не найдено: '+u+' · неоднозначно: '+a
+      + (apply? ' · записано: '+(d.applied||0) : '');
+    $('#tabImportApply').disabled = !n;
+    TAB_PLAN=d;
+    if(apply){ toast('Записано номеров: '+(d.applied||0)); loadEmpTab(true); }
+  }catch(e){ toast('Импорт: '+e.message, true); }
+}
+
 /* ---------- оформление панели ---------- */
 const THEMES=[
   {id:'classic', name:'Как сейчас', note:'синий акцент, карточки с тенями',
@@ -3457,6 +3530,9 @@ function applyTheme(t, save){
   }
 }
 
+$('#tabImportCheck').onclick=()=>tabImportRun(false);
+$('#tabImportApply').onclick=()=>tabImportRun(true);
+
 async function loadMe(){
   try{
     ME = await api('/api/me');
@@ -3465,6 +3541,7 @@ async function loadMe(){
     const isAdmin = ME.role==='admin';
     if(btn) btn.style.display='';                     // оформление доступно всем
     const adm=$('#admCards'); if(adm) adm.style.display = isAdmin ? '' : 'none';
+    const tic=$('#tabImportCard'); if(tic) tic.style.display = isAdmin ? '' : 'none';
     const ml2=$('#meLogin2'); if(ml2) ml2.textContent = ME.login+' · '+ME.roleTitle;
     const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
     const ea=$('#empAdd'); if(ea) ea.style.display = (ME.role==='admin'?'':'none');

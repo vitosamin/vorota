@@ -272,7 +272,8 @@ CREATE TABLE IF NOT EXISTS users (
     group_ptr  INTEGER,
     position   TEXT,
     deleted    INTEGER DEFAULT 0,
-    visitor    INTEGER DEFAULT 0
+    visitor    INTEGER DEFAULT 0,
+    tab_number TEXT
 );
 CREATE TABLE IF NOT EXISTS groups (
     group_ptr INTEGER PRIMARY KEY,
@@ -334,6 +335,13 @@ def connect():
 
 def _migrate(con):
     """Добавить недостающие колонки в существующие таблицы."""
+    try:
+        ucols = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
+        if ucols and "tab_number" not in ucols:
+            con.execute("ALTER TABLE users ADD COLUMN tab_number TEXT")
+            con.commit()
+    except Exception:                            # noqa: BLE001
+        pass
     try:
         cols = {r["name"] for r in con.execute("PRAGMA table_info(passes)")}
     except Exception:                            # noqa: BLE001
@@ -980,7 +988,7 @@ def test_times_map(con):
 def _user_names(con):
     out = {}
     for r in con.execute("SELECT u.user_ptr, u.number, u.last_name, u.first_name, u.father_name,"
-                         " u.position, u.deleted, u.visitor, g.name AS grp"
+                         " u.position, u.deleted, u.visitor, u.tab_number, g.name AS grp"
                          " FROM users u LEFT JOIN groups g ON g.group_ptr=u.group_ptr"):
         fio = " ".join(x for x in (r["last_name"], r["first_name"], r["father_name"]) if x).strip()
         out[r["user_ptr"]] = {
@@ -991,6 +999,7 @@ def _user_names(con):
             "group": r["grp"] or "Без подразделения",
             "deleted": bool(r["deleted"]),
             "visitor": bool(r["visitor"]),
+            "tab_number": (r["tab_number"] or "").strip(),
         }
     for tp in con.execute("SELECT id, fio, position, group_name, number FROM test_people"):
         out[-int(tp["id"])] = {"user_ptr": -int(tp["id"]), "number": tp["number"] or "",
@@ -1821,6 +1830,27 @@ def build_remove_card_sql(card):
             "DELETE FROM [Users] WHERE [Number]='%s'\r\n" % (number, number))
 
 
+def card_owner(con, card):
+    """Кто владеет картой по локальной картотеке: None или dict(сотрудник).
+
+    Нужен, чтобы отзыв/удаление пропуска не стёр из Gate запись живого сотрудника.
+    """
+    digits = re.sub(r"\W+", "", card or "")
+    if not digits:
+        return None
+    for r in con.execute("SELECT user_ptr, number, last_name, first_name, father_name,"
+                         " deleted, visitor FROM users"):
+        if re.sub(r"\W+", "", r["number"] or "") == digits:
+            if r["deleted"] or r["visitor"]:
+                continue
+            if not ((r["last_name"] or "").strip() or (r["first_name"] or "").strip()):
+                continue
+            return {"user_ptr": r["user_ptr"],
+                    "fio": " ".join(x for x in (r["last_name"], r["first_name"],
+                                                r["father_name"]) if x).strip()}
+    return None
+
+
 def queue_remove_card(card):
     """Убрать карту из Gate и перезапустить службу, чтобы её забыли контроллеры."""
     name = "rm_%s.sql" % re.sub(r"\W+", "", card)
@@ -2007,6 +2037,7 @@ def employees(con, group=None, include_visitors=False):
             continue
         s2 = sched.get(pid)
         out.append({"user_ptr": pid, "fio": u["fio"], "number": u["number"],
+                    "tab_number": u.get("tab_number") or "",
                     "group": u["group"], "position": u["position"],
                     "schedule_start": s2[0] if s2 else "",
                     "schedule_end": s2[1] if s2 else "",
@@ -2275,6 +2306,96 @@ def person_history(con, user_ptr, from_day, to_day):
 
 
 
+def set_tab_number(con, user_ptr, value):
+    """Табельный номер из 1С — вводится вручную или приходит из выгрузки 1С."""
+    value = (value or "").strip()[:32]
+    with _lock:
+        con.execute("UPDATE users SET tab_number=? WHERE user_ptr=?", (value or None, int(user_ptr)))
+        con.commit()
+    return value
+
+
+def _norm_fio(v):
+    v = (v or "").lower().replace("ё", "е")
+    v = re.sub(r"[^а-яa-z\s]", " ", v)
+    return re.sub(r"\s+", " ", v).strip()
+
+
+def parse_tab_import(text):
+    """Разобрать выгрузку из 1С: строки «ФИО; табельный» (табуляция, ; или ,).
+
+    Заголовок необязателен: колонки ищутся по словам «фио/сотрудник» и
+    «табельн/таб/код/номер»; если заголовка нет — берём первые две колонки.
+    """
+    rows = []
+    for raw in (text or "").splitlines():
+        line = raw.rstrip("\r")
+        if not line.strip():
+            continue
+        cells = [c.strip().strip('"') for c in re.split(r"\t|;|,(?![^(]*\))", line)]
+        if len(cells) < 2:
+            continue
+        rows.append(cells)
+    if not rows:
+        return []
+    head = [c.lower() for c in rows[0]]
+    i_fio = next((i for i, c in enumerate(head)
+                  if "фио" in c or "сотрудник" in c or "физлицо" in c or "наименован" in c), None)
+    i_tab = next((i for i, c in enumerate(head)
+                  if "табельн" in c or c.startswith("таб") or c in ("код", "номер")), None)
+    body = rows
+    if i_fio is not None and i_tab is not None:
+        body = rows[1:]
+    else:
+        i_fio, i_tab = 0, 1
+        if not any(ch.isdigit() for ch in rows[0][1] if True) and any(ch.isdigit() for ch in rows[0][0]):
+            i_fio, i_tab = 1, 0
+    out = []
+    for cells in body:
+        if max(i_fio, i_tab) >= len(cells):
+            continue
+        fio = cells[i_fio].strip()
+        tab = cells[i_tab].strip()
+        if fio and tab:
+            out.append({"fio": fio, "tab": tab})
+    return out
+
+
+def import_tab_numbers(con, rows, apply=False):
+    """Сопоставить выгрузку 1С с сотрудниками по ФИО и проставить табельные номера."""
+    users = _user_names(con)
+    by_full, by_short = {}, {}
+    for pid, u in users.items():
+        if pid <= 0 or u["deleted"] or u["visitor"]:
+            continue
+        by_full.setdefault(_norm_fio(u["fio"]), []).append(pid)
+        parts = u["fio"].split()
+        if len(parts) >= 2:
+            short = _norm_fio(parts[0] + " " + " ".join(x[0] for x in parts[1:] if x))
+            by_short.setdefault(short, []).append(pid)
+    plan, unmatched, ambiguous = [], [], []
+    for r in rows:
+        fio, tab = r["fio"], r["tab"]
+        key = _norm_fio(fio)
+        hits = by_full.get(key) or []
+        if not hits:
+            short = " ".join(w for w in key.split() if w)
+            hits = by_short.get(short) or []
+        if len(hits) == 1:
+            pid = hits[0]
+            plan.append({"fio": users[pid]["fio"], "tab": tab, "user_ptr": pid,
+                         "was": users[pid].get("tab_number") or ""})
+            if apply:
+                set_tab_number(con, pid, tab)
+        elif not hits:
+            unmatched.append({"fio": fio, "tab": tab})
+        else:
+            ambiguous.append({"fio": fio, "tab": tab,
+                              "candidates": [users[p]["fio"] for p in hits]})
+    return {"matched": plan, "unmatched": unmatched, "ambiguous": ambiguous,
+            "applied": len(plan) if apply else 0}
+
+
 def users_report(con, group=None, search=None, include_deleted=False, user_ptr=None):
     """Отчёт о пользователях: табельный, ФИО, подразделение, должность, последний проход."""
     users = _user_names(con)
@@ -2288,7 +2409,8 @@ def users_report(con, group=None, search=None, include_deleted=False, user_ptr=N
             continue
         if search:
             needle = search.lower()
-            if needle not in u["fio"].lower() and needle not in u["number"].lower():
+            hay = (u["fio"] + " " + u["number"] + " " + (u.get("tab_number") or "")).lower()
+            if needle not in hay:
                 continue
         wanted.append(pid)
     # «последний проход» берём точечно по индексу ix_events_last: два GROUP BY
@@ -2309,6 +2431,7 @@ def users_report(con, group=None, search=None, include_deleted=False, user_ptr=N
             "user_ptr": pid, "number": u["number"], "fio": u["fio"],
             "group": u["group"], "position": u["position"],
             "status": "Гость" if u["visitor"] else ("Удалён" if u["deleted"] else "Работает"),
+            "tab_number": u.get("tab_number") or "",
             "last_used": (lt[11:19] if lt else ""), "last_day": (lt[:10] if lt else ""),
             "last_unit": last_unit.get(pid, ""),
         })
@@ -2738,12 +2861,25 @@ def pass_create(con, data, created_by=""):
     return result
 
 
+def _may_remove_card(con, p):
+    """Можно ли убирать ключ из Gate по этому пропуску.
+
+    Нельзя, если карта принадлежит действующему сотруднику или пользователя в
+    Gate создавали не мы (нет задания) — иначе удалится живая запись картотеки.
+    """
+    if (p.get("gate_state") or "") == "employee":
+        return False
+    if not (p.get("gate_job") or "").strip():
+        return False
+    return card_owner(con, p.get("card")) is None
+
+
 def pass_revoke(con, pid):
     p = pass_get(con, pid)
     with _lock:
         con.execute("UPDATE passes SET status='revoked' WHERE id=?", (int(pid),))
         con.commit()
-    if p and (p.get("card") or "").strip():
+    if p and (p.get("card") or "").strip() and _may_remove_card(con, p):
         try:
             queue_remove_card(p["card"])      # ключ должен исчезнуть и в контроллерах
         except Exception:                     # noqa: BLE001
@@ -2756,7 +2892,7 @@ def pass_delete(con, pid):
     with _lock:
         con.execute("DELETE FROM passes WHERE id=?", (int(pid),))
         con.commit()
-    if p and (p.get("card") or "").strip():
+    if p and (p.get("card") or "").strip() and _may_remove_card(con, p):
         try:
             queue_remove_card(p["card"])
         except Exception:                     # noqa: BLE001

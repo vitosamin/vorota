@@ -253,7 +253,7 @@ def live_buf_worker():
 NOTE = "учтены личные графики работы и перерывы (обед)"
 
 COLS_1C = [
-    ("number", "ТабельныйНомер"),
+    ("tab_number", "ТабельныйНомер"),      # номер из 1С, не номер карты
     ("fio", "ФИО"),
     ("group", "Подразделение"),
     ("position", "Должность"),
@@ -265,6 +265,7 @@ COLS_1C = [
     ("late", "ОпозданиеМин"),
     ("early", "РаннийУходМин"),
     ("points", "КонтрольныеТочки"),
+    ("number", "НомерПропуска"),
 ]
 
 COLS_SUM = [
@@ -316,13 +317,15 @@ COLS_ABS = [
 
 # Печатный вид подробного отчёта: ключи те же, что в файле 1С, но заголовок
 # «Номер пропуска» (в CSV для 1С оставляем «ТабельныйНомер» — это формат обмена).
-COLS_REPORT = [(k, "НомерПропуска" if k == "number" else t) for k, t in COLS_1C]
+COLS_REPORT = ([("number", "НомерПропуска"), ("tab_number", "ТабельныйНомер1С")]
+               + [(k, t) for k, t in COLS_1C if k not in ("number", "tab_number")])
 
 # Заголовки для печати и Excel — человеческие, с пробелами.
 # В CSV для 1С остаются «слитные» имена: это формат обмена, его не трогаем.
 PRETTY_COLS = {
     "ТабельныйНомер": "Табельный номер",
     "НомерПропуска": "Номер пропуска",
+    "ТабельныйНомер1С": "Табельный номер 1С",
     "ФИО": "ФИО",
     "Подразделение": "Подразделение",
     "Должность": "Должность",
@@ -1139,6 +1142,8 @@ class Handler(BaseHTTPRequestHandler):
         to = q.get("to") or frm
         view = q.get("view")
         con = gate.connect()
+        self._tab_numbers = {pid: u.get("tab_number") or ""
+                             for pid, u in gate._user_names(con).items()}
         if view == "absent":
             rows = gate.absent(con, frm, to, group=q.get("group"), search=q.get("search"),
                                user_ptr=q.get("user_ptr") or None, point=qpoints(q))
@@ -1156,12 +1161,16 @@ class Handler(BaseHTTPRequestHandler):
                                shift_start=q.get("shift_start"), shift_end=q.get("shift_end"),
                                user_ptr=q.get("user_ptr") or None)
         con.close()
+        tabs = getattr(self, "_tab_numbers", {})
+        for r in rows:
+            r["tab_number"] = tabs.get(r.get("user_ptr"), "")
         if view == "summary":
             return gate.attendance_summary(rows), COLS_SUM, frm, to
         return rows, COLS_REPORT, frm, to
 
     def export_1c(self, q):
         rows, cols, frm, to = self._export_rows(q)
+        cols = COLS_1C
         enc = q.get("enc", "cp1251")
         sep = {"tab": "\t", "comma": ",", "semicolon": ";"}.get(q.get("sep", "semicolon"), ";")
         dec = q.get("dec", ",")
@@ -1884,6 +1893,43 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True, "absences": res})
             except (ValueError, TypeError) as exc:
                 return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
+        if path == "/api/employee-tab":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            con = gate.connect()
+            try:
+                uid = int(payload.get("user_ptr") or 0)
+                val = gate.set_tab_number(con, uid, payload.get("tab_number") or "")
+                return self.send_json({"ok": True, "tab_number": val})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
+        if path == "/api/import/tab":
+            user = self.require_admin()
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            text = payload.get("text") or ""
+            apply = bool(payload.get("apply"))
+            con = gate.connect()
+            try:
+                rows = gate.parse_tab_import(text)
+                if not rows:
+                    return self.send_json({"error": "не разобрал ни одной строки — нужен вид «ФИО; табельный»"}, code=400)
+                res = gate.import_tab_numbers(con, rows, apply=apply)
+                res["rows"] = len(rows)
+                return self.send_json(res)
             finally:
                 con.close()
         if path == "/api/employee-breaks":
