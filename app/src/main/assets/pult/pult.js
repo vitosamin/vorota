@@ -325,8 +325,6 @@
       '<button class="linkrow danger" type="button" onclick="hideHome(\'' + esc(d.id) + '\')">' +
         '<span class="linklabel">' + ic('EyeOff', 16) + 'Убрать с главного</span>' + ic('ChevronRight', 16) + '</button>' +
       '<button class="linkrow" type="button" onclick="editDevice(\'' + esc(d.id) + '\')">Настройки устройства ' + ic('ChevronRight', 16) + '</button>' +
-      '<div class="sheet-footer"><button class="collapse-btn" type="button" onclick="closeSheet()">' +
-        ic('ChevronDown', 16) + 'Свернуть</button></div>' +
       '</aside>';
     return html;
   }
