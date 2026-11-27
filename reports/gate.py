@@ -3004,8 +3004,16 @@ def pass_create(con, data, created_by=""):
     if not visitor:
         raise ValueError("укажите ФИО посетителя или номер карты")
     visit = (data.get("visit_date") or dt.date.today().isoformat()).strip()
-    valid_to = (data.get("valid_to") or visit).strip()
-    if valid_to < visit:
+    term = (data.get("term") or "").strip()
+    if term == "forever":
+        valid_to = ""                    # бессрочно: снимаем только отзывом
+    elif (data.get("valid_to") or "").strip():
+        valid_to = data["valid_to"].strip()
+    elif term == "date":
+        raise ValueError("укажите дату, до которой действует пропуск")
+    else:
+        valid_to = visit                 # по умолчанию — только день приёма
+    if valid_to and valid_to < visit:
         raise ValueError("срок действия раньше даты приёма")
     doors = data.get("doors") or []
     if isinstance(doors, str):

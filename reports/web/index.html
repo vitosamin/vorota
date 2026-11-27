@@ -816,6 +816,13 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <div><label class="f">Подразделение</label><select id="passHost"></select></div>
           <div><label class="f">Цель визита</label><input id="passPurpose" autocomplete="off" placeholder="доставка, ремонт, встреча"></div>
           <div><label class="f">Дата приёма</label><input type="date" id="passVisit"></div>
+          <div><label class="f">Срок действия</label>
+            <select id="passTerm">
+              <option value="day">только в день приёма</option>
+              <option value="date">до даты…</option>
+              <option value="forever">бессрочно, до отзыва</option>
+            </select></div>
+          <div id="passToWrap" style="display:none"><label class="f">Действует до</label><input type="date" id="passTo"></div>
           <div><label class="f">Карта</label>
             <div class="cardcap">
               <input id="passCard" autocomplete="off" placeholder="введите номер карты">
@@ -3303,7 +3310,7 @@ function renderPasses(items){
         +'<td class="mono">'+esc(it.number)+'</td>'
         +'<td>'+who+card+'</td>'
         +'<td class="mono">'+esc(it.visit_date||'')+'</td>'
-        +'<td class="mono">'+esc(it.valid_to||'')+'</td>'
+        +'<td class="mono">'+(it.valid_to? esc(it.valid_to) : '<span class="dim">бессрочно</span>')+'</td>'
         +'<td class="tag">'+esc(it.schedule_text||'—')+'</td>'
         +'<td class="tag">'+doors+'</td>'
         +'<td>'+gateCell(it)+'</td>'
@@ -3342,6 +3349,11 @@ $('#passByCard').onchange=()=>{
   $('#passCard').placeholder = on ? 'номер карты — обязателен' : 'введите номер карты';
 };
 
+$('#passTerm').onchange=()=>{
+  const t=$('#passTerm').value;
+  $('#passToWrap').style.display = (t==='date' ? '' : 'none');
+  if(t==='date' && !$('#passTo').value) $('#passTo').value=$('#passVisit').value||todayISO();
+};
 $('#passFilter').onclick=loadPasses;
 $('#passAdd').onclick=async()=>{
   const payload={
@@ -3353,6 +3365,8 @@ $('#passAdd').onclick=async()=>{
     purpose:$('#passPurpose').value.trim(),
     card:normCard($('#passCard').value),
     visit_date:$('#passVisit').value,
+    term:$('#passTerm').value,
+    valid_to:($('#passTerm').value==='date' ? $('#passTo').value : ''),
     doors:mselValues('#passDoors'),
     schedule:passWorkSchedule(),
     breaks:passBreaksValue()
@@ -3365,6 +3379,7 @@ $('#passAdd').onclick=async()=>{
     ['#passVisitor','#passPos','#passDoc','#passPurpose','#passCard']
       .forEach(x=>$(x).value='');
     $('#passOrg').selectedIndex=0;
+    $('#passTerm').value='day'; $('#passToWrap').style.display='none'; $('#passTo').value='';
     $('#passHost').selectedIndex=0;
     passBreaksRender([]);                    // одна пустая строка перерыва
     MSEL['#passDoors'] && MSEL['#passDoors'].clear() && mselUpdate('#passDoors');
