@@ -354,3 +354,22 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
 
 /* Карточка открывается на половину экрана, содержимое прокручивается */
 .sheet { height: 50%; max-height: 50%; }
+
+/* Вход/Выход — та же форма и высота, что у «Открыть», но двумя сегментами */
+.seg {
+  gap: 0;
+  margin-top: 16px;
+  padding: 0;
+  height: 64px;
+  background: var(--surface2);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.seg button {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  font-size: 15px;
+}
+.seg button + button { border-left: 1px solid var(--line-soft); }
