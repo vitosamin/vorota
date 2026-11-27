@@ -477,7 +477,7 @@ public class MainActivity extends Activity {
     }
 
     private String pultAddress(Device d) {
-        if (d.isGate()) return hostOf(cfg.getGateUrl());
+        if (d.isGate()) return hostOf(cfg.getGateUrl().trim().isEmpty() ? d.address : cfg.getGateUrl());
         if (Device.SRC_HA.equals(d.source)) return hostOf(cfg.getHaUrl());
         return hostOf(d.address);
     }
@@ -1381,8 +1381,14 @@ public class MainActivity extends Activity {
         return b;
     }
 
+    /** Адрес моста: для Gate-IP всегда из настроек, а не из старой карточки. */
+    private String gateBase(Device d) {
+        String cfgUrl = cfg.getGateUrl().trim();
+        return HaClient.normalizeBase(d.isGate() && !cfgUrl.isEmpty() ? cfgUrl : d.address);
+    }
+
     private void onTapDir(Device d, String dir) {
-        final String base = HaClient.normalizeBase(d.address);
+        final String base = gateBase(d);
         if (base.isEmpty()) { toast("Укажите адрес моста"); return; }
         final String token = cfg.getGateToken();
         if (token.isEmpty()) { askGateKey(null); return; }
@@ -1956,7 +1962,7 @@ public class MainActivity extends Activity {
                 Map<String, Boolean> gateAuthBases = new HashMap<>();
                 for (Device d : snapshot) {
                     if (!d.isGate()) continue;
-                    String base = HaClient.normalizeBase(d.address);
+                    String base = gateBase(d);
                     if (base.isEmpty()) { results.put(d.id, new Status(Status.UNKNOWN, "Не настроено")); continue; }
                     if (gateToken.isEmpty()) {
                         // Ключ ещё не введён: мост ответит отказом, поэтому спрашиваем один раз.
