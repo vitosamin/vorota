@@ -546,6 +546,7 @@ public class MainActivity extends Activity {
                 arr.put(o);
             }
             JSONObject root = new JSONObject();
+            root.put("checking", false);
             root.put("devices", arr);
             pultWeb.evaluateJavascript("window.pultState(" + root.toString() + ")", null);
         } catch (Exception ignored) {

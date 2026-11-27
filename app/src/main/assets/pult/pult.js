@@ -106,6 +106,7 @@
   function conn() {
     var ds = devices();
     if (!state.data) return { text: 'проверка', danger: false };
+    if (state.data.checking) return { text: 'проверка', danger: false };
     if (!ds.length) return { text: 'нет точек', danger: true };
     var online = ds.filter(function (d) { return isOnline(d); }).length;
     return online ? { text: 'на связи', danger: false } : { text: 'нет связи', danger: true };
@@ -238,7 +239,8 @@
         return {
           label: 'Открыть ' + (dir === 'out' ? 'выход' : 'вход'),
           onclick: 'sheetOpenDir(\'' + esc(d.id) + '\',\'' + dir + '\')',
-          disabled: !isOnline(d)
+          // Не ждём опроса статуса: мост сам ответит ошибкой, если недоступен.
+          disabled: false
         };
       }
       return { label: 'Настроить', onclick: 'editDevice(\'' + esc(d.id) + '\')', disabled: false };
@@ -394,6 +396,7 @@
 
   window.pultState = function (data) {
     if (!state.data || !data || !data.devices) return;
+    state.data.checking = false;
     var prev = {};
     for (var i = 0; i < state.data.devices.length; i++) prev[state.data.devices[i].id] = state.data.devices[i];
     var changed = false;
