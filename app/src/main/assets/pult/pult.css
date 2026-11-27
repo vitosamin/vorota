@@ -349,3 +349,23 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
 /* Перетаскивание точек за долгое нажатие */
 .list.reordering { touch-action: none; }
 .row.dragging { position: relative; z-index: 5; opacity: .92; background: var(--surface2); box-shadow: 0 12px 32px rgb(0 0 0 / .35); }
+
+/* Кнопка «Порядок» и лист сортировки */
+.section-right { display: inline-flex; align-items: center; gap: 12px; }
+.sort-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .04em;
+}
+.sheet.sort-sheet { height: 64%; max-height: 64%; }
+.sort-list { margin-top: 14px; }
+.sort-row {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 56px; padding: 8px 0; border-top: 1px solid var(--line-soft);
+}
+.sort-row:last-child { border-bottom: 1px solid var(--line-soft); }
+.sort-row.dragging { opacity: .92; background: var(--surface2); box-shadow: 0 10px 26px rgb(0 0 0 / .3); }
+.sort-grip { width: 30px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--muted); touch-action: none; cursor: grab; }
+.sort-main { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.sort-main .row-name { color: var(--text); font-size: 15px; font-weight: 500; }
+.sort-main .row-sub { color: var(--faint); font-size: 11px; text-transform: lowercase; }

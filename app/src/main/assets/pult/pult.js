@@ -3,7 +3,7 @@
 
   var MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   var JKEY = 'pult_journal_v1';
-  var state = { data: null, tab: 0, sheet: null, sheetDir: 'in', filter: 'all', hiddenPanel: false };
+  var state = { data: null, tab: 0, sheet: null, sheetDir: 'in', filter: 'all', hiddenPanel: false, sortOpen: false };
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function esc(v) {
@@ -146,7 +146,8 @@
     renderHeader();
     renderTabs();
     renderScreen();
-    if (state.hiddenPanel) renderHiddenPanel();
+    if (state.sortOpen) renderSortSheet();
+    else if (state.hiddenPanel) renderHiddenPanel();
     else if (state.sheet) renderSheet();
     else $('#sheetRoot').innerHTML = '';
   }
@@ -216,66 +217,15 @@
     var html = hero ? heroHtml(hero) : '';
     if (rest.length) {
       html += '<div class="section"><span class="eyebrow">' + (hero ? 'Ещё точки' : 'Точки') + '</span>' +
-        '<span class="mono count">' + ('0' + rest.length).slice(-2) + '</span></div>' +
+        '<span class="section-right"><span class="mono count">' + ('0' + rest.length).slice(-2) + '</span>' +
+        '<button class="sort-btn" type="button" onclick="openSort()">' + ic('ArrowUpDown', 14) + 'Порядок</button></span></div>' +
         '<div class="list">' + rest.map(rowHtml).join('') + '</div>';
     }
     if (hidden.length) html += hiddenLink(hidden.length);
     $('#screen').innerHTML = html;
-    bindReorder();
   }
 
-  function bindReorder() {
-    var list = document.querySelector('#screen .list');
-    if (!list) return;
-    var timer = null, dragging = null, startX = 0, startY = 0, pid = null, suppressClick = false;
-    function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
-    function down(e) {
-      var row = e.target && e.target.closest ? e.target.closest('.row') : null;
-      if (!row || !list.contains(row) || (e.button !== undefined && e.button !== 0)) return;
-      startX = e.clientX; startY = e.clientY; pid = e.pointerId;
-      clearTimer();
-      timer = setTimeout(function () {
-        dragging = row;
-        row.classList.add('dragging');
-        list.classList.add('reordering');
-        try { row.setPointerCapture(pid); } catch (err) {}
-      }, 360);
-    }
-    function move(e) {
-      if (!dragging) {
-        if (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8) clearTimer();
-        return;
-      }
-      e.preventDefault();
-      var el = document.elementFromPoint(e.clientX, e.clientY);
-      var target = el && el.closest ? el.closest('.row') : null;
-      if (target && target !== dragging && target.parentNode === list) {
-        var rect = target.getBoundingClientRect();
-        if (e.clientY > rect.top + rect.height / 2) list.insertBefore(dragging, target.nextSibling);
-        else list.insertBefore(dragging, target);
-      }
-    }
-    function up() {
-      clearTimer();
-      if (!dragging) return;
-      var ids = [];
-      var rows = list.querySelectorAll('.row[data-id]');
-      for (var i = 0; i < rows.length; i++) ids.push(rows[i].getAttribute('data-id'));
-      dragging.classList.remove('dragging');
-      list.classList.remove('reordering');
-      dragging = null;
-      suppressClick = true;
-      setTimeout(function () { suppressClick = false; }, 350);
-      bridge('reorder', ids.join(','));
-    }
-    list.addEventListener('pointerdown', down);
-    list.addEventListener('pointermove', move, { passive: false });
-    list.addEventListener('pointerup', up);
-    list.addEventListener('pointercancel', up);
-    list.addEventListener('click', function (e) {
-      if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
-    }, true);
-  }
+
 
   function sheetDirs(d) {
     var dirs = [];
@@ -472,10 +422,11 @@
 
   window.switchTab = function (tab) {
     if (tab === 2) { openSettings(); return; }
-    var hadSheet = state.sheet != null || state.hiddenPanel;
+    var hadSheet = state.sheet != null || state.hiddenPanel || state.sortOpen;
     state.tab = tab;
     state.sheet = null;
     state.hiddenPanel = false;
+    state.sortOpen = false;
     $('#sheetRoot').innerHTML = '';
     if (hadSheet) bridge('sheet', false);
     render();
@@ -526,6 +477,84 @@
   window.editDevice = function (id) { closeSheet(); bridge('edit', id); };
   window.openSettings = function () { bridge('settings'); };
   window.openRefresh = function () { bridge('refresh'); };
+
+  function renderSortSheet() {
+    var ds = devices().filter(function (d) { return !d.hidden; });
+    if (ds.length < 2) { closeSort(); return; }
+    var rows = ds.map(function (d) {
+      return '<div class="sort-row" data-id="' + esc(d.id) + '">' +
+        '<span class="sort-grip" title="Перетащить">' + ic('GripVertical', 18) + '</span>' +
+        '<span class="sort-main"><span class="row-name">' + esc(d.name) + '</span>' +
+        '<span class="row-sub">' + esc(cardSub(d)) + '</span></span></div>';
+    }).join('');
+    $('#sheetRoot').innerHTML = '<div class="scrim" onclick="closeSort()"></div><aside class="sheet sort-sheet">' +
+      '<div class="grab" onclick="closeSort()"></div>' +
+      '<div class="sheet-head"><div><div class="eyebrow">Главный экран</div><h3>Порядок точек</h3></div></div>' +
+      '<p class="meta">Перетащите точку за ручку.</p>' +
+      '<div class="sort-list">' + rows + '</div>' +
+      '<button class="linkrow" type="button" onclick="closeSort()">Готово ' + ic('ChevronRight', 16) + '</button></aside>';
+    bindSortDrag();
+    bindSheetDrag();
+  }
+
+  function bindSortDrag() {
+    var list = document.querySelector('#sheetRoot .sort-list');
+    if (!list) return;
+    var dragging = null, pid = null;
+    function down(e) {
+      var grip = e.currentTarget;
+      var row = grip.closest ? grip.closest('.sort-row') : null;
+      if (!row) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      dragging = row;
+      pid = e.pointerId;
+      row.classList.add('dragging');
+      try { grip.setPointerCapture(pid); } catch (err) {}
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var target = el && el.closest ? el.closest('.sort-row') : null;
+      if (target && target !== dragging && target.parentNode === list) {
+        var rect = target.getBoundingClientRect();
+        if (e.clientY > rect.top + rect.height / 2) list.insertBefore(dragging, target.nextSibling);
+        else list.insertBefore(dragging, target);
+      }
+    }
+    function up() {
+      if (!dragging) return;
+      dragging.classList.remove('dragging');
+      dragging = null;
+      pid = null;
+      var ids = [];
+      var rows = list.querySelectorAll('.sort-row[data-id]');
+      for (var i = 0; i < rows.length; i++) ids.push(rows[i].getAttribute('data-id'));
+      bridge('reorder', ids.join(','));
+    }
+    var grips = list.querySelectorAll('.sort-grip');
+    for (var i = 0; i < grips.length; i++) {
+      grips[i].addEventListener('pointerdown', down);
+      grips[i].addEventListener('pointermove', move, { passive: false });
+      grips[i].addEventListener('pointerup', up);
+      grips[i].addEventListener('pointercancel', up);
+    }
+  }
+
+  window.openSort = function () {
+    state.sheet = null;
+    state.hiddenPanel = false;
+    state.sortOpen = true;
+    renderSortSheet();
+    bridge('sheet', true);
+  };
+  window.closeSort = function () {
+    state.sortOpen = false;
+    $('#sheetRoot').innerHTML = '';
+    bridge('sheet', false);
+    render();
+  };
 
   function renderHiddenPanel() {
     var hidden = devices().filter(function (d) { return d.hidden; });
@@ -580,7 +609,9 @@
   }
 
   function closeTopSheet() {
-    if (state.hiddenPanel) closeHidden(); else closeSheet();
+    if (state.sortOpen) closeSort();
+    else if (state.hiddenPanel) closeHidden();
+    else closeSheet();
   }
 
   function bindSheetDrag() {
@@ -626,6 +657,7 @@
 
 
   window.pultBack = function () {
+    if (state.sortOpen) { closeSort(); return true; }
     if (state.hiddenPanel) { closeHidden(); return true; }
     if (state.sheet) { closeSheet(); return true; }
     return false;
