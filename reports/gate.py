@@ -1837,11 +1837,29 @@ def expire_passes(con):
     """
     today = dt.date.today().isoformat()
     rows = con.execute(
-        "SELECT id, card FROM passes WHERE status='active'"
+        "SELECT id, card, gate_state, gate_job FROM passes WHERE status='active'"
         " AND valid_to IS NOT NULL AND valid_to <> '' AND valid_to < ?"
         " AND card IS NOT NULL AND card <> ''", (today,)).fetchall()
     done = 0
     for r in rows:
+        # Ключ убираем ТОЛЬКО если пользователя в Gate создали мы (есть задание).
+        # Если карта принадлежит действующему сотруднику («employee») или задание
+        # не выдавалось, удаление стёрло бы человека из картотеки Gate.
+        if (r["gate_state"] or "") == "employee" or not (r["gate_job"] or "").strip():
+            with _lock:
+                con.execute("UPDATE passes SET status='expired' WHERE id=?", (r["id"],))
+                con.commit()
+            continue
+        digits = re.sub(r"\W+", "", r["card"] or "")
+        owner = con.execute(
+            "SELECT last_name, first_name FROM users"
+            " WHERE replace(replace(number,'/',''),' ','')=? AND deleted=0 AND visitor=0",
+            (digits,)).fetchone()
+        if owner and ((owner["last_name"] or "").strip() or (owner["first_name"] or "").strip()):
+            with _lock:
+                con.execute("UPDATE passes SET status='expired' WHERE id=?", (r["id"],))
+                con.commit()
+            continue
         # карту убираем, только если она не нужна другому действующему пропуску
         busy = con.execute(
             "SELECT COUNT(*) c FROM passes WHERE card=? AND id<>? AND status='active'"
