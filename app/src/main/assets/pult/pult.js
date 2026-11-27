@@ -105,9 +105,10 @@
 
   function conn() {
     var ds = devices();
-    if (!state.data) return { text: 'проверка', danger: false };
-    if (state.data.checking) return { text: 'проверка', danger: false };
+    if (!state.data) return { text: 'на связи', danger: false };
     if (!ds.length) return { text: 'нет точек', danger: true };
+    // Во время первого опроса не показываем «проверка»: как раньше — сразу «на связи».
+    if (state.data.checking) return { text: 'на связи', danger: false };
     var online = ds.filter(function (d) { return isOnline(d); }).length;
     return online ? { text: 'на связи', danger: false } : { text: 'нет связи', danger: true };
   }
