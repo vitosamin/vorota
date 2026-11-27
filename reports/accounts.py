@@ -84,7 +84,7 @@ def public(users=None):
     for u in data["users"]:
         out.append({"login": u.get("login", ""), "name": u.get("name", ""),
                     "role": u.get("role", "viewer"), "roleTitle": ROLE_TITLES.get(u.get("role"), "—"),
-                    "created": u.get("created", "")})
+                    "created": u.get("created", ""), "tabs": u.get("tabs") or []})
     out.sort(key=lambda x: (x["role"] != "admin", x["login"]))
     return out
 
@@ -169,6 +169,37 @@ def set_role(login, role):
         target["role"] = role
         save(data)
     return True
+
+
+# Вкладки панели: id как в nav.tabs. Пустой список = все доступные.
+TAB_IDS = ("mon", "ana", "rep", "pas", "emp", "kpp", "rpt", "tsh", "brk",
+           "ev", "pf", "acc", "exp", "set", "test")
+
+
+def tabs_of(login):
+    """Вкладки, разрешённые пользователю. Пусто — значит все."""
+    u = get(login) or {}
+    tabs = u.get("tabs") or []
+    if not isinstance(tabs, list):
+        return []
+    return [t for t in tabs if t in TAB_IDS]
+
+
+def set_tabs(login, tabs):
+    clean = [t for t in (tabs or []) if t in TAB_IDS]
+    if len(clean) == len(TAB_IDS):
+        clean = []
+    with _lock:
+        data = load()
+        for u in data["users"]:
+            if u.get("login", "").lower() == (login or "").lower():
+                if clean:
+                    u["tabs"] = clean
+                else:
+                    u.pop("tabs", None)
+                save(data)
+                return clean
+    raise ValueError("пользователь не найден")
 
 
 def theme_of(login):

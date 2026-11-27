@@ -991,6 +991,7 @@ class Handler(BaseHTTPRequestHandler):
                                "roleTitle": accounts.ROLE_TITLES.get(role, "—"),
                                "name": acc.get("name", user),
                                "theme": accounts.theme_of(user),
+                               "tabs": accounts.tabs_of(user),
                                "gate_user": gate.SMB_USER if role == "admin" else None})
 
     def api_accounts(self):
@@ -1031,6 +1032,9 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/accounts/password":
                 accounts.set_password(payload.get("login"), payload.get("password"))
                 return self.send_json({"ok": True})
+            if path == "/api/accounts/tabs":
+                tabs = accounts.set_tabs(payload.get("login"), payload.get("tabs") or [])
+                return self.send_json({"ok": True, "items": accounts.public(), "tabs": tabs})
             if path == "/api/accounts/role":
                 accounts.set_role(payload.get("login"), payload.get("role"))
                 return self.send_json({"ok": True, "items": accounts.public()})

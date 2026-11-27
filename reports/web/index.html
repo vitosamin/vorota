@@ -391,6 +391,12 @@ tbody tr.pick td{background:var(--accent-soft)}
 .notice>span.ni{display:inline-flex;align-items:center;color:var(--accent)}
 .notice>span.ni.warn{color:var(--amber)}
 button .ic,a.btn .ic{opacity:.9}
+/* Выбор вкладок в настройках пользователя */
+.tabs-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 14px}
+.tabs-pick .tp{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);
+  border-radius:var(--radius-s);background:var(--bg);cursor:pointer;font-size:var(--fs-m)}
+.tabs-pick .tp:hover{border-color:var(--border-hi)}
+
 /* Справочники: должности и подразделения */
 .refs-list{display:flex;flex-direction:column;max-height:260px;overflow:auto;
   border:1px solid var(--line);border-radius:var(--radius-s);background:var(--bg)}
@@ -2124,6 +2130,7 @@ setInterval(tickClock,1000); tickClock();
 /* ===================== вкладки ===================== */
 function openTab(name, remember){
   if(name==='set' && $('#tabBtnSet').style.display==='none') name='mon';
+  if(ME && ME.tabs && ME.tabs.length && !ME.tabs.includes(name)) return;
   const btn=Array.from(document.querySelectorAll('nav.tabs button')).find(x=>x.dataset.tab===name);
   if(!btn) return;
   document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
@@ -3587,6 +3594,49 @@ let ME={login:'',role:'viewer'};
 const canOperate = ()=>['admin','operator'].includes(ME.role);
 const isAdmin    = ()=>ME.role==='admin';
 
+/* ---------- доступ к вкладкам по пользователю ---------- */
+const TAB_TITLES=[
+  ['mon','Мониторинг'], ['ana','Аналитика'], ['rep','Посещаемость'], ['pas','Пропуска'],
+  ['emp','Сотрудники'], ['kpp','КПП'], ['rpt','Отчёты'], ['tsh','Табель'],
+  ['brk','Перекуры'], ['ev','Журнал'], ['pf','План-факт'], ['acc','Доступы'],
+  ['exp','Выгрузка в 1С'], ['set','Настройки'], ['test','Тест'],
+];
+function tabsDialog(login){
+  const it=(window.ACC_ITEMS||[]).find(x=>x.login===login)||{};
+  const cur=new Set(it.tabs&&it.tabs.length ? it.tabs : TAB_TITLES.map(t=>t[0]));
+  $('#modal').classList.add('open');
+  $('#mTitle').textContent='Вкладки: '+login;
+  $('#mSub').textContent='снимите галочки, чтобы скрыть разделы';
+  $('#mBody').innerHTML='<div class="tabs-pick">'
+    + TAB_TITLES.map(([id,title])=>'<label class="tp"><input type="checkbox" value="'+id+'"'
+        +(cur.has(id)?' checked':'')+'><span>'+esc(title)+'</span></label>').join('')
+    + '</div><div class="row-actions"><button class="primary" id="tpSave">Сохранить</button>'
+    + '<button id="tpAll" type="button">Все</button>'
+    + '<span class="muted" id="tpHint" style="font-size:var(--fs-s);align-self:center">'
+    + (it.tabs&&it.tabs.length?'ограничено: '+it.tabs.length+' из '+TAB_TITLES.length:'сейчас доступны все')
+    + '</span></div>';
+  $('#tpAll').onclick=()=>document.querySelectorAll('.tabs-pick input').forEach(c=>c.checked=true);
+  $('#tpSave').onclick=async()=>{
+    const picked=[...document.querySelectorAll('.tabs-pick input:checked')].map(c=>c.value);
+    try{
+      const d=await postJSON('/api/accounts/tabs',{login, tabs:picked});
+      ACC_ITEMS=d.items||[]; renderAccounts(ACC_ITEMS, ROLES_CACHE);
+      $('#modal').classList.remove('open');
+      toast('Вкладки сохранены: '+picked.length+' из '+TAB_TITLES.length);
+    }catch(e){ toast('Вкладки: '+e.message, true); }
+  };
+}
+function applyTabAccess(tabs){
+  const allowed=(tabs&&tabs.length)? new Set(tabs) : null;
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    const t=b.dataset.tab;
+    if(!allowed){ b.dataset.hiddenByRole=''; return; }
+    const ok=allowed.has(t);
+    b.style.display = ok ? '' : 'none';
+    b.dataset.hiddenByRole = ok ? '' : '1';
+  });
+}
+
 /* ---------- справочники: должности и подразделения ---------- */
 const REFS={position:[], department:[]};
 function refsRender(kind){
@@ -3639,6 +3689,7 @@ document.addEventListener('click', async (e)=>{
 });
 
 /* ---------- табельные номера из 1С ---------- */
+let ACC_ITEMS=[];
 let TAB_PLAN=null;
 function tabPlanRender(d){
   const box=$('#tabImportList');
@@ -3752,6 +3803,7 @@ async function loadMe(){
   try{
     ME = await api('/api/me');
     if(ME.theme && ME.theme!==(document.documentElement.dataset.theme||'classic')) applyTheme(ME.theme, false);
+
     const btn=$('#tabBtnSet');
     const isAdmin = ME.role==='admin';
     if(btn) btn.style.display='';                     // оформление доступно всем
@@ -3765,6 +3817,9 @@ async function loadMe(){
     const ml=$('#meLogin'); if(ml) ml.textContent=ME.login+' · '+ME.roleTitle;
     if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }
     const gu=$('#gateUser'); if(gu && ME.gate_user) gu.value=ME.gate_user;
+    // доступ к вкладкам применяем последним: иначе показ «Настроек» перетрёт ограничение
+    applyTabAccess(ME.tabs);
+    if(ME.tabs && ME.tabs.length && !ME.tabs.includes(state.tab||'mon')) openTab(ME.tabs[0], false);
   }catch(e){ /* тихо */ }
 }
 
@@ -3772,7 +3827,8 @@ async function loadAccounts(){
   try{
     const d=await api('/api/accounts');
     ROLES_CACHE=d.roles||[];
-    renderAccounts(d.items||[], ROLES_CACHE);
+    ACC_ITEMS=d.items||[];
+    renderAccounts(ACC_ITEMS, ROLES_CACHE);
   }catch(e){ const el=$('#accList'); if(el) el.innerHTML='<div class="empty">'+esc(e.message)+'</div>'; }
 }
 
@@ -3788,6 +3844,7 @@ function renderAccounts(items, roles){
       + '<td><select class="accRoleSel" style="width:auto;min-width:140px">'+roleOpts(u.role)+'</select></td>'
       + '<td class="num mono tag">'+esc((u.created||'').slice(0,10))+'</td>'
       + '<td><button class="accPwd" style="min-height:28px;padding:4px 10px;font-size:var(--fs-s)">Пароль</button> '
+      + '<button class="accTabs" style="min-height:28px;padding:4px 10px;font-size:var(--fs-s)">Вкладки</button> '
       + '<button class="accDel" style="min-height:28px;padding:4px 10px;font-size:var(--fs-s)">Удалить</button></td></tr>').join('')
     + '</tbody></table>';
 
@@ -3796,6 +3853,7 @@ function renderAccounts(items, roles){
     tr.querySelector('.accRoleSel').onchange=(e)=>saveRole(login, e.target.value);
     tr.querySelector('.accDel').onclick=()=>delAccount(login);
     tr.querySelector('.accPwd').onclick=()=>pwdInline(tr, login);
+    tr.querySelector('.accTabs').onclick=()=>tabsDialog(login);
   });
 }
 
