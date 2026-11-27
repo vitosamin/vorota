@@ -888,6 +888,7 @@ class Handler(BaseHTTPRequestHandler):
         html = PASS_TEMPLATE.format(
             number=esc(p["number"]), visitor=esc(p["visitor"]), org=esc(p.get("org") or "—"),
             position=esc(p.get("position") or "—"), schedule=esc(p.get("schedule_text") or "—"),
+            breaks=esc(p.get("breaks_text") or "—"),
             card=esc(p.get("card") or "—"),
             document=esc(p.get("document") or "—"), phone=esc(p.get("phone") or "—"),
             host=esc(p.get("host") or "—"), purpose=esc(p.get("purpose") or "—"),
@@ -2016,13 +2017,12 @@ PASS_TEMPLATE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
   <div class="org">{position} · {org}</div>
   <table>
     <tr><td class="k">Дата приёма</td><td><b>{visit}</b></td></tr>
-    <tr><td class="k">Действует до</td><td><b>{valid_to}</b></td></tr>
-    <tr><td class="k">График</td><td>{schedule}</td></tr>
-    <tr><td class="k">Карта</td><td class="mono">{card}</td></tr>
-    <tr><td class="k">К кому</td><td>{host}</td></tr>
+    <tr><td class="k">График работы</td><td><b>{schedule}</b></td></tr>
+    <tr><td class="k">Перерывы</td><td>{breaks}</td></tr>
+    <tr><td class="k">Подразделение</td><td>{host}</td></tr>
     <tr><td class="k">Цель</td><td>{purpose}</td></tr>
+    <tr><td class="k">Карта</td><td class="mono">{card}</td></tr>
     <tr><td class="k">Документ</td><td>{document}</td></tr>
-    <tr><td class="k">Телефон</td><td>{phone}</td></tr>
   </table>
   <div class="doors"><b>Двери:</b> {doors}</div>
   <div class="foot"><span>Выдал: {author} · {created}</span><span>Подпись ________</span></div>

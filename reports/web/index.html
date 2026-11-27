@@ -371,6 +371,17 @@ tbody tr.pick td{background:var(--accent-soft)}
 .notice>span.ni{display:inline-flex;align-items:center;color:var(--accent)}
 .notice>span.ni.warn{color:var(--amber)}
 button .ic,a.btn .ic{opacity:.9}
+/* Пропуска: график работы и перерывы */
+.worktime{display:flex;align-items:center;gap:8px}
+.worktime input{width:100%}
+.worktime .dash{color:var(--muted)}
+.breaks{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.brk-row{display:flex;align-items:center;gap:8px}
+.brk-row input{width:110px}
+.brk-row input.brk-t{width:170px}
+.brk-row .brk-del{height:var(--control-h-s);min-width:32px;padding:0 8px;color:var(--muted)}
+.brk-add{align-self:flex-start;height:var(--control-h-s);padding:0 12px;font-size:var(--fs-s)}
+
 /* КПП: лента слева, карточка справа */
 .kpp-grid{display:grid;grid-template-columns:1fr 400px;gap:12px;align-items:start}
 .kpp-main{min-width:0}
@@ -781,41 +792,36 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
           <div style="grid-column:1/-1;margin:-4px 0 2px">
             <label class="chk"><input type="checkbox" id="passByCard"> выдать по номеру карты — ФИО можно не заполнять</label>
           </div>
-          <div><label class="f">Должность</label><input id="passPos" autocomplete="off" placeholder="водитель, менеджер…"></div>
+          <div><label class="f">Должность</label><select id="passPos"></select></div>
           <div><label class="f">Организация</label><input id="passOrg" autocomplete="off" placeholder="ООО Ромашка"></div>
           <div><label class="f">Документ</label><input id="passDoc" autocomplete="off" placeholder="паспорт 40 15 123456"></div>
-          <div><label class="f">Телефон</label><input id="passPhone" autocomplete="off" placeholder="+7 …"></div>
-          <div><label class="f">К кому</label><input id="passHost" autocomplete="off" placeholder="отдел, сотрудник"></div>
+          <div><label class="f">Подразделение</label><select id="passHost"></select></div>
           <div><label class="f">Цель визита</label><input id="passPurpose" autocomplete="off" placeholder="доставка, ремонт, встреча"></div>
           <div><label class="f">Дата приёма</label><input type="date" id="passVisit"></div>
-          <div><label class="f">Действует до</label><input type="date" id="passTo"></div>
           <div><label class="f">Карта</label>
             <div class="cardcap">
               <input id="passCard" autocomplete="off" placeholder="приложите карту">
               <button type="button" id="passCardRead" title="Считать с USB-считывателя"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2" /> <line x1="2" x2="22" y1="10" y2="10" /> <path d="M6 14h2" /></svg></button>
             </div></div>
-          <div style="grid-column:1/-1"><label class="f">График доступа</label>
-            <div class="sched">
-              <button type="button" class="wdbtn" data-d="0">Пн</button>
-              <button type="button" class="wdbtn" data-d="1">Вт</button>
-              <button type="button" class="wdbtn" data-d="2">Ср</button>
-              <button type="button" class="wdbtn" data-d="3">Чт</button>
-              <button type="button" class="wdbtn" data-d="4">Пт</button>
-              <button type="button" class="wdbtn" data-d="5">Сб</button>
-              <button type="button" class="wdbtn" data-d="6">Вс</button>
-              <span class="sep"></span>
-              <input type="time" class="tm" id="passTimeFrom" value="08:00">
+          <div><label class="f">График работы</label>
+            <div class="worktime">
+              <input type="time" id="passWorkFrom" value="08:00">
               <span class="dash">—</span>
-              <input type="time" class="tm" id="passTimeTo" value="20:00">
-              <label class="chk" style="margin-left:8px"><input type="checkbox" id="passAllDays"> круглосуточно</label>
+              <input type="time" id="passWorkTo" value="17:00">
+            </div>
+          </div>
+          <div style="grid-column:1/-1"><label class="f">Перерывы</label>
+            <div class="breaks" id="passBreaks"></div>
+            <button type="button" class="brk-add" id="passBreakAdd">+ добавить перерыв</button>
+            <div class="muted" style="font-size:var(--fs-s);margin-top:6px">
+              График и перерывы сохраняются за сотрудником и учитываются в табеле, Т-13 и отчётах.
             </div>
           </div>
           <div><label class="f">Двери</label>
-            <div class="msel" id="passDoors" data-ph="все двери">
+            <div class="msel" id="passDoors" data-ph="все двери" data-unit="дверей">
               <button type="button" class="msel-btn"><span class="msel-txt">все двери</span><i><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></i></button>
               <div class="msel-list"></div>
             </div></div>
-          <div><label class="f">Примечание</label><input id="passNote" autocomplete="off" placeholder="необязательно"></div>
         </div>
         <div class="row-actions">
           <button class="primary" id="passAdd">Выдать пропуск</button>
@@ -2263,7 +2269,7 @@ function mselUpdate(sel){
   const n=set.size;
   txt.textContent = n===0 ? (root.dataset.ph||'все точки')
                   : n===1 ? Array.from(set)[0]
-                  : 'выбрано точек: '+n;
+                  : 'выбрано '+((root.dataset.unit||'точек'))+': '+n;
   root.classList.toggle('on', n>0);
   root.querySelectorAll('.msel-list input[type=checkbox]').forEach(cb=>{ cb.checked=set.has(cb.value); });
   const all=root.querySelector('.msel-list .mi.all');
@@ -3046,27 +3052,39 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkVe
 
 
 /* ---------- пропуска ---------- */
-let PASS_DAYS = new Set([0,1,2,3,4,5,6]);
 let DOORS = [];
 
-function passDaysRender(){
-  document.querySelectorAll('.sched .wdbtn').forEach(b=>{
-    b.classList.toggle('on', PASS_DAYS.has(+b.dataset.d));
-    b.onclick=()=>{
-      const d=+b.dataset.d;
-      if(PASS_DAYS.has(d)) PASS_DAYS.delete(d); else PASS_DAYS.add(d);
-      passDaysRender();
-    };
+/* Перерывы в пропуске: строки «с–по, название» */
+function brkRow(start, end, title){
+  const row=document.createElement('div');
+  row.className='brk-row';
+  row.innerHTML='<input type="time" class="brk-s"><span class="dash" style="color:var(--muted)">—</span>'
+    + '<input type="time" class="brk-e"><input class="brk-t" placeholder="обед">'
+    + '<button type="button" class="brk-del" title="Убрать перерыв">✕</button>';
+  row.querySelector('.brk-s').value=start||'';
+  row.querySelector('.brk-e').value=end||'';
+  row.querySelector('.brk-t').value=title||'';
+  row.querySelector('.brk-del').onclick=()=>row.remove();
+  return row;
+}
+function passBreaksRender(items){
+  const box=$('#passBreaks'); if(!box) return;
+  box.innerHTML='';
+  (items&&items.length?items:[{start:'',end:'',title:''}]).forEach(it=>{
+    box.appendChild(brkRow(it.start, it.end, it.title));
   });
 }
-
-function passSchedule(){
-  const all=$('#passAllDays').checked;
-  const from=$('#passTimeFrom').value, to=$('#passTimeTo').value;
-  const days=Array.from(PASS_DAYS).sort((a,b)=>a-b);
-  return {days: all ? [0,1,2,3,4,5,6] : days,
-          from: all ? '' : from,
-          to:   all ? '' : to};
+function passBreaksValue(){
+  return Array.from(document.querySelectorAll('#passBreaks .brk-row')).map(r=>({
+    start:r.querySelector('.brk-s').value,
+    end:r.querySelector('.brk-e').value,
+    title:r.querySelector('.brk-t').value.trim()
+  })).filter(b=>b.start && b.end);
+}
+function passWorkSchedule(){
+  const from=$('#passWorkFrom').value, to=$('#passWorkTo').value;
+  if(!from || !to) return null;
+  return {days:[0,1,2,3,4,5,6], from, to};
 }
 
 function normCard(v){
@@ -3097,7 +3115,37 @@ async function loadDoors(){
   try{
     DOORS = await api('/api/doors');
     buildMsel('#passDoors', DOORS.map(d=>({unit:d.name})));
+    passDoorsAll();                       // по умолчанию — все двери
   }catch(e){ DOORS=[]; }
+  loadPassRefs();
+}
+function passDoorsAll(){
+  if(!MSEL['#passDoors']) return;
+  MSEL['#passDoors'] = new Set(DOORS.map(d=>d.name));
+  mselUpdate('#passDoors');
+}
+/* Должности — из картотеки, подразделения — из справочника Gate */
+let PASS_REFS_OK=false;
+async function loadPassRefs(){
+  if(PASS_REFS_OK) return;
+  PASS_REFS_OK=true;
+  try{
+    const [groups, users] = await Promise.all([api('/api/groups'), api('/api/users')]);
+    const norm = v => (v || '').replace(/\s+/g, ' ').trim();
+    const common = ['Посетитель', 'Подрядчик', 'Курьер', 'Водитель'];
+    const rest = new Set();
+    (users.items || []).forEach(u => { const p = norm(u.position); if (p && !common.includes(p)) rest.add(p); });
+    const sel = $('#passPos');
+    sel.innerHTML = '<option value="">—</option>'
+      + common.map(p => '<option value="' + esc(p) + '">' + esc(p) + '</option>').join('')
+      + Array.from(rest).sort((a, b) => a.localeCompare(b, 'ru'))
+          .map(p => '<option value="' + esc(p) + '">' + esc(p) + '</option>').join('');
+    const deps = new Set();
+    (groups || []).forEach(g => { const v = norm(g); if (v) deps.add(v); });
+    $('#passHost').innerHTML = '<option value="">—</option>'
+      + Array.from(deps).sort((a, b) => a.localeCompare(b, 'ru'))
+          .map(g => '<option value="' + esc(g) + '">' + esc(g) + '</option>').join('');
+  }catch(e){ /* справочники не критичны */ }
 }
 
 let PASS_PENDING=0;
@@ -3212,23 +3260,23 @@ $('#passAdd').onclick=async()=>{
     position:$('#passPos').value.trim(),
     org:$('#passOrg').value.trim(),
     document:$('#passDoc').value.trim(),
-    phone:$('#passPhone').value.trim(),
-    host:$('#passHost').value.trim(),
+    host:$('#passHost').value,
     purpose:$('#passPurpose').value.trim(),
     card:normCard($('#passCard').value),
     visit_date:$('#passVisit').value,
-    valid_to:$('#passTo').value || $('#passVisit').value,
     doors:mselValues('#passDoors'),
-    schedule:passSchedule(),
-    note:$('#passNote').value.trim()
+    schedule:passWorkSchedule(),
+    breaks:passBreaksValue()
   };
   if(!payload.visitor && !payload.card){ toast('Укажите ФИО или номер карты', true); return; }
   if(!payload.doors.length){ toast('Двери не выбраны — пропуск будет только в реестре, ключ в Gate не создастся', true); }
   try{
     const d=await postJSON('/api/passes/add', payload);
     toast('Выдан пропуск '+d.pass.number+(d.pass.warning?' — '+d.pass.warning:''), !!d.pass.warning);
-    ['#passVisitor','#passPos','#passOrg','#passDoc','#passPhone','#passHost','#passPurpose','#passCard','#passNote']
+    ['#passVisitor','#passPos','#passOrg','#passDoc','#passPurpose','#passCard']
       .forEach(x=>$(x).value='');
+    $('#passHost').selectedIndex=0;
+    passBreaksRender([]);                    // одна пустая строка перерыва
     MSEL['#passDoors'] && MSEL['#passDoors'].clear() && mselUpdate('#passDoors');
     loadPasses();
     window.open('/print/pass?id='+d.pass.id,'_blank');
@@ -3592,11 +3640,12 @@ function initDates(){
   await loadMe();
   await loadStatus();
   setupCardReader();
-  passDaysRender();
+  passBreaksRender([]);
+  $('#passBreakAdd').onclick=()=>$('#passBreaks').appendChild(brkRow('','',''));
   $('#passVisit').value=todayISO();
-  $('#passTo').value=todayISO();
+
   $('#passFltFrom').value=todayISO();
-  $('#passAllDays').onchange=()=>{ $('#passTimeFrom').disabled=$('#passAllDays').checked; $('#passTimeTo').disabled=$('#passAllDays').checked; };
+
   if(!canOperate()){ const f=$('#passFormCard'); if(f) f.style.display='none'; }
   await loadRefs();
   await loadMon();

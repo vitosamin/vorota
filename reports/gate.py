@@ -338,7 +338,8 @@ def _migrate(con):
         cols = {r["name"] for r in con.execute("PRAGMA table_info(passes)")}
     except Exception:                            # noqa: BLE001
         return
-    for col in ("card", "position", "schedule", "gate_job", "gate_state", "gate_error"):
+    for col in ("card", "position", "schedule", "gate_job", "gate_state", "gate_error",
+                "breaks_json"):
         if cols and col not in cols:
             con.execute("ALTER TABLE passes ADD COLUMN %s TEXT" % col)
     try:
@@ -2422,6 +2423,13 @@ def _pass_row(row):
         d["schedule"] = json.loads(d.get("schedule") or "null") if d.get("schedule") else None
     except ValueError:
         d["schedule"] = None
+    try:
+        d["breaks"] = json.loads(d.get("breaks_json") or "[]") or []
+    except ValueError:
+        d["breaks"] = []
+    d["breaks_text"] = ", ".join("%s–%s%s" % (b.get("start", ""), b.get("end", ""),
+                                              (" " + b["title"]) if b.get("title") else "")
+                                 for b in d["breaks"]) or "—"
     d["schedule_text"] = schedule_text(d["schedule"])
     d["in_schedule"] = schedule_allows(d["schedule"])
     d["state"] = _pass_status(row)
@@ -2647,8 +2655,8 @@ def pass_create(con, data, created_by=""):
     with _lock:
         con.execute(
             "INSERT INTO passes(number,visitor,card,position,schedule,document,phone,org,host,purpose,visit_date,"
-            "valid_from,valid_to,doors,note,status,created_by,created_at)"
-            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "valid_from,valid_to,doors,note,status,created_by,created_at,breaks_json)"
+            " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (number, visitor, (data.get("card") or "").strip(),
              (data.get("position") or "").strip(),
              json.dumps(data.get("schedule"), ensure_ascii=False) if data.get("schedule") else None,
@@ -2656,9 +2664,22 @@ def pass_create(con, data, created_by=""):
              (data.get("org") or "").strip(), (data.get("host") or "").strip(),
              (data.get("purpose") or "").strip(), visit, visit, valid_to,
              json.dumps(doors, ensure_ascii=False), (data.get("note") or "").strip(),
-             "active", created_by, dt.datetime.now().isoformat(timespec="seconds")))
+             "active", created_by, dt.datetime.now().isoformat(timespec="seconds"),
+             json.dumps(data.get("breaks") or [], ensure_ascii=False)))
         con.commit()
         pid = con.execute("SELECT last_insert_rowid() i").fetchone()["i"]
+    def _keep_work(ptr):
+        """График работы и перерывы — в личные таблицы, их читают табель и отчёты."""
+        try:
+            sch = data.get("schedule") or {}
+            if sch.get("from") and sch.get("to"):
+                set_schedule(con, ptr, sch["from"], sch["to"])
+            items = data.get("breaks") or []
+            if items:
+                set_breaks(con, ptr, items)
+        except (ValueError, TypeError):
+            pass
+
     result = pass_get(con, pid)
     # если карта в формате Gate и выбраны двери — ставим задание агенту
     if card and card_to_gate(card) and (data.get("doors") or []):
@@ -2670,6 +2691,7 @@ def pass_create(con, data, created_by=""):
                     con.execute("UPDATE passes SET gate_state='employee', gate_error=? WHERE id=?",
                                 ("карта принадлежит сотруднику %s — новый пользователь не создаётся" % existing["fio"], pid))
                     con.commit()
+                _keep_work(existing["user_ptr"])      # график/перерывы — действующему сотруднику
                 return pass_get(con, pid)
             users = mdb_export(os.path.join(DATA, "config.mdb"), "Users")
             next_ptr = max((_int(u.get("UserPtr")) for u in users), default=0) + 1
@@ -2680,6 +2702,7 @@ def pass_create(con, data, created_by=""):
             with _lock:
                 con.execute("UPDATE passes SET gate_job=?, gate_state='sent' WHERE id=?", (job, pid))
                 con.commit()
+            _keep_work(next_ptr)                      # график/перерывы — новому сотруднику
             result = pass_get(con, pid)
         except Exception as exc:                 # noqa: BLE001
             with _lock:
