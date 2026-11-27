@@ -456,14 +456,14 @@
     if (!d.configured) { editDevice(id); return; }
     if (d.gate) { openSheet(id); return; }
     if (!isOnline(d)) return;
-    logEvent(id, d.name, pastAction(actionOf(d)) + ' · с приложения', 'ok');
+    logEvent(id, d.name, pastAction(actionOf(d)) + ' · запрос', 'quiet');
     bridge('open', id);
   };
   window.sheetOpenDir = function (id, dir) {
     var d = deviceById(id);
     if (!d) return;
     var word = dir === 'out' ? 'Выход' : 'Вход';
-    logEvent(id, d.name, word + ' · с приложения', 'ok');
+    logEvent(id, d.name, word + ' · запрос', 'quiet');
     bridge('openDir', id, dir);
   };
   window.editDevice = function (id) { closeSheet(); bridge('edit', id); };

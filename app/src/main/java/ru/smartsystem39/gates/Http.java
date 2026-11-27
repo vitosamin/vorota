@@ -45,6 +45,11 @@ public final class Http {
         return request("GET", url, null, null, false, 12000, 20000);
     }
 
+    /** Открытие двери: мост шевелит окно GateTerm, это может занять больше 9 секунд. */
+    public static Response getGate(String url) {
+        return request("GET", url, null, null, false, 15000, 45000);
+    }
+
     public static Response post(String url, String token, String json, boolean insecure) {
         return request("POST", url, token, json, insecure, 6000, 9000);
     }

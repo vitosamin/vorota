@@ -1393,8 +1393,8 @@ public class MainActivity extends Activity {
         final String token = cfg.getGateToken();
         if (token.isEmpty()) { askGateKey(null); return; }
         runCommand(() -> {
-            Http.Response r = Http.get(base + "/open?id=" + Uri.encode(d.gateId) + "&dir=" + dir
-                    + "&token=" + Uri.encode(token), null, false);
+            Http.Response r = Http.getGate(base + "/open?id=" + Uri.encode(d.gateId) + "&dir=" + dir
+                    + "&token=" + Uri.encode(token));
             if (authFailed(r)) {
                 ui.post(() -> askGateKey(getString(R.string.gate_key_bad)));
                 return getString(R.string.gate_key_bad);
@@ -1960,6 +1960,7 @@ public class MainActivity extends Activity {
                 boolean gateFailed = false, gateAuth = false, gateKeyMissing = false;
                 Map<String, Boolean> gateBases = new HashMap<>();
                 Map<String, Boolean> gateAuthBases = new HashMap<>();
+                Map<String, Boolean> gateCalibrated = new HashMap<>();
                 for (Device d : snapshot) {
                     if (!d.isGate()) continue;
                     String base = gateBase(d);
@@ -1977,12 +1978,23 @@ public class MainActivity extends Activity {
                         Http.Response r = Http.get(base + "/status?token=" + Uri.encode(gateToken), null, false);
                         ok = r.ok();
                         auth = !ok && authFailed(r);
+                        boolean calibrated = true;
+                        if (ok) {
+                            try {
+                                JSONObject body = new JSONObject(r.body);
+                                calibrated = body.optBoolean("calibrated", true);
+                            } catch (Exception ignored) {}
+                        }
                         gateBases.put(cacheKey, ok);
                         gateAuthBases.put(cacheKey, auth);
+                        gateCalibrated.put(cacheKey, calibrated);
                         if (auth) gateAuth = true;
                     }
                     if (ok) {
-                        results.put(d.id, new Status(Status.READY, "Доступен"));
+                        boolean calibrated = !Boolean.FALSE.equals(gateCalibrated.get(cacheKey));
+                        results.put(d.id, calibrated
+                                ? new Status(Status.READY, "Доступен")
+                                : new Status(Status.MOVING, "Не откалиброван"));
                     } else {
                         gateFailed = true;
                         results.put(d.id, new Status(Status.OFFLINE,
