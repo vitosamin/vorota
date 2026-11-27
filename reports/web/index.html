@@ -375,6 +375,16 @@ tbody tr.pick td{background:var(--accent-soft)}
 .notice>span.ni{display:inline-flex;align-items:center;color:var(--accent)}
 .notice>span.ni.warn{color:var(--amber)}
 button .ic,a.btn .ic{opacity:.9}
+/* Справочники: должности и подразделения */
+.refs-list{display:flex;flex-direction:column;max-height:260px;overflow:auto;
+  border:1px solid var(--line);border-radius:var(--radius-s);background:var(--bg)}
+.refs-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line2)}
+.refs-item:last-child{border-bottom:0}
+.refs-item .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.refs-item button{height:var(--control-h-s);min-width:28px;padding:0 8px;font-size:var(--fs-s)}
+.refs-item input{height:var(--control-h-s)}
+.refs-empty{padding:12px;color:var(--muted);font-size:var(--fs-s)}
+
 /* Пропуска: график работы и перерывы */
 .worktime{display:flex;align-items:center;gap:8px}
 .worktime input{width:100%}
@@ -1262,6 +1272,35 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
       </div>
     </div>
 
+    <div class="card" id="refsCard">
+      <div class="hd"><h3>Должности и подразделения</h3>
+        <span class="hint">списки для формы пропуска: можно переименовать, добавить и убрать; сотрудников это не удаляет</span></div>
+      <div class="bd">
+        <div class="grid2 eq">
+          <div>
+            <label class="f">Должности</label>
+            <div class="refs-list" id="refsPos"></div>
+            <div class="filters" style="grid-template-columns:1fr auto;margin-top:8px">
+              <input id="refsPosNew" placeholder="новая должность">
+              <button id="refsPosAdd">Добавить</button>
+            </div>
+          </div>
+          <div>
+            <label class="f">Подразделения</label>
+            <div class="refs-list" id="refsDep"></div>
+            <div class="filters" style="grid-template-columns:1fr auto;margin-top:8px">
+              <input id="refsDepNew" placeholder="новое подразделение">
+              <button id="refsDepAdd">Добавить</button>
+            </div>
+          </div>
+        </div>
+        <div class="muted" style="font-size:var(--fs-s);margin-top:10px">
+          Удаление пункта убирает его только из списка — у сотрудников и в выданных пропусках
+          значение остаётся, люди не удаляются.
+        </div>
+      </div>
+    </div>
+
     <div class="card" style="max-width:560px">
       <div class="hd"><h3>Мой пароль</h3><span class="hint" id="meLogin2"></span></div>
       <div class="bd">
@@ -2043,7 +2082,7 @@ function openTab(name, remember){
   if(name==='mon') loadMon();
   if(name==='ana') loadAnalytics();
   if(name==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
-  if(name==='set'){ if(ME && ME.role==='admin'){ ROLES_CACHE=[]; loadAccounts(); tabImportStatus(); } }
+  if(name==='set'){ if(ME && ME.role==='admin'){ ROLES_CACHE=[]; loadAccounts(); tabImportStatus(); refsLoad(); } }
   if(name==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
   if(name==='tsh') loadTimesheet();
   if(name==='brk') loadBreaks();
@@ -3179,25 +3218,15 @@ function passDoorsAll(){
 }
 /* Должности — из картотеки, подразделения — из справочника Gate */
 let PASS_REFS_OK=false;
-async function loadPassRefs(){
-  if(PASS_REFS_OK) return;
+async function loadPassRefs(force){
+  if(PASS_REFS_OK && !force) return;
   PASS_REFS_OK=true;
   try{
-    const [groups, users] = await Promise.all([api('/api/groups'), api('/api/users')]);
-    const norm = v => (v || '').replace(/\s+/g, ' ').trim();
-    const common = ['Посетитель', 'Подрядчик', 'Курьер', 'Водитель'];
-    const rest = new Set();
-    (users.items || []).forEach(u => { const p = norm(u.position); if (p && !common.includes(p)) rest.add(p); });
-    const sel = $('#passPos');
-    sel.innerHTML = '<option value="">—</option>'
-      + common.map(p => '<option value="' + esc(p) + '">' + esc(p) + '</option>').join('')
-      + Array.from(rest).sort((a, b) => a.localeCompare(b, 'ru'))
-          .map(p => '<option value="' + esc(p) + '">' + esc(p) + '</option>').join('');
-    const deps = new Set();
-    (groups || []).forEach(g => { const v = norm(g); if (v) deps.add(v); });
-    $('#passHost').innerHTML = '<option value="">—</option>'
-      + Array.from(deps).sort((a, b) => a.localeCompare(b, 'ru'))
-          .map(g => '<option value="' + esc(g) + '">' + esc(g) + '</option>').join('');
+    const [pos, dep] = await Promise.all([api('/api/refs?kind=position'), api('/api/refs?kind=department')]);
+    const opts = (items)=>'<option value="">—</option>'
+      + (items||[]).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    $('#passPos').innerHTML = opts(pos.items);
+    $('#passHost').innerHTML = opts(dep.items);
   }catch(e){ /* справочники не критичны */ }
 }
 
@@ -3469,6 +3498,57 @@ let ME={login:'',role:'viewer'};
 const canOperate = ()=>['admin','operator'].includes(ME.role);
 const isAdmin    = ()=>ME.role==='admin';
 
+/* ---------- справочники: должности и подразделения ---------- */
+const REFS={position:[], department:[]};
+function refsRender(kind){
+  const box=$(kind==='position' ? '#refsPos' : '#refsDep');
+  if(!box) return;
+  const items=REFS[kind]||[];
+  if(!items.length){ box.innerHTML='<div class="refs-empty">Список пуст — добавьте название</div>'; return; }
+  box.innerHTML=items.map(n=>
+    '<div class="refs-item" data-k="'+kind+'" data-n="'+esc(n)+'">'
+    + '<span class="n">'+esc(n)+'</span>'
+    + '<button title="Переименовать" data-act="ren">✎</button>'
+    + '<button title="Убрать из списка (сотрудников не удаляет)" data-act="del">✕</button></div>').join('');
+}
+async function refsLoad(){
+  try{
+    const [p,d]=await Promise.all([api('/api/refs?kind=position'),api('/api/refs?kind=department')]);
+    REFS.position=p.items||[]; REFS.department=d.items||[];
+    refsRender('position'); refsRender('department');
+    loadPassRefs(true);                 // обновляем списки в форме пропуска
+  }catch(e){ /* тихо */ }
+}
+async function refsSend(kind, action, name, new_name){
+  try{
+    const d=await postJSON('/api/refs',{kind, action, name, new_name});
+    REFS[kind]=d.items||[];
+    refsRender(kind); loadPassRefs(true);
+    return true;
+  }catch(e){ toast('Справочник: '+e.message, true); return false; }
+}
+document.addEventListener('click', async (e)=>{
+  const btn=e.target.closest('#refsPos .refs-item button, #refsDep .refs-item button');
+  if(!btn) return;
+  const row=btn.closest('.refs-item');
+  const kind=row.dataset.k, name=row.dataset.n;
+  if(btn.dataset.act==='del'){
+    if(!confirm('Убрать «'+name+'» из списка? Сотрудников это не удалит.')) return;
+    if(await refsSend(kind,'delete',name)) toast('Убрано из списка');
+    return;
+  }
+  const cur=row.querySelector('.n');
+  const inp=document.createElement('input');
+  inp.value=name; cur.replaceWith(inp); inp.focus(); inp.select();
+  const done=async(ok)=>{
+    const val=(inp.value||'').trim();
+    if(ok && val && val!==name){ if(await refsSend(kind,'rename',name,val)) toast('Переименовано'); }
+    else refsLoad();
+  };
+  inp.onkeydown=(ev)=>{ if(ev.key==='Enter') done(true); if(ev.key==='Escape') done(false); };
+  inp.onblur=()=>done(true);
+});
+
 /* ---------- табельные номера из 1С ---------- */
 let TAB_PLAN=null;
 function tabPlanRender(d){
@@ -3550,6 +3630,14 @@ async function tabImportStatus(){
     box.textContent='Автозагрузка из '+d.dir+'\\'+d.name+' — '+((d.state||'ещё не запускалась'));
   }catch(e){ /* тихо */ }
 }
+$('#refsPosAdd').onclick=async()=>{
+  const v=($('#refsPosNew').value||'').trim(); if(!v) return;
+  if(await refsSend('position','add',v)){ $('#refsPosNew').value=''; toast('Должность добавлена'); }
+};
+$('#refsDepAdd').onclick=async()=>{
+  const v=($('#refsDepNew').value||'').trim(); if(!v) return;
+  if(await refsSend('department','add',v)){ $('#refsDepNew').value=''; toast('Подразделение добавлено'); }
+};
 $('#tabImportCheck').onclick=()=>tabImportRun(false);
 $('#tabImportApply').onclick=()=>tabImportRun(true);
 
@@ -3562,6 +3650,7 @@ async function loadMe(){
     if(btn) btn.style.display='';                     // оформление доступно всем
     const adm=$('#admCards'); if(adm) adm.style.display = isAdmin ? '' : 'none';
     const tic=$('#tabImportCard'); if(tic) tic.style.display = isAdmin ? '' : 'none';
+    const rc=$('#refsCard'); if(rc) rc.style.display = isAdmin ? '' : 'none';
     const ml2=$('#meLogin2'); if(ml2) ml2.textContent = ME.login+' · '+ME.roleTitle;
     const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
     const ea=$('#empAdd'); if(ea) ea.style.display = (ME.role==='admin'?'':'none');

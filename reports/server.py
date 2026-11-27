@@ -547,6 +547,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.print_breaks(q)
             if path == "/api/prefs":
                 return self.api_prefs()
+            if path == "/api/refs":
+                kind = (q.get("kind") or "position").strip()
+                con = gate.connect()
+                try:
+                    return self.send_json({"kind": kind, "items": gate.refs_list(con, kind)})
+                finally:
+                    con.close()
             if path == "/api/import/tab":
                 con = gate.connect()
                 try:
@@ -1912,6 +1919,31 @@ class Handler(BaseHTTPRequestHandler):
                 items = payload.get("items") or []
                 res = gate.set_absences(con, uid, items)
                 return self.send_json({"ok": True, "absences": res})
+            except (ValueError, TypeError) as exc:
+                return self.send_json({"ok": False, "error": str(exc)}, code=400)
+            finally:
+                con.close()
+        if path == "/api/refs":
+            user = self.require_role("admin", "operator")
+            if not user:
+                return
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            act = payload.get("action") or ""
+            kind = (payload.get("kind") or "position").strip()
+            con = gate.connect()
+            try:
+                if act == "add":
+                    items = gate.refs_add(con, kind, payload.get("name"))
+                elif act == "delete":
+                    items = gate.refs_delete(con, kind, payload.get("name"))
+                elif act == "rename":
+                    items = gate.refs_rename(con, kind, payload.get("name"), payload.get("new_name"))
+                else:
+                    return self.send_json({"ok": False, "error": "неизвестное действие"}, code=400)
+                return self.send_json({"ok": True, "kind": kind, "items": items})
             except (ValueError, TypeError) as exc:
                 return self.send_json({"ok": False, "error": str(exc)}, code=400)
             finally:

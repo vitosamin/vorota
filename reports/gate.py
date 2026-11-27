@@ -275,6 +275,13 @@ CREATE TABLE IF NOT EXISTS users (
     visitor    INTEGER DEFAULT 0,
     tab_number TEXT
 );
+CREATE TABLE IF NOT EXISTS refs (
+    kind   TEXT NOT NULL,          -- position | department
+    name   TEXT NOT NULL,
+    ord    INTEGER DEFAULT 0,
+    PRIMARY KEY (kind, name)
+);
+
 CREATE TABLE IF NOT EXISTS groups (
     group_ptr INTEGER PRIMARY KEY,
     name      TEXT
@@ -2304,6 +2311,90 @@ def person_history(con, user_ptr, from_day, to_day):
             "summary": summary, "details": extra, "breaks": get_breaks(con, user_ptr),
             "absences": get_absences(con, user_ptr), "photo": get_photo(con, user_ptr)}
 
+
+
+REFS_KINDS = ("position", "department")
+REFS_DEFAULTS = {
+    "position": ["Посетитель", "Подрядчик", "Курьер", "Водитель"],
+    "department": [],
+}
+
+
+def refs_list(con, kind):
+    """Справочник панели: должности и подразделения для формы пропуска.
+
+    Заполняется один раз из картотеки Gate, дальше живёт сам по себе —
+    правки в списке не трогают ни сотрудников, ни картотеку.
+    """
+    if kind not in REFS_KINDS:
+        raise ValueError("неизвестный справочник")
+    rows = [r["name"] for r in con.execute(
+        "SELECT name FROM refs WHERE kind=? ORDER BY ord, name", (kind,)) if (r["name"] or "").strip()]
+    if rows:
+        return rows
+    seed = list(REFS_DEFAULTS.get(kind) or [])
+    try:
+        if kind == "position":
+            seen = {x.lower() for x in seed}
+            for u in _user_names(con).values():
+                p = (u["position"] or "").strip()
+                if p and p.lower() not in seen and not u["deleted"]:
+                    seed.append(p)
+                    seen.add(p.lower())
+        else:
+            seen = {x.lower() for x in seed}
+            for r in con.execute("SELECT name FROM groups ORDER BY name"):
+                g = (r["name"] or "").replace("\t", " ").strip()
+                if g and g.lower() not in seen:
+                    seed.append(g)
+                    seen.add(g.lower())
+    except Exception:                            # noqa: BLE001
+        pass
+    seed = seed[:400]
+    with _lock:
+        for i, name in enumerate(seed):
+            con.execute("INSERT OR IGNORE INTO refs(kind,name,ord) VALUES(?,?,?)",
+                        (kind, name[:80], i))
+        con.commit()
+    return refs_list(con, kind)
+
+
+def refs_add(con, kind, name):
+    name = (name or "").strip()[:80]
+    if not name:
+        raise ValueError("пустое название")
+    if kind not in REFS_KINDS:
+        raise ValueError("неизвестный справочник")
+    refs_list(con, kind)                      # засеять, если пусто
+    with _lock:
+        con.execute("INSERT OR IGNORE INTO refs(kind,name,ord) VALUES(?,?,999)", (kind, name))
+        con.commit()
+    return refs_list(con, kind)
+
+
+def refs_delete(con, kind, name):
+    """Убрать пункт из списка. Сотрудников и пропуска это не касается."""
+    if kind not in REFS_KINDS:
+        raise ValueError("неизвестный справочник")
+    with _lock:
+        con.execute("DELETE FROM refs WHERE kind=? AND name=?", (kind, (name or "").strip()))
+        con.commit()
+    return refs_list(con, kind)
+
+
+def refs_rename(con, kind, old_name, new_name):
+    """Переименовать пункт справочника; сотрудников не трогаем (для этого есть флаг)."""
+    old_name = (old_name or "").strip()
+    new_name = (new_name or "").strip()[:80]
+    if kind not in REFS_KINDS:
+        raise ValueError("неизвестный справочник")
+    if not old_name or not new_name:
+        raise ValueError("нужны старое и новое название")
+    with _lock:
+        con.execute("DELETE FROM refs WHERE kind=? AND name=?", (kind, old_name))
+        con.execute("INSERT OR IGNORE INTO refs(kind,name,ord) VALUES(?,?,999)", (kind, new_name))
+        con.commit()
+    return refs_list(con, kind)
 
 
 def set_tab_number(con, user_ptr, value):
