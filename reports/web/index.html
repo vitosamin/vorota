@@ -3154,7 +3154,7 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkVe
 let DOORS = [];
 
 /* Перерывы в пропуске: строки «с–по, название» */
-function brkRow(start, end, title){
+function brkRowEl(start, end, title){
   const row=document.createElement('div');
   row.className='brk-row';
   row.innerHTML='<input type="time" class="brk-s"><span class="dash" style="color:var(--muted)">—</span>'
@@ -3170,7 +3170,7 @@ function passBreaksRender(items){
   const box=$('#passBreaks'); if(!box) return;
   box.innerHTML='';
   (items&&items.length?items:[{start:'',end:'',title:''}]).forEach(it=>{
-    box.appendChild(brkRow(it.start, it.end, it.title));
+    box.appendChild(brkRowEl(it.start, it.end, it.title));
   });
 }
 function passBreaksValue(){
@@ -3854,7 +3854,7 @@ function initDates(){
   await loadStatus();
   setupCardReader();
   passBreaksRender([]);
-  $('#passBreakAdd').onclick=()=>$('#passBreaks').appendChild(brkRow('','',''));
+  $('#passBreakAdd').onclick=()=>$('#passBreaks').appendChild(brkRowEl('','',''));
   $('#passVisit').value=todayISO();
 
   $('#passFltFrom').value=todayISO();
