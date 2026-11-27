@@ -75,6 +75,8 @@
     <string name="ha_bad">%1$s</string>
     <string name="gate_section">Gate-IP</string>
     <string name="gate_url">Адрес моста Gate-IP</string>
+    <string name="gate_local_url">Локальный адрес (для дома)</string>
+    <string name="gate_local_hint">например, http://192.168.2.160:8099; пусто — только публичный</string>
     <string name="gate_token">Ключ доступа</string>
     <string name="gate_import">Загрузить двери</string>
     <string name="gate_loading">Загрузка списка дверей…</string>

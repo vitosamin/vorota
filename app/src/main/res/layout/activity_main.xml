@@ -304,6 +304,23 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="14dp"
+                            android:text="@string/gate_local_url" />
+
+                        <EditText
+                            android:id="@+id/gateLocalUrl"
+                            style="@style/Field"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:hint="@string/gate_local_hint"
+                            android:importantForAutofill="no"
+                            android:inputType="textUri" />
+
+                        <TextView
+                            style="@style/FieldLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
                             android:text="@string/gate_token" />
 
                         <EditText

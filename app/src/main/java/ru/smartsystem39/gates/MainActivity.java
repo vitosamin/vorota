@@ -18,7 +18,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.net.Uri;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
@@ -97,6 +103,7 @@ public class MainActivity extends Activity {
     private EditText haUrl;
     private EditText haToken;
     private EditText gateUrl;
+    private EditText gateLocalUrl;
     private EditText gateToken;
     private Button btnGateImport;
     private TextView gateStatus;
@@ -181,6 +188,7 @@ public class MainActivity extends Activity {
         haUrl = findViewById(R.id.haUrl);
         haToken = findViewById(R.id.haToken);
         gateUrl = findViewById(R.id.gateUrl);
+        gateLocalUrl = findViewById(R.id.gateLocalUrl);
         gateToken = findViewById(R.id.gateToken);
         btnGateImport = findViewById(R.id.btnGateImport);
         gateStatus = findViewById(R.id.gateStatus);
@@ -235,11 +243,18 @@ public class MainActivity extends Activity {
         });
 
         gateUrl.setText(cfg.getGateUrl());
+        gateLocalUrl.setText(cfg.getGateLocalUrl());
         gateToken.setText(cfg.getGateToken());
         gateUrl.addTextChangedListener(new SimpleWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 cfg.setGateUrl(s.toString().trim());
+            }
+        });
+        gateLocalUrl.addTextChangedListener(new SimpleWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                cfg.setGateLocalUrl(s.toString().trim());
             }
         });
         gateToken.addTextChangedListener(new SimpleWatcher() {
@@ -1381,10 +1396,70 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    /** Адрес моста: для Gate-IP всегда из настроек, а не из старой карточки. */
+    /** Адрес моста: дома — локальный, вне дома — публичный из настроек. */
     private String gateBase(Device d) {
-        String cfgUrl = cfg.getGateUrl().trim();
-        return HaClient.normalizeBase(d.isGate() && !cfgUrl.isEmpty() ? cfgUrl : d.address);
+        String publicUrl = cfg.getGateUrl().trim();
+        String local = cfg.getGateLocalUrl().trim();
+        if (local.isEmpty()) {
+            // Старые карточки хранят локальный адрес, которым мост открывался раньше.
+            String deviceHost = hostOnly(d.address);
+            if (d.isGate() && isPrivateHost(deviceHost)) local = d.address;
+        }
+        if (!local.isEmpty() && onHomeLan(local)) return HaClient.normalizeBase(local);
+        return HaClient.normalizeBase(!publicUrl.isEmpty() ? publicUrl : d.address);
+    }
+
+    private static String hostOnly(String address) {
+        try {
+            String base = HaClient.normalizeBase(address);
+            String host = Uri.parse(base).getHost();
+            return host == null ? "" : host;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static boolean isPrivateHost(String host) {
+        if (host == null || host.isEmpty()) return false;
+        try {
+            return InetAddress.getByName(host).isSiteLocalAddress();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Телефон в той же подсети, что и локальный адрес моста. */
+    private boolean onHomeLan(String url) {
+        String host = hostOnly(url);
+        if (!isPrivateHost(host)) return false;
+        try {
+            InetAddress bridge = InetAddress.getByName(host);
+            if (!(bridge instanceof Inet4Address)) return false;
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            Network active = cm == null ? null : cm.getActiveNetwork();
+            LinkProperties lp = active == null ? null : cm.getLinkProperties(active);
+            if (lp == null) return false;
+            for (LinkAddress la : lp.getLinkAddresses()) {
+                InetAddress local = la.getAddress();
+                if (local instanceof Inet4Address
+                        && sameV4Subnet((Inet4Address) local, (Inet4Address) bridge, la.getPrefixLength())) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private static boolean sameV4Subnet(Inet4Address a, Inet4Address b, int prefixLength) {
+        int bits = Math.max(0, Math.min(32, prefixLength));
+        int mask = bits == 0 ? 0 : (0xFFFFFFFF << (32 - bits));
+        return (v4ToInt(a) & mask) == (v4ToInt(b) & mask);
+    }
+
+    private static int v4ToInt(Inet4Address address) {
+        byte[] b = address.getAddress();
+        return ((b[0] & 0xFF) << 24) | ((b[1] & 0xFF) << 16)
+                | ((b[2] & 0xFF) << 8) | (b[3] & 0xFF);
     }
 
     private void onTapDir(Device d, String dir) {

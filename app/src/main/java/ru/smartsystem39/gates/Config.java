@@ -60,6 +60,16 @@ public class Config {
         sp.edit().putString("gate_url", v == null ? "" : v).apply();
     }
 
+    /** Необязательный локальный адрес моста — используется только в домашней сети. */
+    public String getGateLocalUrl() {
+        String v = sp.getString("gate_local_url", "");
+        return v == null ? "" : v.trim();
+    }
+
+    public void setGateLocalUrl(String v) {
+        sp.edit().putString("gate_local_url", v == null ? "" : v).apply();
+    }
+
     /** Ключ доступа к воротам. Пусто — человек его ещё не вводил. */
     public String getGateToken() {
         String v = sp.getString("gate_token", "");
