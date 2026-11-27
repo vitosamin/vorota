@@ -1257,7 +1257,14 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
       <div class="hd"><h3>Табельные номера из 1С</h3><span class="hint">вставьте выгрузку 1С: «ФИО; табельный номер»</span></div>
       <div class="bd">
         <div class="filters" style="grid-template-columns:1fr">
-          <div><label class="f">Выгрузка из 1С (CSV, скопировать и вставить)</label>
+          <div><label class="f">Файл выгрузки 1С (XML или CSV)</label>
+            <input type="file" id="tabImportFile" accept=".xml,.csv,.txt,text/xml,text/csv" style="display:none">
+            <button id="tabImportPick" type="button" style="width:100%;justify-content:flex-start">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5-5 5 5"/><path d="M12 5v12"/></svg>
+              <span id="tabImportPickTxt">Выбрать файл выгрузки…</span></button></div>
+        </div>
+        <div class="filters" style="grid-template-columns:1fr;margin-top:10px">
+          <div><label class="f">…или вставьте текст выгрузки</label>
             <textarea id="tabImportText" rows="6" placeholder="ФИО;Табельный номер&#10;Иванов Иван Иванович;00123&#10;Петрова Мария Сергеевна;00124"></textarea></div>
         </div>
         <div class="row-actions">
@@ -3617,6 +3624,24 @@ function applyTheme(t, save){
       .catch(()=>{ const n=$('#themeNote'); if(n) n.textContent='Оформление применено в этом браузере, но на сервер не сохранилось.'; });
   }
 }
+
+function tabImportReadFile(file){
+  if(!file) return;
+  const t=$('#tabImportPickTxt'); if(t) t.textContent=file.name;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const txt=String(rd.result||'');
+    $('#tabImportText').value=txt;
+    $('#tabImportHint').textContent='файл: '+file.name+' · '+(txt.length/1024).toFixed(0)+' КБ';
+    tabImportRun(false);
+  };
+  rd.readAsText(file, 'UTF-8');
+}
+$('#tabImportPick').onclick=()=>$('#tabImportFile').click();
+$('#tabImportFile').onchange=(e)=>{
+  const f=e.target.files && e.target.files[0];
+  tabImportReadFile(f);
+};
 
 async function tabImportStatus(){
   try{

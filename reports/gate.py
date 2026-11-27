@@ -2439,12 +2439,45 @@ def _norm_fio(v):
     return re.sub(r"\s+", " ", v).strip()
 
 
+def parse_tab_import_xml(text):
+    """Разобрать выгрузку 1С (XML V8Exch): справочник «Сотрудники».
+
+    Берём ФИО из <v8:Description> и номер из <v8:Code> (в 1С это табельный
+    номер сотрудника). Удалённые и архивные записи пропускаем.
+    """
+    out = []
+    for block in re.findall(r"<v8:CatalogObject\.Сотрудники>(.*?)</v8:CatalogObject\.Сотрудники>",
+                            text, re.S):
+        deleted = re.search(r"<v8:DeletionMark>\s*true\s*</v8:DeletionMark>", block, re.I)
+        archived = re.search(r"<v8:ВАрхиве>\s*true\s*</v8:ВАрхиве>", block)
+        if deleted or archived:
+            continue
+        fio = re.search(r"<v8:Description>(.*?)</v8:Description>", block, re.S)
+        code = re.search(r"<v8:Code>(.*?)</v8:Code>", block, re.S)
+        # на случай, если в карточке есть отдельный реквизит табельного номера
+        tab = re.search(r"<v8:(?:ТабельныйНомер|ТабельныйНомерСотрудника)>(.*?)</v8:", block, re.S)
+        fio_v = _xml_unescape(fio.group(1)).strip() if fio else ""
+        tab_v = (_xml_unescape(tab.group(1)) if tab else
+                 (_xml_unescape(code.group(1)) if code else "")).strip()
+        if fio_v and tab_v:
+            out.append({"fio": fio_v, "tab": tab_v})
+    return out
+
+
+def _xml_unescape(v):
+    return (v.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
+             .replace("&apos;", "'").replace("&amp;", "&")).strip()
+
+
 def parse_tab_import(text):
     """Разобрать выгрузку из 1С: строки «ФИО; табельный» (табуляция, ; или ,).
 
     Заголовок необязателен: колонки ищутся по словам «фио/сотрудник» и
     «табельн/таб/код/номер»; если заголовка нет — берём первые две колонки.
     """
+    text = (text or "").lstrip("\ufeff")
+    if "<V8Exch" in text[:4000] or "CatalogObject." in text[:8000]:
+        return parse_tab_import_xml(text)          # выгрузка 1С в XML
     rows = []
     for raw in (text or "").splitlines():
         line = raw.rstrip("\r")
