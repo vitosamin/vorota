@@ -345,3 +345,7 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
 
 /* Тёмная тема: активный вход/выход — светлая плашка, не чёрная дыра */
 .app[data-theme="dark"] .seg button.on { background: var(--text); color: var(--bg); }
+
+/* Перетаскивание точек за долгое нажатие */
+.list.reordering { touch-action: none; }
+.row.dragging { position: relative; z-index: 5; opacity: .92; background: var(--surface2); box-shadow: 0 12px 32px rgb(0 0 0 / .35); }

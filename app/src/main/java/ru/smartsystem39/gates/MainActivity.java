@@ -617,6 +617,25 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void reorder(String csv) {
+            runOnUiThread(() -> {
+                if (csv == null || csv.trim().isEmpty()) return;
+                List<Device> current = cfg.getDevices();
+                List<Device> next = new ArrayList<>();
+                for (String id : csv.split(",")) {
+                    for (Device d : current) {
+                        if (d.id.equals(id.trim()) && !next.contains(d)) { next.add(d); break; }
+                    }
+                }
+                if (next.isEmpty()) return;
+                for (Device d : current) if (!next.contains(d)) next.add(d);
+                devices = next;
+                cfg.saveDevices(next);
+                if (cfg.pultUi()) pushPultData(); else rebuildMain();
+            });
+        }
+
+        @JavascriptInterface
         public void settings() {
             runOnUiThread(() -> selectTab(1));
         }

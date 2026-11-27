@@ -186,7 +186,7 @@
 
   function rowHtml(d) {
     var cls = kindClass(d.kind);
-    return '<button class="row" data-type="' + esc(d.type) + '" type="button" onclick="openSheet(\'' + esc(d.id) + '\')">' +
+    return '<button class="row" data-id="' + esc(d.id) + '" data-type="' + esc(d.type) + '" type="button" onclick="openSheet(\'' + esc(d.id) + '\')">' +
       '<span class="row-ic">' + ic(typeIcon(d), 20) + '</span>' +
       '<span class="row-main"><span class="row-name">' + esc(d.name) + '</span>' +
         '<span class="row-sub">' + esc(cardSub(d)) + '</span></span>' +
@@ -221,6 +221,60 @@
     }
     if (hidden.length) html += hiddenLink(hidden.length);
     $('#screen').innerHTML = html;
+    bindReorder();
+  }
+
+  function bindReorder() {
+    var list = document.querySelector('#screen .list');
+    if (!list) return;
+    var timer = null, dragging = null, startX = 0, startY = 0, pid = null, suppressClick = false;
+    function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
+    function down(e) {
+      var row = e.target && e.target.closest ? e.target.closest('.row') : null;
+      if (!row || !list.contains(row) || (e.button !== undefined && e.button !== 0)) return;
+      startX = e.clientX; startY = e.clientY; pid = e.pointerId;
+      clearTimer();
+      timer = setTimeout(function () {
+        dragging = row;
+        row.classList.add('dragging');
+        list.classList.add('reordering');
+        try { row.setPointerCapture(pid); } catch (err) {}
+      }, 360);
+    }
+    function move(e) {
+      if (!dragging) {
+        if (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8) clearTimer();
+        return;
+      }
+      e.preventDefault();
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var target = el && el.closest ? el.closest('.row') : null;
+      if (target && target !== dragging && target.parentNode === list) {
+        var rect = target.getBoundingClientRect();
+        if (e.clientY > rect.top + rect.height / 2) list.insertBefore(dragging, target.nextSibling);
+        else list.insertBefore(dragging, target);
+      }
+    }
+    function up() {
+      clearTimer();
+      if (!dragging) return;
+      var ids = [];
+      var rows = list.querySelectorAll('.row[data-id]');
+      for (var i = 0; i < rows.length; i++) ids.push(rows[i].getAttribute('data-id'));
+      dragging.classList.remove('dragging');
+      list.classList.remove('reordering');
+      dragging = null;
+      suppressClick = true;
+      setTimeout(function () { suppressClick = false; }, 350);
+      bridge('reorder', ids.join(','));
+    }
+    list.addEventListener('pointerdown', down);
+    list.addEventListener('pointermove', move, { passive: false });
+    list.addEventListener('pointerup', up);
+    list.addEventListener('pointercancel', up);
+    list.addEventListener('click', function (e) {
+      if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
   }
 
   function sheetDirs(d) {
