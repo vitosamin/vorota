@@ -1187,7 +1187,7 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
         </div>
       </div>
     </div>
-    <div class="grid2">
+    <div class="grid2" id="admCards">
       <div class="card">
         <div class="hd"><h3>Пользователи</h3><span class="hint" id="accCount">—</span></div>
         <div class="bd">
@@ -1224,16 +1224,17 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
             </div>
           </div>
         </div>
-        <div class="card">
-          <div class="hd"><h3>Мой пароль</h3><span class="hint" id="meLogin"></span></div>
-          <div class="bd">
-            <div class="filters">
-              <div><label class="f">Текущий</label><input id="myOld" type="password" autocomplete="current-password"></div>
-              <div><label class="f">Новый</label><input id="myNew" type="password" autocomplete="new-password" placeholder="минимум 6 символов"></div>
-            </div>
-            <div class="row-actions"><button class="primary" id="myPass">Сменить пароль</button></div>
-          </div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px">
+      <div class="hd"><h3>Мой пароль</h3><span class="hint" id="meLogin2"></span></div>
+      <div class="bd">
+        <div class="filters">
+          <div><label class="f">Текущий</label><input id="myOld2" type="password" autocomplete="current-password"></div>
+          <div><label class="f">Новый</label><input id="myNew2" type="password" autocomplete="new-password" placeholder="минимум 6 символов"></div>
         </div>
+        <div class="row-actions"><button class="primary" id="myPass2">Сменить пароль</button></div>
       </div>
     </div>
   </section>
@@ -2006,7 +2007,7 @@ function openTab(name, remember){
   if(name==='mon') loadMon();
   if(name==='ana') loadAnalytics();
   if(name==='rpt'){ if(!rptBuilt){ renderReports(); rptBuilt=true; } loadReportCounts(); }
-  if(name==='set'){ ROLES_CACHE=[]; loadAccounts(); }
+  if(name==='set'){ if(ME && ME.role==='admin'){ ROLES_CACHE=[]; loadAccounts(); } }
   if(name==='pas'){ if(!DOORS.length) loadDoors(); loadPasses(); }
   if(name==='tsh') loadTimesheet();
   if(name==='brk') loadBreaks();
@@ -3411,7 +3412,10 @@ async function loadMe(){
     ME = await api('/api/me');
     if(ME.theme && ME.theme!==(document.documentElement.dataset.theme||'classic')) applyTheme(ME.theme, false);
     const btn=$('#tabBtnSet');
-    if(ME.role==='admin'){ btn.style.display=''; }
+    const isAdmin = ME.role==='admin';
+    if(btn) btn.style.display='';                     // оформление доступно всем
+    const adm=$('#admCards'); if(adm) adm.style.display = isAdmin ? '' : 'none';
+    const ml2=$('#meLogin2'); if(ml2) ml2.textContent = ME.login+' · '+ME.roleTitle;
     const tb=$('#tabBtnTest'); if(tb) tb.style.display = (ME.role==='admin'?'':'none');
     const ea=$('#empAdd'); if(ea) ea.style.display = (ME.role==='admin'?'':'none');
     else { btn.style.display='none'; }
@@ -3515,11 +3519,11 @@ $('#gateSave').onclick=async()=>{
   }catch(e){ st.textContent='не сохранено: '+e.message; toast('Не сохранено: '+e.message, true); }
 };
 
-$('#myPass').onclick=async()=>{
-  const old=$('#myOld').value, nw=$('#myNew').value;
+$('#myPass2').onclick=async()=>{
+  const old=$('#myOld2').value, nw=$('#myNew2').value;
   if(nw.length<6){ toast('Новый пароль короче 6 символов', true); return; }
   try{ await postJSON('/api/settings/password',{old, new:nw});
-    $('#myOld').value=''; $('#myNew').value=''; toast('Пароль изменён');
+    $('#myOld2').value=''; $('#myNew2').value=''; toast('Пароль изменён');
   }catch(e){ toast('Не удалось: '+e.message, true); }
 };
 

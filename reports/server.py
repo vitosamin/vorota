@@ -1775,6 +1775,21 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "unauthorized"}, code=401)
         if path == "/api/prefs":
             return self.api_prefs(body)
+        if path == "/api/settings/password":
+            # смена СВОЕГО пароля — доступна любой роли, а не только админу
+            user = self.current_user()
+            try:
+                payload = json.loads(body or b"{}")
+            except ValueError:
+                payload = {}
+            old_pw = payload.get("old") or ""
+            new_pw = payload.get("new") or ""
+            if len(new_pw) < 6:
+                return self.send_json({"ok": False, "error": "новый пароль короче 6 символов"}, code=400)
+            if not accounts.verify(user, old_pw):
+                return self.send_json({"ok": False, "error": "текущий пароль неверен"}, code=400)
+            accounts.set_password(user, new_pw)
+            return self.send_json({"ok": True})
         if path == "/api/sync":
             try:
                 payload = json.loads(body or b"{}")
