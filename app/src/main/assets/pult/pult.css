@@ -342,3 +342,6 @@ button, a, .row, .hero, .tab, .action, .linkrow, .filter, .seg button {
   font-size: 15px;
 }
 .seg button + button { border-left: 1px solid var(--line-soft); }
+
+/* Тёмная тема: активный вход/выход — светлая плашка, не чёрная дыра */
+.app[data-theme="dark"] .seg button.on { background: var(--text); color: var(--bg); }
