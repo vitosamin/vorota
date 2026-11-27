@@ -797,7 +797,11 @@ html[data-theme="pult"] .kpi .val{font-size:28px;letter-spacing:-.02em}
             <label class="chk"><input type="checkbox" id="passByCard"> выдать по номеру карты — ФИО можно не заполнять</label>
           </div>
           <div><label class="f">Должность</label><select id="passPos"></select></div>
-          <div><label class="f">Организация</label><input id="passOrg" autocomplete="off" placeholder="ООО Ромашка"></div>
+          <div><label class="f">Организация</label><select id="passOrg">
+              <option value="">—</option>
+              <option value="Гипермаркет «Альмак»">Гипермаркет «Альмак»</option>
+              <option value="ООО «Балтийский Продукт»">ООО «Балтийский Продукт»</option>
+            </select></div>
           <div><label class="f">Документ</label><input id="passDoc" autocomplete="off" placeholder="паспорт 40 15 123456"></div>
           <div><label class="f">Подразделение</label><select id="passHost"></select></div>
           <div><label class="f">Цель визита</label><input id="passPurpose" autocomplete="off" placeholder="доставка, ремонт, встреча"></div>
@@ -3304,7 +3308,7 @@ $('#passAdd').onclick=async()=>{
   const payload={
     visitor:$('#passVisitor').value.trim(),
     position:$('#passPos').value.trim(),
-    org:$('#passOrg').value.trim(),
+    org:($('#passOrg').value||'').trim(),
     document:$('#passDoc').value.trim(),
     host:$('#passHost').value,
     purpose:$('#passPurpose').value.trim(),
@@ -3319,8 +3323,9 @@ $('#passAdd').onclick=async()=>{
   try{
     const d=await postJSON('/api/passes/add', payload);
     toast('Выдан пропуск '+d.pass.number+(d.pass.warning?' — '+d.pass.warning:''), !!d.pass.warning);
-    ['#passVisitor','#passPos','#passOrg','#passDoc','#passPurpose','#passCard']
+    ['#passVisitor','#passPos','#passDoc','#passPurpose','#passCard']
       .forEach(x=>$(x).value='');
+    $('#passOrg').selectedIndex=0;
     $('#passHost').selectedIndex=0;
     passBreaksRender([]);                    // одна пустая строка перерыва
     MSEL['#passDoors'] && MSEL['#passDoors'].clear() && mselUpdate('#passDoors');
